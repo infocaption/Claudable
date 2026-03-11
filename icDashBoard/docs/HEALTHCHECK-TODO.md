@@ -1,5 +1,11 @@
 # HealthCheckScheduler — Att göra
 
+> **OBS: Delvis inaktuellt.** Implementationen avvek från denna plan.
+> HealthCheckScheduler använder `.version.xml`-checks (HTTP-statuskoder) istället för
+> `MasterTimeStamp.txt`-parsning som beskrivs nedan. De nya kolumnerna (`master_timestamp`,
+> `error_count`, `error_details`) implementerades aldrig. Se aktuell kod i
+> `HealthCheckScheduler.java` för faktisk implementation.
+
 ## Bakgrund
 
 `HealthCheckScheduler.java` kör idag legacy-check mot `.version.xml` — **fel**. Den ska istället göra samma sak som icCloudGuard-appen (`C:\icCloudGuard`).

@@ -34,10 +34,13 @@ The dashboard is a Java Servlet/JSP application running on Tomcat 9.0.100 with J
 icDashBoard/
 ├── src/main/java/com/infocaption/dashboard/
 │   ├── filter/
-│   │   ├── AuthFilter.java           # Guards dashboard, modules, API; API key auth for import
-│   │   ├── CsrfFilter.java           # CSRF token validation (Synchronizer Token Pattern)
-│   │   ├── EncodingFilter.java       # UTF-8 on all requests
-│   │   └── SecurityHeaderFilter.java # Security headers (X-Content-Type-Options, X-Frame-Options, CSP)
+│   │   ├── AuthFilter.java              # Guards dashboard, modules, API; API key + Bearer token auth
+│   │   ├── BodySizeLimitFilter.java    # Request body size limits for /api/*
+│   │   ├── ContentTypeValidationFilter.java # Content-Type validation for /api/*
+│   │   ├── CsrfFilter.java             # CSRF token validation (Synchronizer Token Pattern)
+│   │   ├── EncodingFilter.java          # UTF-8 on all requests
+│   │   ├── RateLimitFilter.java         # Brute force protection on login/register
+│   │   └── SecurityHeaderFilter.java    # Security headers (CSP, X-Frame-Options, etc.)
 │   ├── servlet/
 │   │   ├── LoginServlet.java         # Password login + session (loads is_admin)
 │   │   ├── RegisterServlet.java      # Registration (BCrypt)
@@ -60,7 +63,24 @@ icDashBoard/
 │   │   ├── GroupApiServlet.java      # Group list + join/leave
 │   │   ├── GroupManageServlet.java   # Group CRUD + member management
 │   │   ├── UserManageServlet.java    # User listing with Teams chat links
-│   │   └── WidgetApiServlet.java     # GET /api/widgets → group-filtered JSON
+│   │   ├── UserPreferencesApiServlet.java # User preferences API
+│   │   ├── UserSettingsServlet.java  # Account settings (password, profile)
+│   │   ├── WidgetApiServlet.java     # GET /api/widgets → group-filtered JSON
+│   │   ├── ApiTokenServlet.java      # Bearer token management
+│   │   ├── AvatarUploadServlet.java  # Profile picture upload
+│   │   ├── BackupStatusApiServlet.java # Backup monitoring
+│   │   ├── CloudGuardApiServlet.java # CloudGuard incident reporting
+│   │   ├── DriftMonitorApiServlet.java # Drift monitor (machines, services, hosts)
+│   │   ├── GuidePlannerApiServlet.java # Guide planning tool
+│   │   ├── HealthCheckScheduler.java # Background health check scheduler
+│   │   ├── IncidentApiServlet.java   # Incident management
+│   │   ├── JiraApiServlet.java       # Jira integration
+│   │   ├── KbAdminServlet.java       # Knowledge base admin
+│   │   ├── McpAdminServlet.java      # MCP server management
+│   │   ├── McpGatewayServlet.java    # MCP Gateway proxy
+│   │   ├── ModuleFileApiServlet.java # Module file management
+│   │   ├── NotificationServlet.java  # Push notifications
+│   │   └── VersionServlet.java       # App version endpoint
 │   ├── model/
 │   │   ├── User.java                 # POJO: id, username, email, fullName, isAdmin
 │   │   ├── Module.java               # POJO: matches modules DB columns
@@ -79,14 +99,14 @@ icDashBoard/
 │       └── Esc.java                  # HTML entity escaping utility
 ├── src/main/webapp/
 │   ├── WEB-INF/
-│   │   ├── web.xml                   # 22 servlets, 4 filters, multipart config, HTTPS
+│   │   ├── web.xml                   # 39 servlets, 7 filters, multipart config
 │   │   ├── saml.properties           # SAML2 SSO config (Entra ID)
 │   │   └── lib/                      # 12 JAR dependencies
 │   ├── shared/
 │   │   ├── ic-styles.css             # Design system with CSS variables
 │   │   └── ic-utils.js              # Client-side utilities, postMessage API
 │   ├── assets/logga.png              # InfoCaption logo
-│   ├── modules/                      # 9 module directories
+│   ├── modules/                      # 16 module directories
 │   ├── login.jsp                     # Login (password + SSO)
 │   ├── register.jsp                  # Registration
 │   ├── dashboard.jsp                 # Main dashboard: sidebar, widget bar, iframe
@@ -99,8 +119,13 @@ icDashBoard/
 │   ├── MODULE-SPEC.md                # This file
 │   ├── MODULE-GUIDE.md               # Human-readable guide (Swedish)
 │   ├── SAML-SETUP.md                 # Azure Entra ID SAML2 setup
-│   └── SECURITY-AUDIT.md            # Security audit report
-└── sql/                              # 15 database migration scripts
+│   ├── SECURITY-AUDIT.md            # Security audit reports
+│   ├── KNOWLEDGE-BASE.md            # Knowledge base / MCP integration
+│   ├── API-GUIDE.md                 # API endpoints, Bearer tokens, examples
+│   ├── GETTING_STARTED.md           # Full installation guide
+│   ├── GUIDE-PLANNER-SPEC.md        # Guide planner feature spec
+│   └── HEALTHCHECK-TODO.md          # Health monitoring notes
+└── sql/                              # 35 database migration scripts (001-032 + baseline)
 ```
 
 ---
@@ -376,10 +401,10 @@ Admin panel → "Inställningar" tab → edit any config value.
     --ic-radius-md: 10px;
     --ic-radius-lg: 16px;
     --ic-radius-xl: 24px;
-    --ic-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+    --ic-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
     --ic-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --ic-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
-    --ic-shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.15);
+    --ic-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --ic-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 ```
 
@@ -389,8 +414,8 @@ Admin panel → "Inställningar" tab → edit any config value.
 |----------|---------|
 | **Buttons** | `.ic-btn`, `.ic-btn-primary`, `.ic-btn-success`, `.ic-btn-danger`, `.ic-btn-ghost`, `.ic-btn-sm`, `.ic-btn-lg` |
 | **Cards** | `.ic-card`, `.ic-card-header`, `.ic-card-title`, `.ic-card-body`, `.ic-card-footer` |
-| **Forms** | `.ic-form-group`, `.ic-label`, `.ic-input`, `.ic-select`, `.ic-textarea`, `.ic-checkbox` |
-| **Tables** | `.ic-table`, `.ic-table-striped`, `.ic-table-hover` |
+| **Forms** | `.ic-label`, `.ic-input`, `.ic-select` |
+| **Tables** | `.ic-table` |
 | **Badges** | `.ic-badge`, `.ic-badge-primary`, `.ic-badge-success`, `.ic-badge-danger`, `.ic-badge-warning`, `.ic-badge-info`, `.ic-badge-accent` |
 | **Alerts** | `.ic-alert`, `.ic-alert-info`, `.ic-alert-success`, `.ic-alert-warning`, `.ic-alert-danger` |
 | **Layout** | `.ic-container`, `.ic-header`, `.ic-title`, `.ic-subtitle`, `.ic-section` |
@@ -480,11 +505,18 @@ ICUtils.copyToClipboard(text: string): Promise<void>
 |--------|-----------|-------------|
 | `pong` | Simple | Canvas, game loop, keyboard input |
 | `toolbox` | Simple | Tabs, forms, clipboard, crypto |
+| `docs` | Medium | Sidebar navigation, search, two-column layout |
 | `sql-builder` | Medium | JSON data loading, dynamic rendering, variable substitution |
 | `trigger-builder` | Medium | Wizard UI, code generation, template literals, clipboard |
-| `docs` | Medium | Sidebar navigation, search, two-column layout |
 | `server-list` | Medium | Backend API, async health checks, severity badges |
 | `certificates` | Medium | Backend API, expiry alerts, color-coded status |
+| `backup-status` | Medium | Backup monitoring, status badges |
+| `guide-planner` | Medium | Project planning, task management |
+| `jira` | Medium | Jira integration, issue tracking |
+| `incidents` | Medium | Incident management, severity tracking |
+| `drift-monitor` | Advanced | Machine/service/host monitoring, health checks |
+| `drift-ops` | Advanced | Combined drift operations view |
+| `cloudguard-monitor` | Advanced | CloudGuard incident monitoring, server health |
 | `customer-stats` | Advanced | Tables, filtering (coach/track/version), sorting, license tracking, Excel/CSV export, Chart.js, toolbar with ic-icons |
 | `utskick` | Advanced | Backend servlet, Azure ACS email, templates, Listor, history |
 

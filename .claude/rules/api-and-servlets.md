@@ -48,6 +48,22 @@ paths:
 | `/manage-users` | UserManageServlet | Required | User listing |
 | `/module/create` | ModuleCreateServlet | Required | Upload modules (50MB max) |
 | `/module/manage` | ModuleManageServlet | Required | Edit/delete modules |
+| `/api/tokens/*` | ApiTokenServlet | Required | Bearer token CRUD |
+| `/api/user/avatar` | AvatarUploadServlet | Required | Profile picture upload |
+| `/api/user/settings` | UserSettingsServlet | Required | Account settings |
+| `/api/preferences` | UserPreferencesApiServlet | Required | User preferences |
+| `/api/admin/modules/*` | ModuleFileApiServlet | Admin | Module file management |
+| `/api/drift/*` | DriftMonitorApiServlet | Admin/Token | Drift monitor (machines, services, hosts) |
+| `/api/cloudguard/*` | CloudGuardApiServlet | Mixed | Incident reporting (public) + listing (auth) |
+| `/api/incidents/*` | IncidentApiServlet | Required | Incident management |
+| `/api/backups` | BackupStatusApiServlet | Required | Backup status |
+| `/api/jira/*` | JiraApiServlet | Required | Jira integration |
+| `/api/guide-planner/*` | GuidePlannerApiServlet | Required | Guide planning |
+| `/api/notifications/*` | NotificationServlet | Required | Push notifications |
+| `/api/version` | VersionServlet | Public | App version |
+| `/api/mcp` | McpGatewayServlet | Token | MCP Gateway proxy |
+| `/api/mcp/admin/*` | McpAdminServlet | Admin | MCP server management |
+| `/api/admin/kb/*` | KbAdminServlet | Admin | Knowledge base admin |
 
 ## Servlet Development Patterns
 
@@ -64,7 +80,7 @@ Parse incoming JSON with regex helpers: `extractJsonString()`, `extractJsonInt()
 ### Configuration Pattern
 Use `AppConfig.get("key", FALLBACK_CONSTANT)` for all configurable values:
 ```java
-private static final String FALLBACK_URL = "jdbc:mysql://localhost:3306/icdashboard?...";
+private static final String FALLBACK_URL = "jdbc:mysql://localhost:3306/icdashboard?useSSL=false&...";
 String url = AppConfig.get("db.url", FALLBACK_URL);
 ```
 Keep `FALLBACK_` constant as backup — system must work without DB config.

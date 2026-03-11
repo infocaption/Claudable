@@ -1,9 +1,6 @@
-# InfoCaption Dashboard (Java JSP)
+# InfoCaption Dashboard
 
-En modulär dashboard-plattform för InfoCaption med databasdriven modulhantering, uppladdning och delning.
-
-> **Konverterad från:** `C:\pshellws\icdashboard` (statisk HTML/JS)
-> **Konverterad till:** Java Servlet/JSP med MySQL-backed autentisering och modulregister
+En modulär dashboard-plattform for InfoCaption supportorganisationer. Databasdriven modulhantering, lösenords- och SAML2 SSO-autentisering, gruppbaserad åtkomstkontroll, adminsystem och datasync.
 
 ---
 
@@ -11,29 +8,24 @@ En modulär dashboard-plattform för InfoCaption med databasdriven modulhanterin
 
 | Komponent | Version | Detaljer |
 |-----------|---------|----------|
-| Java | 21 | Eclipse Adoptium JDK 21.0.10 |
-| Tomcat | 9.0.100 | Servlet 4.0 spec (med multipart-stöd) |
-| MySQL | 5.7 | localhost:3306, schema `icdashboard` |
-| IDE | Eclipse | Dynamic Web Project (WTP) |
-| Lösenord | BCrypt | jbcrypt-0.4.jar, work factor 12 |
+| Java | 21 | Eclipse Adoptium |
+| Tomcat | 9.0.100 | Servlet 4.0 (ingår i repot) |
+| MySQL | 5.7 | utf8mb4, schema `icdashboard` |
+| Autentisering | BCrypt + SAML2 | jbcrypt-0.4, OneLogin java-saml 2.9.0 |
 | JDBC | MySQL Connector/J 8.4.0 | utf8mb4 via connectionCollation |
+
+Se [GETTING_STARTED.md](docs/GETTING_STARTED.md) for fullständig installationsguide.
 
 ---
 
 ## Snabbstart
 
-### Förutsättningar
-- Eclipse IDE med WTP (Web Tools Platform)
-- Java 21 JDK installerat
-- MySQL 5.7 körandes på localhost:3306
-- Schema `icdashboard` med användare `icdashboarduser`
-
-### Starta
-1. Importera workspace i Eclipse: `File > Switch Workspace > C:\INFOCAPTION_GIT\InfoCaptionZID\claudable`
-2. I **Servers**-vyn: starta **apache-tomcat-9.0.100 at localhost**
-3. Navigera till `http://localhost:8080/icDashBoard/`
-4. Registrera ett konto via "Registrera dig"-länken
-5. Logga in och dashboarden visas
+1. Installera Java 21, MySQL 5.7 och Eclipse med WTP
+2. Skapa databas och kör migreringsskript (se [GETTING_STARTED.md](docs/GETTING_STARTED.md))
+3. Kopiera `WEB-INF/app-secrets.properties.template` till `app-secrets.properties` och fyll i credentials
+4. Konfigurera Tomcat i Eclipse och lägg till projektet
+5. Starta Tomcat och navigera till `http://<host>:<port>/icDashBoard/`
+6. Registrera ett konto och logga in
 
 ---
 
@@ -42,230 +34,156 @@ En modulär dashboard-plattform för InfoCaption med databasdriven modulhanterin
 ```
 icDashBoard/
 ├── src/main/java/com/infocaption/dashboard/
-│   ├── filter/
-│   │   ├── AuthFilter.java           # Skyddar dashboard, moduler, API, hantering
-│   │   └── EncodingFilter.java       # UTF-8 på alla requests/responses
-│   ├── servlet/
-│   │   ├── LoginServlet.java         # GET: visa login, POST: autentisera
-│   │   ├── RegisterServlet.java      # GET: visa registrering, POST: skapa konto
-│   │   ├── LogoutServlet.java        # Invalidera session, redirect till login
-│   │   ├── ModuleApiServlet.java     # GET /api/modules → JSON (modulregister)
-│   │   ├── ModuleCreateServlet.java  # GET/POST /module/create (multipart upload)
-│   │   ├── ModuleManageServlet.java  # GET/POST /module/manage (CRUD)
-│   │   └── ModuleSpecServlet.java    # GET /api/module/spec?id=X → markdown
-│   ├── model/
-│   │   ├── User.java                 # User POJO (Serializable för HttpSession)
-│   │   └── Module.java               # Module POJO (matchar modules-tabellen)
-│   └── util/
-│       ├── DBUtil.java               # JDBC connection helper (DriverManager)
-│       └── PasswordUtil.java         # BCrypt hash/verify wrapper
+│   ├── filter/          # 7 filters: Auth, CSRF, Encoding, Security Headers, Rate Limit, ...
+│   ├── servlet/         # 39 servlets: Login, SAML, Admin, Modules, Sync, Email, ...
+│   ├── model/           # User, Module, Group POJOs
+│   └── util/            # 22 utilities: AppConfig, DBUtil, SyncExecutor, CryptoUtil, ...
 ├── src/main/webapp/
 │   ├── WEB-INF/
-│   │   ├── web.xml                   # Servlet mappings, filter config, multipart
-│   │   └── lib/
-│   │       ├── mysql-connector-j-8.4.0.jar
-│   │       └── jbcrypt-0.4.jar
-│   ├── assets/
-│   │   └── logga.png                 # InfoCaption logotyp
-│   ├── shared/
-│   │   ├── ic-styles.css             # Gemensamt designsystem (CSS variabler)
-│   │   └── ic-utils.js               # Delade JS-verktyg (formatering, export)
-│   ├── login.jsp                     # Inloggningssida
-│   ├── register.jsp                  # Registreringssida
-│   ├── dashboard.jsp                 # Huvuddashboard (async API-laddning)
-│   ├── create-module.jsp             # Skapa/ladda upp ny modul
-│   ├── manage-modules.jsp            # Hantera moduler (redigera, dela, ta bort)
-│   └── modules/
-│       ├── customer-stats/
-│       │   ├── displaystats.html     # Kundstatistik (aktiv)
-│       │   ├── displaystats.jsp      # Legacy (kan tas bort)
-│       │   ├── allstats.json         # Statistikdata
-│       │   └── companies.json        # CRM-mappningar
-│       ├── sql-builder/
-│       │   ├── sql-builder.html      # SQL-frågebyggare (aktiv)
-│       │   ├── sql-builder.jsp       # Legacy (kan tas bort)
-│       │   └── sql-queries.json      # SQL-mallar
-│       ├── toolbox/
-│       │   ├── toolbox.html          # 10+ verktyg (aktiv)
-│       │   └── toolbox.jsp           # Legacy (kan tas bort)
-│       ├── pong/
-│       │   ├── pong.html             # Arkadspel (aktiv)
-│       │   └── pong.jsp              # Legacy (kan tas bort)
-│       └── docs/
-│           ├── docs.html             # Inbyggd dokumentation (aktiv)
-│           └── docs.jsp              # Legacy (kan tas bort)
-└── docs/
-    ├── MODULE-SPEC.md                # Teknisk spec för AI/kodgenerering
-    └── MODULE-GUIDE.md               # Mänsklig guide för modulutveckling
+│   │   ├── web.xml      # Servlet/filter-mappningar, multipart, session
+│   │   └── lib/         # 12 JAR-beroenden (ingen Maven/Gradle)
+│   ├── shared/          # ic-styles.css, ic-utils.js, ic-icons.css, fonts/
+│   ├── modules/         # 16 systemmoduler (HTML/CSS/JS i iframes)
+│   └── *.jsp            # 10 JSP-sidor (login, dashboard, admin, ...)
+├── sql/                 # Migreringsskript (001–025)
+└── docs/                # GETTING_STARTED, API-GUIDE, SAML-SETUP, MODULE-GUIDE, ...
 ```
 
 ---
 
 ## Modulsystem
 
+Moduler laddas som iframes i `dashboard.jsp`. Modulerna är ren HTML/CSS/JS (inte JSP).
+
 ### Modultyper
 
-| Typ | Beskrivning | Ägare |
-|-----|-------------|-------|
-| **system** | Förinstallerade moduler | Ingen (NULL) |
-| **private** | Synlig bara för skaparen | Användare |
-| **shared** | Synlig för alla inloggade | Användare |
+| Typ | Beskrivning | Synlighet |
+|-----|-------------|-----------|
+| **system** | Förinstallerade | Alla (eller gruppbaserat) |
+| **private** | Skapade av användare | Bara skaparen |
+| **shared** | Delade av användare | Alla inloggade |
 
-### Modulflöde
+### Systemmoduler (16 st)
 
-1. **Skapa modul** (`/module/create`): Ladda upp .html eller .zip, fyll i metadata
-2. **Dashboard** (`/dashboard.jsp`): Moduler laddas via `GET /api/modules` (JSON)
-3. **Hantera** (`/module/manage`): Redigera, toggla synlighet, exportera AI-spec, ta bort
-4. **AI-spec** (`/api/module/spec?id=X`): Exportera modulspecifikation som Markdown
-
-### Modulfiler
-
-Moduler är ren HTML/CSS/JS (inte JSP). Filerna lagras under `webapp/modules/{directory_name}/` och Tomcat servar dem direkt. Metadata lagras i `modules`-tabellen.
+| Modul | Kategori |
+|-------|----------|
+| customer-stats | analytics |
+| server-list | analytics |
+| utskick | communication |
+| certificates | monitoring |
+| drift-monitor | monitoring |
+| drift-ops | monitoring |
+| cloudguard-monitor | monitoring |
+| backup-status | monitoring |
+| incidents | monitoring |
+| jira | tools |
+| sql-builder | tools |
+| toolbox | tools |
+| guide-planner | tools |
+| trigger-builder | tools |
+| docs | tools |
+| pong | fun |
 
 ---
 
-## Autentiseringsflöde
+## Autentisering
 
-```
-Användare → GET /icDashBoard/
-                 ↓
-         welcome-file → /login (LoginServlet)
-                 ↓
-         GET → visa login.jsp
-                 ↓
-         POST → validera mot MySQL (BCrypt)
-                 ↓ (lyckat)
-         session.setAttribute("user", User)
-                 ↓
-         redirect → /dashboard.jsp
-                 ↓
-         AuthFilter: session har "user"? → OK, visa dashboard
-                 ↓ (saknas)
-         redirect → /login (eller 401 JSON för API-anrop)
-```
+Två inloggningsmetoder:
+
+1. **Lösenord** — BCrypt (work factor 12) mot MySQL
+2. **SAML2 SSO** — Microsoft Entra ID (se [SAML-SETUP.md](docs/SAML-SETUP.md))
 
 ### Skyddade resurser (AuthFilter)
-- `/dashboard.jsp`
-- `/modules/*`
-- `/api/*`
-- `/module/*`
-- `/create-module.jsp`
-- `/manage-modules.jsp`
 
-### Publika resurser (ingen filter)
-- `/login` och `/login.jsp`
-- `/register` och `/register.jsp`
-- `/shared/*` (CSS, JS)
-- `/assets/*` (bilder)
+`/dashboard.jsp`, `/modules/*`, `/api/*`, `/module/*`, `/admin.jsp`, `/manage-*.jsp`, `/settings.jsp`, `/group/*`
+
+### Publika resurser
+
+`/login`, `/register`, `/shared/*`, `/assets/*`, `/saml/*`
+
+---
+
+## API-endpoints
+
+| URL | Servlet | Beskrivning |
+|-----|---------|-------------|
+| `/login` | LoginServlet | Inloggning |
+| `/register` | RegisterServlet | Registrering |
+| `/logout` | LogoutServlet | Utloggning |
+| `/saml/login` | SamlLoginServlet | SAML SSO-initiering |
+| `/saml/acs` | SamlAcsServlet | SAML assertion consumer |
+| `/saml/metadata` | SamlMetadataServlet | SP-metadata |
+| `/api/modules` | ModuleApiServlet | Modulregister |
+| `/api/admin/*` | AdminApiServlet | Admin-API |
+| `/api/customer-stats/*` | CustomerStatsApiServlet | Kundstatistik |
+| `/api/servers/*` | ServerListApiServlet | Serverlista |
+| `/api/email/*` | EmailApiServlet | E-postutskick |
+| `/api/contacts/*` | ContactListServlet | Kontaktlista |
+| `/api/sync/*` | SyncConfigServlet | Datasync-konfiguration |
+| `/api/certificates/*` | CertificateApiServlet | SSL-certifikat |
+| `/api/widgets` | WidgetApiServlet | Dashboard-widgets |
+| `/api/groups` | GroupApiServlet | Grupphantering |
+| `/api/drift/*` | DriftMonitorApiServlet | Driftövervakning |
+| `/api/cloudguard/*` | CloudGuardApiServlet | CloudGuard-monitor |
+| `/api/incidents/*` | IncidentApiServlet | Incidenthantering |
+| `/api/backups` | BackupStatusApiServlet | Backupstatus |
+| `/api/jira/*` | JiraApiServlet | Jira-integration |
+| `/api/guide-planner/*` | GuidePlannerApiServlet | Guideplanering |
+| `/api/tokens/*` | ApiTokenServlet | API-tokens |
+| `/api/notifications/*` | NotificationServlet | Notifikationer |
+| `/api/mcp` | McpGatewayServlet | MCP Gateway |
+| `/api/preferences` | UserPreferencesApiServlet | Användarpreferenser |
+| `/api/user/settings` | UserSettingsServlet | Kontoinställningar |
+| `/api/user/avatar` | AvatarUploadServlet | Profilbild |
+| `/api/version` | VersionServlet | Appversion |
+
+Se [API-GUIDE.md](docs/API-GUIDE.md) for detaljer om autentisering och användning.
+
+---
+
+## Filter-kedja
+
+| Filter | URL | Syfte |
+|--------|-----|-------|
+| EncodingFilter | `/*` | UTF-8 på alla requests/responses |
+| AuthFilter | skyddade resurser | Session-validering, 401 för API |
+| CsrfFilter | `/*` | CSRF-token-validering |
+| SecurityHeaderFilter | `/*` | CSP, X-Frame-Options, etc. |
+| BodySizeLimitFilter | `/api/*` | Begränsar request body-storlek |
+| RateLimitFilter | `/login`, `/register`, `/api/cloudguard/*` | Brute force-skydd |
+| ContentTypeValidationFilter | `/api/*` | Validerar Content-Type |
+
+---
+
+## JAR-beroenden (WEB-INF/lib/)
+
+| JAR | Syfte |
+|-----|-------|
+| mysql-connector-j-8.4.0.jar | JDBC-drivrutin |
+| jbcrypt-0.4.jar | BCrypt-hashning |
+| java-saml-2.9.0.jar + java-saml-core-2.9.0.jar | SAML2 SSO |
+| xmlsec-2.3.4.jar | XML-signaturvalidering |
+| joda-time-2.10.6.jar | Datum/tid (SAML-beroende) |
+| commons-lang3-3.14.0.jar + commons-codec-1.16.1.jar | Strängverktyg, encoding |
+| woodstox-core-6.5.0.jar + stax2-api-4.2.1.jar | XML StAX-parser |
+| slf4j-api-1.7.36.jar + slf4j-simple-1.7.36.jar | Loggning |
+
+> Inget Maven/Gradle. JARs hanteras manuellt.
 
 ---
 
 ## Databas
 
-### Anslutning
-| Parameter | Värde |
-|-----------|-------|
-| Host | localhost:3306 |
-| Schema | icdashboard |
-| Användare | icdashboarduser |
-| Lösenord | *(se app-secrets.properties)* |
-| Charset | utf8mb4 |
-| Collation | utf8mb4_unicode_ci |
-| Timezone | Europe/Stockholm |
+Credentials konfigureras i `WEB-INF/app-secrets.properties` (gitignored).
 
-### JDBC URL
+JDBC URL-format:
 ```
-jdbc:mysql://localhost:3306/icdashboard?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Stockholm&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci
+jdbc:mysql://<host>:3306/icdashboard?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Stockholm&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci
 ```
 
-> **Viktigt:** `connectionCollation=utf8mb4_unicode_ci` krävs för att emojis (4-byte UTF-8) ska sparas korrekt i MySQL 5.7. Utan detta konverteras emojis till `?`.
+> `connectionCollation=utf8mb4_unicode_ci` krävs for korrekt emoji-stöd i MySQL 5.7.
 
-### Tabell: `users`
-
-```sql
-CREATE TABLE users (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    username    VARCHAR(50)  NOT NULL UNIQUE,
-    email       VARCHAR(255) NOT NULL UNIQUE,
-    password    VARCHAR(60)  NOT NULL,
-    full_name   VARCHAR(100) NOT NULL,
-    created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    last_login  TIMESTAMP    NULL,
-    is_active   TINYINT(1)   DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-```
-
-### Tabell: `modules`
-
-```sql
-CREATE TABLE modules (
-    id              INT AUTO_INCREMENT PRIMARY KEY,
-    owner_user_id   INT             NULL,
-    module_type     ENUM('system','private','shared') NOT NULL DEFAULT 'private',
-    name            VARCHAR(100)    NOT NULL,
-    icon            VARCHAR(20)     NOT NULL DEFAULT '📦',
-    description     VARCHAR(500)    NULL,
-    category        VARCHAR(50)     NOT NULL DEFAULT 'tools',
-    entry_file      VARCHAR(255)    NOT NULL DEFAULT 'index.html',
-    directory_name  VARCHAR(100)    NOT NULL UNIQUE,
-    badge           VARCHAR(50)     NULL,
-    version         VARCHAR(20)     NOT NULL DEFAULT '1.0',
-    ai_spec_text    TEXT            NULL,
-    is_active       TINYINT(1)      NOT NULL DEFAULT 1,
-    created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_modules_owner FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_modules_type (module_type),
-    INDEX idx_modules_owner (owner_user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-```
-
----
-
-## Servlet-mappningar (web.xml)
-
-| URL | Servlet/Filter | Metod | Beskrivning |
-|-----|---------------|-------|-------------|
-| `/login` | LoginServlet | GET/POST | Visa login / autentisera |
-| `/register` | RegisterServlet | GET/POST | Visa registrering / skapa konto |
-| `/logout` | LogoutServlet | GET | Invalidera session |
-| `/api/modules` | ModuleApiServlet | GET | JSON-lista av synliga moduler |
-| `/module/create` | ModuleCreateServlet | GET/POST | Skapa modul (multipart, 50MB) |
-| `/module/manage` | ModuleManageServlet | GET/POST | Hantera moduler (CRUD) |
-| `/api/module/spec` | ModuleSpecServlet | GET | AI-spec export som markdown |
-| `/dashboard.jsp` | AuthFilter | * | Kräver aktiv session |
-| `/modules/*` | AuthFilter | * | Kräver aktiv session |
-| `/api/*` | AuthFilter | * | Kräver session (returnerar 401 JSON) |
-| `/module/*` | AuthFilter | * | Kräver aktiv session |
-| `/*` | EncodingFilter | * | Sätter UTF-8 encoding |
-
----
-
-## Systemmoduler
-
-Alla moduler laddas i en iframe inuti `dashboard.jsp`. Modulerna är rena HTML-filer.
-
-| Modul | ID | Fil | Kategori |
-|-------|----|-----|----------|
-| Kundstatistik | `customer-stats` | `displaystats.html` | analytics |
-| SQL Builder | `sql-builder` | `sql-builder.html` | tools |
-| Verktygslåda | `toolbox` | `toolbox.html` | tools |
-| Pong | `pong` | `pong.html` | tools |
-| Dokumentation | `docs` | `docs.html` | tools |
-
----
-
-## URL-parametrar
-
-Dashboarden stöder direktlänkning till moduler:
-
-```
-/icDashBoard/dashboard.jsp?module=customer-stats
-/icDashBoard/dashboard.jsp?module=sql-builder
-/icDashBoard/dashboard.jsp?module=toolbox
-/icDashBoard/dashboard.jsp?module=pong
-/icDashBoard/dashboard.jsp?module=docs
-```
+Migreringsskript finns i `sql/` (001–025). For fullständigt schema, se installationsskriptet `install-package/install.sql`.
 
 ---
 
@@ -273,61 +191,55 @@ Dashboarden stöder direktlänkning till moduler:
 
 | Problem | Lösning |
 |---------|---------|
-| `ClassNotFoundException: Bootstrap` | Kontrollera Tomcat runtime i Eclipse. Verifiera `bootstrap.jar` och `tomcat-juli.jar` i classpath. |
-| Login fungerar inte | Kontrollera att MySQL körs och att `users`-tabellen finns. |
-| Moduler laddas inte | Kontrollera att `modules`-tabellen finns och innehåller systemmoduler. Kör API: `GET /api/modules` |
-| 401 från API | Sessionen har gått ut. Logga in igen. |
-| Modul laddas inte i iframe | Kontrollera att du är inloggad (AuthFilter skyddar `/modules/*`) |
-| Svenska tecken visas fel | Kontrollera att EncodingFilter är aktivt |
-| Tomcat startar inte | Dubbelkolla JDK 21 på `C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot` |
-| Uppladdad modul syns inte | Kontrollera att filen är .html eller .zip och att entry_file pekar rätt |
-| Emojis visas som `?` | Kontrollera att JDBC URL har `connectionCollation=utf8mb4_unicode_ci`. MySQL 5.7 klient (`mysql.exe`) kräver `--default-character-set=utf8mb4` vid INSERT |
-| `FIELD()` SQL-fel | `ORDER BY FIELD(...)` kräver MySQL, fungerar inte i andra databaser |
+| Tomcat startar inte | Kontrollera JDK 21-sökväg och att porten är ledig |
+| `ClassNotFoundException` | Server → Clean i Eclipse. Kontrollera JARs i `WEB-INF/lib/` |
+| Login fungerar inte | Kontrollera att MySQL körs och att tabellerna finns |
+| Emojis visas som `?` | JDBC URL måste ha `connectionCollation=utf8mb4_unicode_ci` |
+| Svenska tecken trasiga | MySQL CLI: `--default-character-set=utf8mb4` |
+| JSP-ändringar syns inte | Starta om Tomcat eller Server → Clean |
+| 401 från API | Sessionen har gått ut (30 min). Logga in igen. |
+| Admin-panel syns inte | `UPDATE users SET is_admin = 1 WHERE email = '...'` |
+| SSO fungerar inte | Se [SAML-SETUP.md](docs/SAML-SETUP.md) |
+
+---
+
+## Dokumentation
+
+| Dokument | Innehåll |
+|----------|----------|
+| [GETTING_STARTED.md](docs/GETTING_STARTED.md) | Fullständig installationsguide |
+| [API-GUIDE.md](docs/API-GUIDE.md) | API-endpoints, tokens, exempel |
+| [MODULE-GUIDE.md](docs/MODULE-GUIDE.md) | Skapa egna moduler |
+| [MODULE-SPEC.md](docs/MODULE-SPEC.md) | Teknisk modulspecifikation |
+| [SAML-SETUP.md](docs/SAML-SETUP.md) | SSO med Microsoft Entra ID |
+| [KNOWLEDGE-BASE.md](docs/KNOWLEDGE-BASE.md) | Kunskapsbas / MCP-integration |
 
 ---
 
 ## Changelog
 
-### v3.0.0 (2026-02-06) — Databasdrivet modulsystem
-- Modulregister i MySQL istället för hårdkodat JavaScript
-- Stöd för system-, privata- och delade moduler
-- Moduluppladdning: .html eller .zip (max 50MB)
-- Modulhanteringssida: redigera, dela, ta bort
-- AI-specifikationstext per modul med Markdown-export
-- Dashboard hämtar moduler asynkront via `/api/modules`
-- Modulfiler migrerade från .jsp till .html (legacy .jsp finns kvar, kan tas bort)
-- Sidebar: "Skapa modul" och "Mina moduler" länkar
-- JDBC: `connectionCollation=utf8mb4_unicode_ci` för korrekt emoji-stöd
-- AuthFilter: returnerar 401 JSON för `/api/*` istället för redirect
+### v4.0 — Admin, SSO, Sync, Säkerhet
+- Adminsystem med rollbaserad åtkomst
+- SAML2 SSO (Microsoft Entra ID)
+- Gruppbaserad modulsynlighet
+- Datasync med extern databas (SuperOffice)
+- E-postutskick via Azure Communication Services
+- Dashboard-widgets med anpassningsbar layout
+- 16 systemmoduler (drift, certifikat, CloudGuard, Jira, ...)
+- CSRF-skydd, rate limiting, security headers
+- API-tokens for extern integration
+- MCP Gateway
 
-### v2.0.0 (2026-02-06) — Java JSP-konvertering
+### v3.0 — Databasdrivet modulsystem
+- Modulregister i MySQL istället for hårdkodat JavaScript
+- System-, privata- och delade moduler
+- Moduluppladdning (.html/.zip, max 50MB)
+- AI-specifikationstext per modul
+
+### v2.0 — Java JSP-konvertering
 - Konverterad från statisk HTML till Java Servlet/JSP
-- Autentisering: login, registrering, logout med BCrypt
-- MySQL-backed användardatabas
-- AuthFilter skyddar dashboard och moduler
-- UTF-8 EncodingFilter
+- BCrypt-autentisering mot MySQL
+- AuthFilter + EncodingFilter
 
-### v1.2.0 (2025-02-05)
-- Ny modul: Pong
-- VIPS Intranät-länk
-- Dokumentationssektion
-
-### v1.1.0 (2025-02-05)
-- Ny modul: Dokumentation
-- Uppdaterad design med InfoCaption VIPS-stil
-
-### v1.0.0 (2025-02-05)
-- Initial release: Dashboard, Kundstatistik, SQL Builder, Verktygslåda
-
----
-
-## Framtida funktioner
-
-- [x] ~~Autentisering~~ (implementerat v2.0.0)
-- [x] ~~Moduler som laddas dynamiskt från server~~ (implementerat v3.0.0)
-- [ ] Mörkt tema
-- [ ] Rollbaserad åtkomst (admin, viewer)
-- [ ] Lösenordsåterställning
-- [ ] Connection pooling (Tomcat DBCP/JNDI)
-- [ ] Audit log (vem loggade in när)
-- [ ] Modulversionshantering
+### v1.0 — Initial release
+- Dashboard, Kundstatistik, SQL Builder, Verktygslåda

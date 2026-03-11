@@ -31,7 +31,7 @@ Group filtering via `module_groups` table applies equally to all module types:
 - Modules trigger via `ICUtils.showDocPopup()` (sends `SHOW_MODULE_DOC` postMessage)
 - `ModuleApiServlet` returns `aiSpecText` in JSON
 
-### Built-in Modules (9)
+### Built-in Modules (16)
 
 | Module | Entry File | Description |
 |--------|-----------|-------------|
@@ -44,6 +44,13 @@ Group filtering via `module_groups` table applies equally to all module types:
 | Dokumentation | `docs/docs.html` | Documentation viewer |
 | Certifikat | `certificates/index.html` | SSL cert monitoring with expiry alerts |
 | Pong | `pong/pong.html` | Demo game module |
+| Driftövervakning | `drift-monitor/index.html` | Machine/service/host monitoring |
+| Drift Ops | `drift-ops/index.html` | Combined drift operations view |
+| CloudGuard | `cloudguard-monitor/index.html` | CloudGuard incident monitoring, server health |
+| Backupstatus | `backup-status/index.html` | Backup monitoring with status badges |
+| Guideplanering | `guide-planner/index.html` | Project planning and task management |
+| Jira | `jira/index.html` | Jira integration, issue tracking |
+| Incidenter | `incidents/index.html` | Incident management and severity tracking |
 
 ### Customer Stats Module (Advanced)
 - **CDN libs**: SheetJS, Chart.js 4.4.7, chartjs-adapter-date-fns 3.0.0

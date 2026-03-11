@@ -21,17 +21,17 @@ Java Servlet/JSP dashboard platform for InfoCaption support organizations. Datab
 claudable/
 ├── icDashBoard/
 │   ├── src/main/java/com/infocaption/dashboard/
-│   │   ├── filter/          # AuthFilter, EncodingFilter, CsrfFilter, SecurityHeaderFilter
-│   │   ├── servlet/         # 22 servlets (Login, SAML, ModuleApi, AdminApi, SyncConfig, Email, etc.)
+│   │   ├── filter/          # 7 filters (Auth, CSRF, Encoding, SecurityHeader, RateLimit, BodySizeLimit, ContentTypeValidation)
+│   │   ├── servlet/         # 39 servlets (Login, SAML, Admin, Modules, Drift, Email, Sync, MCP, etc.)
 │   │   ├── model/           # User, Module, Group POJOs
-│   │   └── util/            # AppConfig, DBUtil, SmartassicDBUtil, AdminUtil, SyncExecutor, etc.
+│   │   └── util/            # 22 utilities (AppConfig, DBUtil, SyncExecutor, CryptoUtil, etc.)
 │   ├── src/main/webapp/
 │   │   ├── WEB-INF/         # web.xml, saml.properties, lib/ (12 JARs)
 │   │   ├── shared/          # ic-styles.css, ic-utils.js, ic-icons.css
-│   │   ├── modules/         # 9 built-in modules (customer-stats, utskick, server-list, etc.)
+│   │   ├── modules/         # 16 built-in modules (customer-stats, drift-monitor, utskick, jira, etc.)
 │   │   └── *.jsp            # login, register, dashboard, admin, create-module, manage-*
-│   ├── docs/                # MODULE-SPEC.md, MODULE-GUIDE.md, SAML-SETUP.md, SECURITY-AUDIT.md
-│   ├── sql/                 # 18 migration scripts (001-024)
+│   ├── docs/                # GETTING_STARTED, API-GUIDE, MODULE-SPEC/GUIDE, SAML-SETUP, KNOWLEDGE-BASE, security audits
+│   ├── sql/                 # 35 migration scripts (001-032 + baseline)
 │   └── build/               # Compiled classes
 ├── Ny mapp/                 # PowerShell scripts for stats collection, cert scanning
 ├── apache-tomcat-9.0.100/   # Embedded Tomcat
@@ -59,11 +59,12 @@ When adding JARs, Eclipse WTP may not sync — may need server Clean + Restart.
 
 ## Build & Run
 
-1. Eclipse IDE → workspace `C:\INFOCAPTION_GIT\InfoCaptionZID\claudable`
-2. MySQL 5.7 running on `localhost:3306` with database `icdashboard`
+1. Eclipse IDE → open workspace pointing to the `claudable` directory
+2. MySQL 5.7 running with database `icdashboard`
 3. Start Tomcat from Eclipse Servers panel
-4. Navigate to `https://icdashboard.infocaption.com:8443/icDashBoard/`
+4. Navigate to `http://<host>:<port>/icDashBoard/`
 5. Eclipse auto-compiles on save — no manual build step
+6. See `icDashBoard/docs/GETTING_STARTED.md` for full setup guide
 
 **DB credentials**: Stored in `WEB-INF/app-secrets.properties` (not committed to git).
 Copy `app-secrets.properties.template` and fill in your values.
@@ -125,7 +126,7 @@ Detailed context is in `.claude/rules/` — auto-loaded when working in relevant
 | `api-and-servlets.md` | URL routes, servlet patterns, AppConfig, admin system |
 | `database-schema.md` | Full schema, migrations, external DB |
 | `security-and-auth.md` | Login, SAML SSO, CSRF, groups, security headers |
-| `frontend-and-modules.md` | JSP/JS/CSS, 9 modules, widgets, postMessage, iframe patterns |
+| `frontend-and-modules.md` | JSP/JS/CSS, 16 modules, widgets, postMessage, iframe patterns |
 | `data-sync.md` | SyncExecutor, field transforms, SuperOffice sync jobs |
 | `powershell-scripts.md` | Stats collection, certificate monitoring |
 | `packaging.md` | WAR build, install package, credential cleaning |

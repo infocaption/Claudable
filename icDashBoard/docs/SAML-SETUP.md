@@ -77,8 +77,8 @@ Under **SAML Certificates** och **Set up InfoCaption Dashboard** i Azure Portal 
 
 ```properties
 # Service Provider
-sp.entityid=https://dashboard.infocaption.com/icDashBoard
-sp.assertion_consumer_service.url=https://dashboard.infocaption.com/icDashBoard/saml/acs
+sp.entityid=https://DIN-DOMAN/icDashBoard
+sp.assertion_consumer_service.url=https://DIN-DOMAN/icDashBoard/saml/acs
 sp.nameidformat=urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
 
 # Identity Provider

@@ -54,8 +54,25 @@ paths:
 | `022_superoffice_sync.sql` | 2 sync configs (Kunder + Serverkoppling) |
 | `023_customer_tracks.sql` | track column on customers |
 | `024_license_keys.sql` | license_keys table + Licenser sync config |
+| `015_guide_planner.sql` | guide_projects, guide_tasks, guide_project_assignees |
+| `015_user_preferences.sql` | user_preferences table |
+| `016_jira_integration.sql` | jira_* tables |
+| `017_drift_monitoring.sql` | drift_machines, drift_services, drift_hosts, server_health_state |
+| `018_api_tokens.sql` | api_tokens table |
+| `019_cloudguard.sql` | cloudguard_* tables |
+| `020_incidents.sql` | incidents table |
+| `021_backup_status.sql` | backup_status table |
+| `025_mcp_gateway.sql` | mcp_servers table |
+| `026_server_exclusion.sql` | server_exclusions table |
+| `027_push_notifications.sql` | push_subscriptions table |
+| `028_health_monitor.sql` | health_metrics table |
+| `029_drift_ops_module.sql` | drift_ops module registration |
+| `030_crypto_config.sql` | Encrypted config support |
+| `031_audit_log.sql` | audit_logs table |
+| `032_knowledge_base.sql` | kb_documents, kb_collections, kb_collection_documents |
+| `v1.0_baseline.sql` | Full baseline schema for fresh installs |
 
-All applied. Several tables also auto-created by servlet `init()` methods.
+All applied (35 files total). Several tables also auto-created by servlet `init()` methods.
 
 ## External DB (smartassic)
 

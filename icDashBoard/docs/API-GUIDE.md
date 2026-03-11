@@ -18,7 +18,7 @@ Authorization: Bearer icd_<token>
 1. En admin aktiverar "API-åtkomst" för din användare (Admin → Användare → 🔑 API toggle)
 2. Du genererar en token via API:et (kräver inloggad session):
    ```bash
-   curl -X POST https://icdashboard.infocaption.com:8443/icDashBoard/api/tokens \
+   curl -X POST https://<DIN-DOMAN>/icDashBoard/api/tokens \
      -H "Cookie: JSESSIONID=<din-session>" \
      -H "X-CSRF-Token: <csrf-token>" \
      -H "Content-Type: application/json" \
@@ -28,7 +28,7 @@ Authorization: Bearer icd_<token>
 
 **Använda token:**
 ```bash
-curl https://icdashboard.infocaption.com:8443/icDashBoard/api/drift/summary \
+curl https://<DIN-DOMAN>/icDashBoard/api/drift/summary \
   -H "Authorization: Bearer icd_AbCdEf..."
 ```
 
@@ -41,12 +41,12 @@ $headers = @{
 }
 
 # GET
-$response = Invoke-RestMethod -Uri "https://icdashboard.infocaption.com:8443/icDashBoard/api/drift/summary" `
+$response = Invoke-RestMethod -Uri "https://<DIN-DOMAN>/icDashBoard/api/drift/summary" `
     -Headers $headers -Method GET
 
 # POST
 $body = @{ hostname = "SRV01"; os = "Windows Server 2022" } | ConvertTo-Json
-Invoke-RestMethod -Uri "https://icdashboard.infocaption.com:8443/icDashBoard/api/drift/machines" `
+Invoke-RestMethod -Uri "https://<DIN-DOMAN>/icDashBoard/api/drift/machines" `
     -Headers $headers -Method POST -Body $body
 ```
 
@@ -240,7 +240,7 @@ POST /api/cloudguard/report
 Content-Type: application/json
 
 {
-  "entityName": "https://demo.infocaption.com",
+  "entityName": "https://example.infocaption.com",
   "entityType": "url",
   "severity": "error",
   "message": "Health check failed: HTTP 500",
@@ -260,7 +260,7 @@ Content-Type: application/json
 ```json
 {
   "id": 42,
-  "entityName": "https://demo.infocaption.com",
+  "entityName": "https://example.infocaption.com",
   "entityType": "url",
   "severity": "error",
   "reportedAt": "2026-02-20 14:30:00"
@@ -311,7 +311,7 @@ Authorization: Bearer icd_...
 [
   {
     "id": 42,
-    "entityName": "https://demo.infocaption.com",
+    "entityName": "https://example.infocaption.com",
     "entityType": "url",
     "severity": "error",
     "message": "Health check failed: HTTP 500",
@@ -517,7 +517,7 @@ function Invoke-DashboardApi {
         [string]$Method = "GET",
         [object]$Body
     )
-    $baseUrl = "https://icdashboard.infocaption.com:8443/icDashBoard"
+    $baseUrl = "https://<DIN-DOMAN>/icDashBoard"
     $headers = @{ "Authorization" = "Bearer $ApiToken" }
 
     $params = @{
@@ -546,11 +546,11 @@ Invoke-DashboardApi -Path "/api/drift/machines" -Method POST -Body @{
 }
 
 # 5. CloudGuard — rapportera fel (inget auth krävs!)
-$baseUrl = "https://icdashboard.infocaption.com:8443/icDashBoard"
+$baseUrl = "https://<DIN-DOMAN>/icDashBoard"
 $incident = Invoke-RestMethod -Uri "$baseUrl/api/cloudguard/report" -Method POST `
     -Headers @{ "Content-Type" = "application/json" } `
     -Body (@{
-        entityName = "https://demo.infocaption.com"
+        entityName = "https://example.infocaption.com"
         entityType = "url"
         severity   = "error"
         message    = "Health check failed: HTTP 500"

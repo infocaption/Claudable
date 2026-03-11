@@ -174,16 +174,16 @@ Kräver:
 ```
 icDashBoard/
 ├── src/main/java/.../
-│   ├── filter/     ← AuthFilter, CsrfFilter, EncodingFilter, SecurityHeaderFilter
-│   ├── servlet/    ← 22 servlets (Login, SAML, API, Admin, Sync, Email, ...)
+│   ├── filter/     ← 7 filters (Auth, CSRF, Encoding, SecurityHeader, RateLimit, ...)
+│   ├── servlet/    ← 39 servlets (Login, SAML, Admin, Drift, Email, MCP, ...)
 │   ├── model/      ← User, Module, Group POJOs
-│   └── util/       ← AppConfig, DBUtil, AdminUtil, SyncExecutor, ...
+│   └── util/       ← 22 utilities (AppConfig, DBUtil, SyncExecutor, CryptoUtil, ...)
 ├── src/main/webapp/
 │   ├── WEB-INF/    ← web.xml, lib/ (12 JARs), secrets
 │   ├── shared/     ← ic-styles.css, ic-utils.js, ic-icons.css
-│   ├── modules/    ← 9 systemmoduler (HTML/CSS/JS i iframes)
+│   ├── modules/    ← 16 systemmoduler (HTML/CSS/JS i iframes)
 │   └── *.jsp       ← login, dashboard, admin, hanteringssidor
-├── sql/            ← 18 migreringsskript (001–025)
+├── sql/            ← 35 migreringsskript (001–032 + baseline)
 └── docs/           ← SAML, API, moduler, säkerhetsaudits
 ```
 

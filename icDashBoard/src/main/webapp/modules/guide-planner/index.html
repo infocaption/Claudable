@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <title>Guide Planner</title>
+    <link rel="stylesheet" href="../../shared/ic-styles.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--ic-bg-light, #f8f9fc); color: var(--ic-text-dark, #323232); min-height: 100vh; }
+
+        /* ── Header ── */
+        .gp-header { position: sticky; top: 0; z-index: 100; background: linear-gradient(135deg, var(--ic-primary, #5458F2) 0%, #6366f1 100%); color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .gp-header-title { font-size: 1.25rem; font-weight: 700; white-space: nowrap; }
+        .gp-header-count { background: rgba(255,255,255,.2); border-radius: 12px; padding: 2px 10px; font-size: .8rem; font-weight: 600; }
+        .gp-header-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+        .gp-hdr-btn { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: var(--ic-radius-sm, 6px); padding: 6px 14px; font-size: .82rem; cursor: pointer; transition: background .15s; display: inline-flex; align-items: center; gap: 6px; }
+        .gp-hdr-btn:hover { background: rgba(255,255,255,.28); }
+        .gp-hdr-btn.danger { background: rgba(239,68,68,.25); border-color: rgba(239,68,68,.4); }
+        .gp-hdr-btn.danger:hover { background: rgba(239,68,68,.4); }
+
+        /* ── Project Tabs ── */
+        .gp-tabs { display: flex; align-items: center; gap: 4px; padding: 8px 24px; background: #fff; border-bottom: 1px solid #e5e7eb; overflow-x: auto; }
+        .gp-tab { padding: 6px 16px; border-radius: var(--ic-radius-sm, 6px); cursor: pointer; font-size: .85rem; border: 1px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 6px; transition: all .15s; user-select: none; }
+        .gp-tab:hover { background: var(--ic-secondary, #D4D5FC); }
+        .gp-tab.active { background: var(--ic-primary, #5458F2); color: #fff; font-weight: 600; }
+        .gp-tab .tab-count { font-size: .75rem; opacity: .7; }
+        .gp-tab-actions { display: none; gap: 2px; margin-left: 4px; }
+        .gp-tab:hover .gp-tab-actions { display: flex; }
+        .gp-tab-btn { background: none; border: none; cursor: pointer; padding: 2px; border-radius: 3px; color: inherit; opacity: .6; font-size: .8rem; }
+        .gp-tab-btn:hover { opacity: 1; background: rgba(0,0,0,.1); }
+        .gp-tab-add { border: 1px dashed #9ca3af; color: #6b7280; padding: 6px 12px; }
+        .gp-tab-add:hover { border-color: var(--ic-primary, #5458F2); color: var(--ic-primary, #5458F2); background: var(--ic-secondary, #D4D5FC); }
+        .gp-tab-input { border: 1px solid var(--ic-primary, #5458F2); border-radius: 4px; padding: 4px 8px; font-size: .85rem; width: 140px; outline: none; }
+
+        /* ── Toolbar ── */
+        .gp-toolbar { padding: 12px 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: #fff; border-bottom: 1px solid #e5e7eb; }
+        .gp-search { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
+        .gp-search input { width: 100%; padding: 7px 12px 7px 34px; border: 1px solid #d1d5db; border-radius: var(--ic-radius-sm, 6px); font-size: .85rem; outline: none; transition: border-color .15s; }
+        .gp-search input:focus { border-color: var(--ic-primary, #5458F2); box-shadow: 0 0 0 3px rgba(84,88,242,.12); }
+        .gp-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
+        .gp-search-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #9ca3af; padding: 2px; }
+        .gp-filter-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .gp-filter-btn { position: relative; padding: 6px 12px; border: 1px solid #d1d5db; border-radius: var(--ic-radius-sm, 6px); background: #fff; cursor: pointer; font-size: .82rem; display: flex; align-items: center; gap: 4px; }
+        .gp-filter-btn:hover { border-color: var(--ic-primary, #5458F2); }
+        .gp-filter-btn.has-filter { border-color: var(--ic-primary, #5458F2); background: rgba(84,88,242,.06); color: var(--ic-primary, #5458F2); }
+        .gp-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: var(--ic-secondary, #D4D5FC); color: var(--ic-primary, #5458F2); border-radius: 12px; font-size: .75rem; font-weight: 500; }
+        .gp-chip-x { cursor: pointer; font-weight: 700; margin-left: 2px; }
+        .gp-expand-btns { display: flex; border: 1px solid #d1d5db; border-radius: var(--ic-radius-sm, 6px); overflow: hidden; margin-left: auto; }
+        .gp-expand-btns button { padding: 5px 10px; border: none; background: #fff; cursor: pointer; font-size: .78rem; border-left: 1px solid #d1d5db; }
+        .gp-expand-btns button:first-child { border-left: none; }
+        .gp-expand-btns button:hover { background: #f3f4f6; }
+
+        /* ── Dropdown Panel ── */
+        .gp-dropdown { position: fixed; z-index: 500; background: #fff; border: 1px solid #e5e7eb; border-radius: var(--ic-radius-md, 10px); box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 6px; min-width: 180px; max-height: 280px; overflow-y: auto; }
+        .gp-dropdown-item { padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: .83rem; display: flex; align-items: center; gap: 8px; }
+        .gp-dropdown-item:hover { background: #f3f4f6; }
+        .gp-dropdown-item.selected { background: rgba(84,88,242,.08); font-weight: 600; }
+        .gp-dropdown-sep { height: 1px; background: #e5e7eb; margin: 4px 0; }
+        .gp-dd-check { width: 16px; height: 16px; border: 1.5px solid #d1d5db; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: .7rem; flex-shrink: 0; }
+        .gp-dd-check.on { background: var(--ic-primary, #5458F2); border-color: var(--ic-primary, #5458F2); color: #fff; }
+
+        /* ── Bulk Action Bar ── */
+        .gp-bulk { padding: 8px 24px; background: var(--ic-primary, #5458F2); color: #fff; display: flex; align-items: center; gap: 12px; font-size: .85rem; }
+        .gp-bulk-count { font-weight: 600; }
+        .gp-bulk button, .gp-bulk select, .gp-bulk input { font-size: .82rem; }
+        .gp-bulk-btn { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 4px 12px; cursor: pointer; }
+        .gp-bulk-btn:hover { background: rgba(255,255,255,.3); }
+        .gp-bulk-btn.danger { background: rgba(239,68,68,.3); border-color: rgba(239,68,68,.5); }
+        .gp-bulk-input { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 4px 10px; color: #fff; outline: none; width: 140px; }
+        .gp-bulk-input::placeholder { color: rgba(255,255,255,.6); }
+
+        /* ── Guide Groups ── */
+        .gp-groups { padding: 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+        .gp-group { background: #fff; border-radius: var(--ic-radius-md, 10px); border: 1px solid #e5e7eb; overflow: hidden; }
+        .gp-ghdr { padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; user-select: none; transition: background .12s; }
+        .gp-ghdr:hover { background: #f9fafb; }
+        .gp-ghdr-chevron { transition: transform .2s; font-size: .9rem; color: #6b7280; flex-shrink: 0; }
+        .gp-ghdr-chevron.open { transform: rotate(90deg); }
+        .gp-ghdr-id { font-weight: 700; font-size: .9rem; color: var(--ic-primary, #5458F2); }
+        .gp-ghdr-name { color: var(--ic-text-muted, #6c757d); font-size: .82rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .gp-ghdr-count { font-size: .75rem; color: #9ca3af; }
+        .gp-progress { width: 100px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+        .gp-progress-fill { height: 100%; background: var(--ic-success, #10b981); border-radius: 3px; transition: width .3s; }
+        .gp-ghdr-pct { font-size: .75rem; font-weight: 600; color: var(--ic-text-muted, #6c757d); min-width: 32px; text-align: right; }
+        .gp-status-dots { display: flex; gap: 4px; }
+        .gp-sdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .gp-ghdr-del { background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; opacity: 0; transition: opacity .15s; }
+        .gp-ghdr:hover .gp-ghdr-del { opacity: 1; }
+        .gp-ghdr-del:hover { color: var(--ic-danger, #ef4444); background: #fee2e2; }
+
+        /* ── Task Table ── */
+        .gp-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+        .gp-table th { background: #f9fafb; padding: 6px 10px; text-align: left; font-weight: 600; font-size: .78rem; color: var(--ic-text-muted, #6c757d); text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+        .gp-table td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+        .gp-table tr:hover td { background: #fafbff; }
+        .gp-table tr.selected td { background: rgba(84,88,242,.04); }
+        .gp-table tr.dragging { opacity: .5; }
+        .gp-drag { cursor: grab; color: #d1d5db; padding: 0 4px; }
+        .gp-drag:active { cursor: grabbing; }
+        .gp-chk { width: 16px; height: 16px; accent-color: var(--ic-primary, #5458F2); cursor: pointer; }
+        .gp-type { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: .72rem; font-weight: 600; text-transform: uppercase; }
+        .gp-type.new { background: #fef3c7; color: #92400e; }
+        .gp-type.update { background: #dbeafe; color: #1e40af; }
+
+        /* ── Status Pill ── */
+        .gp-status { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 12px; font-size: .78rem; font-weight: 500; cursor: pointer; border: none; transition: filter .15s; white-space: nowrap; }
+        .gp-status:hover { filter: brightness(.93); }
+        .gp-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ── Inline Edit ── */
+        .gp-editable { cursor: pointer; padding: 2px 4px; border-radius: 3px; min-height: 22px; transition: background .12s; }
+        .gp-editable:hover { background: #f3f4f6; }
+        .gp-edit-input { width: 100%; padding: 4px 6px; border: 1.5px solid var(--ic-primary, #5458F2); border-radius: 4px; font-size: .83rem; outline: none; font-family: inherit; }
+        .gp-id-group { display: flex; flex-direction: column; gap: 3px; }
+        .gp-id-row { display: flex; align-items: center; gap: 4px; font-size: .78rem; }
+        .gp-id-label { font-weight: 600; color: #9ca3af; min-width: 22px; }
+        .gp-id-val { color: var(--ic-text-muted, #6c757d); }
+        .gp-name-link { color: var(--ic-primary, #5458F2); text-decoration: none; font-weight: 500; }
+        .gp-name-link:hover { text-decoration: underline; }
+        .gp-desc-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--ic-text-muted, #6c757d); font-size: .8rem; }
+        .gp-time { font-family: 'Courier New', monospace; font-size: .8rem; color: var(--ic-text-muted, #6c757d); }
+        .gp-add-step { width: 100%; padding: 6px; border: none; background: none; cursor: pointer; color: #9ca3af; font-size: .82rem; text-align: center; border-top: 1px dashed #e5e7eb; }
+        .gp-add-step:hover { background: #f9fafb; color: var(--ic-primary, #5458F2); }
+
+        /* ── Empty State ── */
+        .gp-empty { text-align: center; padding: 60px 24px; }
+        .gp-empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: .3; }
+        .gp-empty h2 { font-size: 1.2rem; color: var(--ic-text-dark, #323232); margin-bottom: 8px; }
+        .gp-empty p { color: var(--ic-text-muted, #6c757d); margin-bottom: 20px; }
+
+        /* ── Add Form ── */
+        .gp-add-toggle { width: 100%; padding: 14px; border: 2px dashed #d1d5db; border-radius: var(--ic-radius-md, 10px); background: none; cursor: pointer; color: #6b7280; font-size: .9rem; transition: all .15s; }
+        .gp-add-toggle:hover { border-color: var(--ic-primary, #5458F2); color: var(--ic-primary, #5458F2); background: rgba(84,88,242,.03); }
+        .gp-add-panel { background: #fff; border: 1px solid #e5e7eb; border-radius: var(--ic-radius-md, 10px); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+        .gp-add-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .gp-add-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+        .gp-add-field label { font-size: .78rem; font-weight: 600; color: var(--ic-text-muted, #6c757d); }
+        .gp-add-field input, .gp-add-field textarea, .gp-add-field select { padding: 7px 10px; border: 1px solid #d1d5db; border-radius: var(--ic-radius-sm, 6px); font-size: .85rem; outline: none; font-family: inherit; }
+        .gp-add-field input:focus, .gp-add-field textarea:focus { border-color: var(--ic-primary, #5458F2); box-shadow: 0 0 0 3px rgba(84,88,242,.1); }
+        .gp-radio-group { display: flex; gap: 12px; padding: 6px 0; }
+        .gp-radio { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: .85rem; }
+        .gp-add-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+        /* ── Modal Overlay ── */
+        .gp-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 600; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .gp-modal { background: #fff; border-radius: var(--ic-radius-lg, 16px); max-width: 820px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,.18); }
+        .gp-modal-hdr { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid #e5e7eb; }
+        .gp-modal-hdr h2 { font-size: 1.1rem; font-weight: 700; }
+        .gp-modal-close { background: none; border: none; cursor: pointer; font-size: 1.3rem; color: #9ca3af; padding: 4px; }
+        .gp-modal-close:hover { color: var(--ic-text-dark, #323232); }
+        .gp-modal-body { padding: 24px; }
+        .gp-modal-foot { padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 8px; }
+
+        /* ── Import Areas ── */
+        .gp-import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .gp-import-zone { border: 2px dashed #d1d5db; border-radius: var(--ic-radius-md, 10px); padding: 32px; text-align: center; cursor: pointer; transition: all .15s; }
+        .gp-import-zone:hover { border-color: var(--ic-primary, #5458F2); background: rgba(84,88,242,.03); }
+        .gp-import-zone.dragover { border-color: var(--ic-primary, #5458F2); background: rgba(84,88,242,.08); }
+        .gp-import-icon { font-size: 2rem; margin-bottom: 8px; opacity: .5; }
+        .gp-import-zone h3 { font-size: .95rem; margin-bottom: 4px; }
+        .gp-import-zone p { font-size: .8rem; color: var(--ic-text-muted, #6c757d); }
+        .gp-preview-table { width: 100%; border-collapse: collapse; font-size: .8rem; margin-top: 12px; }
+        .gp-preview-table th { background: #f3f4f6; padding: 6px 8px; text-align: left; font-weight: 600; }
+        .gp-preview-table td { padding: 5px 8px; border-bottom: 1px solid #f3f4f6; }
+        .gp-import-mode { display: flex; gap: 16px; margin: 12px 0; }
+        .gp-import-mode label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: .85rem; }
+
+        /* ── Settings ── */
+        .gp-member { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--ic-radius-sm, 6px); }
+        .gp-member:hover { background: #f3f4f6; }
+        .gp-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--ic-secondary, #D4D5FC); color: var(--ic-primary, #5458F2); display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; flex-shrink: 0; }
+        .gp-member-name { flex: 1; font-size: .88rem; }
+        .gp-member-del { background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; }
+        .gp-member-del:hover { color: var(--ic-danger, #ef4444); }
+
+        /* ── Toast ── */
+        .gp-toast-wrap { position: fixed; bottom: 20px; right: 20px; z-index: 900; display: flex; flex-direction: column; gap: 8px; }
+        .gp-toast { padding: 10px 16px; border-radius: var(--ic-radius-sm, 6px); color: #fff; font-size: .85rem; display: flex; align-items: center; gap: 8px; animation: gp-slide-in .25s ease-out; min-width: 240px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+        .gp-toast.success { background: var(--ic-success, #10b981); }
+        .gp-toast.error { background: var(--ic-danger, #ef4444); }
+        .gp-toast.info { background: var(--ic-primary, #5458F2); }
+        .gp-toast-x { margin-left: auto; cursor: pointer; opacity: .7; background: none; border: none; color: #fff; font-size: 1rem; }
+        @keyframes gp-slide-in { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* ── Footer ── */
+        .gp-footer { padding: 12px 24px; text-align: center; font-size: .8rem; color: var(--ic-text-muted, #6c757d); border-top: 1px solid #e5e7eb; background: #fff; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .gp-header { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
+            .gp-header-title { font-size: 1rem; }
+            .gp-tabs { padding: 6px 12px; }
+            .gp-toolbar { padding: 10px 12px; }
+            .gp-groups { padding: 12px; }
+            .gp-import-grid { grid-template-columns: 1fr; }
+            .gp-search { max-width: none; }
+            .gp-ghdr { flex-wrap: wrap; }
+            .gp-progress { width: 60px; }
+            .gp-table { font-size: .78rem; }
+            .gp-table th, .gp-table td { padding: 6px; }
+        }
+        @media (max-width: 480px) {
+            .gp-header-actions { width: 100%; justify-content: flex-end; }
+            .gp-add-row { flex-direction: column; }
+        }
+
+        /* ── Utility ── */
+        .hidden { display: none !important; }
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <div id="toast-root"></div>
+    <script src="../../shared/ic-utils.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        // ================================================================
+        //  CONSTANTS
+        // ================================================================
+        const API_BASE = '../../api/guide-planner';
+        const STORAGE_VERSION = 2;
+        const STATUS_CFG = {
+            not_started: { label: 'Ej startad', bg: '#e5e7eb', text: '#374151', dot: '#9ca3af' },
+            in_progress: { label: 'Pågående',   bg: '#fef3c7', text: '#92400e', dot: '#f59e0b' },
+            bumped:      { label: 'Bumpad',      bg: '#ffedd5', text: '#9a3412', dot: '#f97316' },
+            skipped:     { label: 'Hoppad',      bg: '#fee2e2', text: '#991b1b', dot: '#ef4444' },
+            completed:   { label: 'Klar',        bg: '#d1fae5', text: '#065f46', dot: '#10b981' }
+        };
+        const ALL_STATUSES = ['not_started','in_progress','bumped','skipped','completed'];
+        const COLUMN_MAP = {
+            'sv id':'svId','sv_id':'svId','svid':'svId','swedish id':'svId',
+            'guide-id':'svId','guideid':'svId','guide id':'svId',
+            'namn':'namn','name':'namn','titel':'namn','title':'namn',
+            'kommentar':'description','comment':'description','comments':'description','description':'description',
+            'eng id':'enId','eng_id':'enId','engid':'enId','english id':'enId',
+            'en id':'enId','en_id':'enId','enid':'enId',
+            'no id':'noId','no_id':'noId','noid':'noId','norwegian id':'noId',
+            'task type':'taskType','tasktype':'taskType','task_type':'taskType','type':'taskType',
+            'assignee':'assignee','assigned to':'assignee'
+        };
+
+        // ================================================================
+        //  API LAYER
+        // ================================================================
+        // CSRF token is handled automatically by ic-utils.js global fetch wrapper.
+        // It intercepts POST/PUT/DELETE fetch calls and injects X-CSRF-Token header.
+
+        async function api(path, options = {}) {
+            const url = API_BASE + path;
+            if (!options.headers) options.headers = {};
+            if (!options.headers['Content-Type']) options.headers['Content-Type'] = 'application/json';
+            const resp = await fetch(url, options);
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({ error: 'Request failed' }));
+                throw new Error(err.error || 'HTTP ' + resp.status);
+            }
+            const text = await resp.text();
+            return text ? JSON.parse(text) : {};
+        }
+
+        // ================================================================
+        //  UTILITIES
+        // ================================================================
+        function uid() { return crypto.randomUUID ? crypto.randomUUID() : 'xxxx-xxxx-xxxx'.replace(/x/g, () => ((Math.random()*16)|0).toString(16)); }
+        function nowISO() { return new Date().toISOString(); }
+        function fmtDate(iso) { if (!iso) return ''; try { return new Date(iso).toLocaleDateString('sv-SE'); } catch { return ''; } }
+        function fmtDateTime(iso) { if (!iso) return ''; try { const d = new Date(iso); return d.toLocaleDateString('sv-SE') + ' ' + d.toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'}); } catch { return ''; } }
+        function deriveGuideId(svId) {
+            if (!svId) return '';
+            const parts = svId.split('-');
+            return parts.length > 2 ? parts.slice(0, -1).join('-') : svId;
+        }
+        function calcCompletionTime(start, end) {
+            if (!start || !end) return null;
+            const ms = new Date(end) - new Date(start);
+            if (ms < 0) return null;
+            const s = Math.floor(ms/1000), m = Math.floor(s/60), h = Math.floor(m/60);
+            return h > 0 ? `${h}:${String(m%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}` : `${m}:${String(s%60).padStart(2,'0')}`;
+        }
+        function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+        function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+        // ================================================================
+        //  STATE
+        // ================================================================
+        let state = null;
+        let editing = null;   // { taskId, field } or null
+        let editingIds = null; // taskId or null (expanded ID editing)
+        let openDD = null;    // { type, taskId?, anchor? } or null
+        let addFormOpen = false;
+        let importPreview = null; // { rows, errors, warnings } or null
+        let importMode = 'merge';
+        let renamingTab = null; // projectId or null
+        let addingTab = false;
+        let confirmAction = null; // { msg, fn } or null
+
+        function getActiveProject() {
+            return state.projects.find(p => p.id === state.activeProjectId) || state.projects[0];
+        }
+        function getTasks() { return getActiveProject().data.tasks; }
+        function getAssignees() { return getActiveProject().data.knownAssignees || []; }
+        function setTasks(tasks) { const p = getActiveProject(); p.data.tasks = tasks; p.data.lastModified = nowISO(); }
+
+        function createEmptyProject(name) {
+            return { id: uid(), name, data: { version: STORAGE_VERSION, tasks: [], knownAssignees: [], lastModified: nowISO() } };
+        }
+        function createDefaultState(projectId) {
+            const p = createEmptyProject('Projekt 1');
+            if (projectId) p.id = projectId;
+            return { version: STORAGE_VERSION, activeProjectId: p.id, projects: [p], _ui: defaultUI() };
+        }
+        function defaultUI() {
+            return { selectedIds: new Set(), expandedGroups: new Set(), filters: { search: '', statuses: [], assignees: [] }, sort: { field: 'sortOrder', direction: 'asc' }, importModalOpen: false, settingsModalOpen: false };
+        }
+
+        // ================================================================
+        //  STATUS SIDE EFFECTS
+        // ================================================================
+        function applyStatusFx(task, newStatus) {
+            const now = nowISO();
+            const fx = {};
+            if (newStatus === 'in_progress') {
+                if (!task.startedAt) fx.startedAt = now;
+                fx.completedAt = null; fx.completionTime = null;
+            } else if (newStatus === 'completed') {
+                fx.completedAt = now;
+                fx.completionTime = calcCompletionTime(task.startedAt, now);
+            } else {
+                fx.startedAt = null; fx.completedAt = null; fx.completionTime = null;
+            }
+            return fx;
+        }
+
+        // ================================================================
+        //  REDUCER
+        // ================================================================
+        function dispatch(action) {
+            const ui = state._ui;
+            const proj = getActiveProject();
+            const tasks = proj.data.tasks;
+
+            switch (action.type) {
+                case 'UPDATE_TASK': {
+                    const { id, updates } = action.payload;
+                    const idx = tasks.findIndex(t => t.id === id);
+                    if (idx < 0) break;
+                    const task = tasks[idx];
+                    let merged = { ...updates, updatedAt: nowISO() };
+                    if (updates.status && updates.status !== task.status) {
+                        Object.assign(merged, applyStatusFx(task, updates.status));
+                    }
+                    tasks[idx] = { ...task, ...merged };
+                    updateAssignees();
+                    break;
+                }
+                case 'ADD_TASK': {
+                    tasks.push(action.payload);
+                    updateAssignees();
+                    break;
+                }
+                case 'DELETE_TASKS': {
+                    const ids = new Set(action.payload);
+                    proj.data.tasks = tasks.filter(t => !ids.has(t.id));
+                    ui.selectedIds = new Set([...ui.selectedIds].filter(id => !ids.has(id)));
+                    break;
+                }
+                case 'IMPORT_TASKS': {
+                    const { newTasks, mode } = action.payload;
+                    if (mode === 'replace') {
+                        proj.data.tasks = newTasks;
+                    } else {
+                        const existing = new Map(tasks.map(t => [t.svId, t]));
+                        for (const nt of newTasks) {
+                            const ex = existing.get(nt.svId);
+                            if (ex) {
+                                Object.assign(ex, { namn: nt.namn || ex.namn, description: nt.description || ex.description, enId: nt.enId || ex.enId, noId: nt.noId || ex.noId, updatedAt: nowISO() });
+                            } else {
+                                proj.data.tasks.push(nt);
+                            }
+                        }
+                    }
+                    newTasks.forEach(t => { if (t.guideId) ui.expandedGroups.add(t.guideId); });
+                    updateAssignees();
+                    break;
+                }
+                case 'BULK_UPDATE_STATUS': {
+                    const { ids, status } = action.payload;
+                    for (const id of ids) {
+                        const t = proj.data.tasks.find(x => x.id === id);
+                        if (t) { Object.assign(t, { status, updatedAt: nowISO() }, applyStatusFx(t, status)); }
+                    }
+                    ui.selectedIds.clear();
+                    break;
+                }
+                case 'BULK_UPDATE_ASSIGNEE': {
+                    const { ids, assignee } = action.payload;
+                    for (const id of ids) {
+                        const t = proj.data.tasks.find(x => x.id === id);
+                        if (t) { t.assignee = assignee; t.updatedAt = nowISO(); }
+                    }
+                    ui.selectedIds.clear();
+                    updateAssignees();
+                    break;
+                }
+                case 'REORDER_TASK': {
+                    const { taskId, newIndex, guideId } = action.payload;
+                    const groupTasks = proj.data.tasks.filter(t => t.guideId === guideId).sort((a,b) => a.sortOrder - b.sortOrder);
+                    const task = groupTasks.find(t => t.id === taskId);
+                    if (!task) break;
+                    const filtered = groupTasks.filter(t => t.id !== taskId);
+                    filtered.splice(newIndex, 0, task);
+                    filtered.forEach((t, i) => { t.sortOrder = i; });
+                    break;
+                }
+                case 'TOGGLE_SELECTION':
+                    if (ui.selectedIds.has(action.payload)) ui.selectedIds.delete(action.payload);
+                    else ui.selectedIds.add(action.payload);
+                    break;
+                case 'SELECT_ALL_VISIBLE':
+                    action.payload.forEach(id => ui.selectedIds.add(id));
+                    break;
+                case 'CLEAR_SELECTION':
+                    ui.selectedIds.clear();
+                    break;
+                case 'SET_FILTER':
+                    Object.assign(ui.filters, action.payload);
+                    break;
+                case 'RESET_FILTERS':
+                    ui.filters = { search: '', statuses: [], assignees: [] };
+                    break;
+                case 'SET_SORT':
+                    ui.sort = action.payload;
+                    break;
+                case 'TOGGLE_EXPAND':
+                    if (ui.expandedGroups.has(action.payload)) ui.expandedGroups.delete(action.payload);
+                    else ui.expandedGroups.add(action.payload);
+                    break;
+                case 'EXPAND_ALL':
+                    action.payload.forEach(id => ui.expandedGroups.add(id));
+                    break;
+                case 'COLLAPSE_ALL':
+                    ui.expandedGroups.clear();
+                    break;
+                case 'SWITCH_PROJECT':
+                    state.activeProjectId = action.payload;
+                    Object.assign(ui, defaultUI());
+                    break;
+                case 'ADD_PROJECT': {
+                    const np = createEmptyProject(action.payload);
+                    state.projects.push(np);
+                    state.activeProjectId = np.id;
+                    Object.assign(ui, defaultUI());
+                    break;
+                }
+                case 'RENAME_PROJECT': {
+                    const rp = state.projects.find(p => p.id === action.payload.id);
+                    if (rp) rp.name = action.payload.name;
+                    break;
+                }
+                case 'DELETE_PROJECT': {
+                    if (state.projects.length <= 1) break;
+                    state.projects = state.projects.filter(p => p.id !== action.payload);
+                    if (state.activeProjectId === action.payload) {
+                        state.activeProjectId = state.projects[0].id;
+                        Object.assign(ui, defaultUI());
+                    }
+                    break;
+                }
+                case 'SET_ASSIGNEES':
+                    getActiveProject().data.knownAssignees = action.payload;
+                    break;
+                case 'CLEAR_ALL_DATA':
+                    proj.data.tasks = [];
+                    proj.data.lastModified = nowISO();
+                    ui.selectedIds.clear();
+                    break;
+                case 'SET_IMPORT_MODAL':
+                    ui.importModalOpen = action.payload;
+                    if (!action.payload) importPreview = null;
+                    break;
+                case 'SET_SETTINGS_MODAL':
+                    ui.settingsModalOpen = action.payload;
+                    break;
+            }
+
+            // ── API sync (fire-and-forget with error handling) ──
+            apiSync(action).catch(e => {
+                console.error('API sync failed:', e);
+                showToast('Kunde inte spara ändringen', 'error');
+            });
+
+            render();
+        }
+
+        function updateAssignees() {
+            const proj = getActiveProject();
+            const fromTasks = new Set(proj.data.tasks.map(t => t.assignee).filter(Boolean));
+            const known = new Set(proj.data.knownAssignees || []);
+            fromTasks.forEach(a => known.add(a));
+            proj.data.knownAssignees = [...known].sort();
+        }
+
+        // ================================================================
+        //  API SYNC
+        // ================================================================
+        async function apiSync(action) {
+            const proj = getActiveProject();
+            switch (action.type) {
+                case 'UPDATE_TASK': {
+                    const { id, updates } = action.payload;
+                    await api('/tasks', { method: 'PUT', body: JSON.stringify({ id, ...updates }) });
+                    break;
+                }
+                case 'ADD_TASK': {
+                    const task = action.payload;
+                    const result = await api('/tasks', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            projectId: proj.id,
+                            svId: task.svId, guideId: task.guideId, namn: task.namn,
+                            description: task.description, enId: task.enId, noId: task.noId,
+                            taskType: task.taskType, status: task.status,
+                            assignee: task.assignee, sortOrder: task.sortOrder
+                        })
+                    });
+                    // Update local ID with server ID
+                    const localTask = proj.data.tasks.find(t => t.id === task.id);
+                    if (localTask && result.id) localTask.id = result.id;
+                    render(); // Re-render with correct ID
+                    break;
+                }
+                case 'DELETE_TASKS':
+                    await api('/tasks', { method: 'DELETE', body: JSON.stringify({ ids: action.payload }) });
+                    break;
+                case 'IMPORT_TASKS': {
+                    await api('/tasks/import', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            projectId: proj.id,
+                            tasks: action.payload.newTasks.map(t => ({
+                                svId: t.svId, namn: t.namn, description: t.description,
+                                enId: t.enId, noId: t.noId, taskType: t.taskType, assignee: t.assignee
+                            })),
+                            mode: action.payload.mode
+                        })
+                    });
+                    // Reload tasks from server to get correct IDs
+                    await reloadCurrentProject();
+                    break;
+                }
+                case 'BULK_UPDATE_STATUS':
+                    await api('/tasks/bulk-update', {
+                        method: 'POST',
+                        body: JSON.stringify({ ids: action.payload.ids, status: action.payload.status })
+                    });
+                    // Reload to get server-computed timestamps
+                    await reloadCurrentProject();
+                    break;
+                case 'BULK_UPDATE_ASSIGNEE':
+                    await api('/tasks/bulk-update', {
+                        method: 'POST',
+                        body: JSON.stringify({ ids: action.payload.ids, assignee: action.payload.assignee })
+                    });
+                    break;
+                case 'REORDER_TASK':
+                    await api('/tasks/reorder', {
+                        method: 'POST',
+                        body: JSON.stringify(action.payload)
+                    });
+                    break;
+                case 'ADD_PROJECT': {
+                    const result = await api('/projects', {
+                        method: 'POST',
+                        body: JSON.stringify({ name: action.payload })
+                    });
+                    const newProj = state.projects[state.projects.length - 1];
+                    if (newProj && result.id) {
+                        newProj.id = result.id;
+                        state.activeProjectId = result.id;
+                    }
+                    render();
+                    break;
+                }
+                case 'RENAME_PROJECT':
+                    await api('/projects', {
+                        method: 'PUT',
+                        body: JSON.stringify(action.payload)
+                    });
+                    break;
+                case 'DELETE_PROJECT':
+                    await api('/projects?id=' + action.payload, { method: 'DELETE' });
+                    break;
+                case 'SWITCH_PROJECT': {
+                    try {
+                        const tasks = await api('/tasks?projectId=' + action.payload);
+                        const assignees = await api('/assignees?projectId=' + action.payload);
+                        const p = state.projects.find(pr => pr.id === action.payload);
+                        if (p) {
+                            p.data.tasks = tasks.map(mapTaskFromApi);
+                            p.data.knownAssignees = assignees;
+                        }
+                        render();
+                    } catch (e) {
+                        showToast('Kunde inte ladda projekt', 'error');
+                    }
+                    break;
+                }
+                case 'CLEAR_ALL_DATA': {
+                    // Delete all tasks for this project
+                    const taskIds = proj.data.tasks.map(t => t.id);
+                    if (taskIds.length) {
+                        await api('/tasks', { method: 'DELETE', body: JSON.stringify({ ids: taskIds }) });
+                    }
+                    break;
+                }
+                case 'SET_ASSIGNEES': {
+                    // Sync assignees: delete all and re-add
+                    const currentAssignees = proj.data.knownAssignees || [];
+                    const newAssignees = action.payload;
+                    const projectId = proj.id;
+                    // Find removed
+                    for (const a of currentAssignees) {
+                        if (!newAssignees.includes(a)) {
+                            await api('/assignees?projectId=' + projectId + '&name=' + encodeURIComponent(a), { method: 'DELETE' });
+                        }
+                    }
+                    // Find added
+                    for (const a of newAssignees) {
+                        if (!currentAssignees.includes(a)) {
+                            await api('/assignees', { method: 'POST', body: JSON.stringify({ projectId, name: a }) });
+                        }
+                    }
+                    break;
+                }
+                // UI-only actions need no API call
+                case 'TOGGLE_SELECTION':
+                case 'SELECT_ALL_VISIBLE':
+                case 'CLEAR_SELECTION':
+                case 'SET_FILTER':
+                case 'RESET_FILTERS':
+                case 'SET_SORT':
+                case 'TOGGLE_EXPAND':
+                case 'EXPAND_ALL':
+                case 'COLLAPSE_ALL':
+                case 'SET_IMPORT_MODAL':
+                case 'SET_SETTINGS_MODAL':
+                    break;
+            }
+        }
+
+        async function reloadCurrentProject() {
+            const proj = getActiveProject();
+            try {
+                const tasks = await api('/tasks?projectId=' + proj.id);
+                const assignees = await api('/assignees?projectId=' + proj.id);
+                proj.data.tasks = tasks.map(mapTaskFromApi);
+                proj.data.knownAssignees = assignees;
+                render();
+            } catch (e) {
+                console.error('Failed to reload project:', e);
+            }
+        }
+
+        // ================================================================
+        //  STORAGE (API-backed)
+        // ================================================================
+        async function loadState() {
+            try {
+                const projects = await api('/projects');
+                if (!projects.length) {
+                    const result = await api('/projects', { method: 'POST', body: JSON.stringify({ name: 'Projekt 1' }) });
+                    return createDefaultState(result.id);
+                }
+                const activeProjectId = projects[0].id;
+                const tasks = await api('/tasks?projectId=' + activeProjectId);
+                const assignees = await api('/assignees?projectId=' + activeProjectId);
+
+                return {
+                    version: STORAGE_VERSION,
+                    activeProjectId,
+                    projects: projects.map(p => ({
+                        id: p.id, name: p.name,
+                        data: {
+                            version: STORAGE_VERSION,
+                            tasks: p.id === activeProjectId ? tasks.map(mapTaskFromApi) : [],
+                            knownAssignees: p.id === activeProjectId ? assignees : [],
+                            lastModified: p.updatedAt
+                        }
+                    })),
+                    _ui: defaultUI()
+                };
+            } catch (e) {
+                console.error('Failed to load from API:', e);
+                showToast('Kunde inte ladda data från servern', 'error');
+                return createDefaultState();
+            }
+        }
+
+        function mapTaskFromApi(t) {
+            return {
+                id: t.id,
+                guideId: t.guideId || '',
+                svId: t.svId || '',
+                enId: t.enId || '',
+                noId: t.noId || '',
+                namn: t.namn || '',
+                description: t.description || '',
+                taskType: t.taskType || 'update',
+                status: t.status || 'not_started',
+                assignee: t.assignee || '',
+                sortOrder: t.sortOrder || 0,
+                startedAt: t.startedAt || null,
+                completedAt: t.completedAt || null,
+                completionTime: t.completionTime || null,
+                createdAt: t.createdAt || '',
+                updatedAt: t.updatedAt || '',
+                lockedFields: []
+            };
+        }
+
+        // ================================================================
+        //  IMPORT / EXPORT
+        // ================================================================
+        function normalizeHeader(h) { return COLUMN_MAP[(h||'').toLowerCase().trim()] || null; }
+
+        function parseTSV(text) {
+            const lines = text.trim().split('\n').map(l => l.split('\t'));
+            if (lines.length < 2) return { rows: [], errors: ['Ingen data hittades'], warnings: [] };
+            const headers = lines[0].map(normalizeHeader);
+            const rows = [], warnings = [];
+            for (let i = 1; i < lines.length; i++) {
+                const cells = lines[i];
+                if (cells.join('').trim() === '' || (cells[0]||'').toLowerCase().includes('antal guider')) continue;
+                const row = {};
+                headers.forEach((h, ci) => { if (h) row[h] = (cells[ci] || '').trim(); });
+                if (!row.svId && !row.namn) { warnings.push(`Rad ${i+1}: saknar svId och namn, hoppas över`); continue; }
+                rows.push(row);
+            }
+            return { rows, errors: rows.length === 0 ? ['Inga giltiga rader hittades'] : [], warnings };
+        }
+
+        function parseCSVText(text) {
+            const lines = []; let current = '', inQuote = false;
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (ch === '"') { inQuote = !inQuote; current += ch; }
+                else if ((ch === '\n' || ch === '\r') && !inQuote) {
+                    if (current.trim()) lines.push(current);
+                    current = '';
+                    if (ch === '\r' && text[i+1] === '\n') i++;
+                } else { current += ch; }
+            }
+            if (current.trim()) lines.push(current);
+
+            function splitCSVLine(line) {
+                const cells = []; let cell = '', inQ = false;
+                for (let i = 0; i < line.length; i++) {
+                    const c = line[i];
+                    if (c === '"') { if (inQ && line[i+1] === '"') { cell += '"'; i++; } else inQ = !inQ; }
+                    else if (c === ',' && !inQ) { cells.push(cell.trim()); cell = ''; }
+                    else cell += c;
+                }
+                cells.push(cell.trim());
+                return cells;
+            }
+
+            if (lines.length < 2) return { rows: [], errors: ['Ingen data hittades'], warnings: [] };
+            const headers = splitCSVLine(lines[0]).map(normalizeHeader);
+            const rows = [], warnings = [];
+            for (let i = 1; i < lines.length; i++) {
+                const cells = splitCSVLine(lines[i]);
+                if (cells.join('').trim() === '' || (cells[0]||'').toLowerCase().includes('antal guider')) continue;
+                const row = {};
+                headers.forEach((h, ci) => { if (h) row[h] = (cells[ci] || '').trim(); });
+                if (!row.svId && !row.namn) { warnings.push(`Rad ${i+1}: saknar svId och namn`); continue; }
+                rows.push(row);
+            }
+            return { rows, errors: rows.length === 0 ? ['Inga giltiga rader'] : [], warnings };
+        }
+
+        function importRowsToTasks(rows) {
+            const maxSort = Math.max(0, ...getTasks().map(t => t.sortOrder));
+            return rows.map((r, i) => {
+                const svId = r.svId || '';
+                return {
+                    id: uid(), guideId: deriveGuideId(svId), svId,
+                    namn: r.namn || '', description: r.description || '',
+                    enId: r.enId || '', noId: r.noId || '',
+                    taskType: (r.taskType || '').toLowerCase() === 'new' ? 'new' : 'update',
+                    status: 'not_started', assignee: r.assignee || '',
+                    createdAt: nowISO(), updatedAt: nowISO(),
+                    sortOrder: maxSort + i + 1,
+                    startedAt: null, completedAt: null, completionTime: null,
+                    lockedFields: []
+                };
+            });
+        }
+
+        function exportCSV(tasks) {
+            const cols = ['taskType','namn','svId','enId','noId','status','description','assignee','completionTime'];
+            const headers = ['Typ','Namn','SV ID','EN ID','NO ID','Status','Beskrivning','Tilldelad','Tid'];
+            const csvEsc = v => { const s = String(v||''); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g,'""') + '"' : s; };
+            const lines = [headers.join(',')];
+            tasks.forEach(t => { lines.push(cols.map(c => csvEsc(t[c])).join(',')); });
+            return lines.join('\n');
+        }
+
+        function downloadCSV(tasks, filename) {
+            const csv = exportCSV(tasks);
+            if (typeof ICUtils !== 'undefined' && ICUtils.exportToCSV) {
+                const cols = ['taskType','namn','svId','enId','noId','status','description','assignee','completionTime'];
+                const mapped = tasks.map(t => { const o = {}; cols.forEach(c => o[c] = t[c]||''); return o; });
+                ICUtils.exportToCSV(mapped, filename, ['Typ','Namn','SV ID','EN ID','NO ID','Status','Beskrivning','Tilldelad','Tid']);
+            } else {
+                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+            }
+        }
+
+        // ================================================================
+        //  FILTERING & GROUPING
+        // ================================================================
+        function getFilteredTasks() {
+            const { search, statuses, assignees } = state._ui.filters;
+            const { field, direction } = state._ui.sort;
+            let tasks = [...getTasks()];
+
+            if (search) {
+                const q = search.toLowerCase();
+                tasks = tasks.filter(t => [t.namn,t.svId,t.enId,t.noId,t.description,t.assignee,t.guideId].some(v => (v||'').toLowerCase().includes(q)));
+            }
+            if (statuses.length) tasks = tasks.filter(t => statuses.includes(t.status));
+            if (assignees.length) tasks = tasks.filter(t => assignees.includes(t.assignee));
+
+            const dir = direction === 'asc' ? 1 : -1;
+            tasks.sort((a, b) => {
+                const av = a[field] || '', bv = b[field] || '';
+                if (field === 'sortOrder') return (a.sortOrder - b.sortOrder) * dir;
+                return String(av).localeCompare(String(bv), 'sv') * dir;
+            });
+            return tasks;
+        }
+
+        function getGroupedTasks(tasks) {
+            const map = new Map();
+            tasks.forEach(t => {
+                const gid = t.guideId || t.svId || 'Övriga';
+                if (!map.has(gid)) map.set(gid, []);
+                map.get(gid).push(t);
+            });
+            const groups = [];
+            for (const [guideId, gTasks] of map) {
+                gTasks.sort((a,b) => a.sortOrder - b.sortOrder);
+                groups.push({ guideId, tasks: gTasks, isExpanded: state._ui.expandedGroups.has(guideId) });
+            }
+            groups.sort((a,b) => a.guideId.localeCompare(b.guideId, 'sv'));
+            return groups;
+        }
+
+        // ================================================================
+        //  TOAST
+        // ================================================================
+        let toasts = [];
+        function showToast(message, type) {
+            if (typeof ICUtils !== 'undefined' && ICUtils.showToast) { ICUtils.showToast(message, type); return; }
+            const id = uid();
+            toasts.push({ id, message, type: type || 'info' });
+            renderToasts();
+            setTimeout(() => { toasts = toasts.filter(t => t.id !== id); renderToasts(); }, 4000);
+        }
+        function renderToasts() {
+            const root = document.getElementById('toast-root');
+            root.innerHTML = toasts.length ? `<div class="gp-toast-wrap">${toasts.map(t =>
+                `<div class="gp-toast ${t.type}"><span>${esc(t.message)}</span><button class="gp-toast-x" onclick="this.parentElement.remove()">×</button></div>`
+            ).join('')}</div>` : '';
+        }
+
+        // ================================================================
+        //  RENDERING
+        // ================================================================
+        function render() {
+            const app = document.getElementById('app');
+            const tasks = getTasks();
+            const filtered = getFilteredTasks();
+            const groups = getGroupedTasks(filtered);
+            const sel = state._ui.selectedIds;
+
+            let html = renderHeader(tasks.length);
+            html += renderTabs();
+            if (tasks.length > 0) {
+                html += renderToolbar();
+                if (sel.size > 0) html += renderBulkBar(filtered);
+                html += `<div class="gp-groups">`;
+                if (filtered.length === 0) {
+                    html += `<div class="gp-empty"><div class="gp-empty-icon"><i class="icon-search"></i></div><h2>Inga träffar</h2><p>Inga guider matchar dina filter.</p>
+                        <button class="ic-btn ic-btn-ghost" data-action="reset-filters">Rensa filter</button></div>`;
+                } else {
+                    groups.forEach(g => { html += renderGroup(g); });
+                }
+                html += renderAddForm();
+                html += `</div>`;
+                html += `<div class="gp-footer">${filtered.length} av ${tasks.length} uppgifter</div>`;
+            } else {
+                html += `<div class="gp-groups">`;
+                html += renderEmptyState();
+                html += renderAddForm();
+                html += `</div>`;
+            }
+            app.innerHTML = html;
+
+            if (state._ui.importModalOpen) renderImportModal();
+            if (state._ui.settingsModalOpen) renderSettingsModal();
+            if (confirmAction) renderConfirmModal();
+
+            restoreFocus();
+        }
+
+        function restoreFocus() {
+            if (editing) {
+                const el = document.querySelector(`[data-edit-task="${editing.taskId}"][data-edit-field="${editing.field}"]`);
+                if (el) el.focus();
+            }
+        }
+
+        function renderHeader(count) {
+            return `<div class="gp-header">
+                <div class="gp-header-title"><i class="icon-clipboard-list"></i> Guide Planner</div>
+                ${count ? `<span class="gp-header-count">${count} uppgifter</span>` : ''}
+                <div class="gp-header-actions">
+                    <button class="gp-hdr-btn" data-action="scroll-add" title="Lägg till guide">＋ Lägg till</button>
+                    <button class="gp-hdr-btn" data-action="open-import" title="Importera data"><i class="icon-download1"></i> Importera</button>
+                    ${count ? `<button class="gp-hdr-btn" data-action="export-csv" title="Exportera CSV"><i class="icon-upload"></i> Exportera</button>` : ''}
+                    <button class="gp-hdr-btn" data-action="open-settings" title="Inställningar"><i class="icon-cog1"></i> Team</button>
+                    ${count ? `<button class="gp-hdr-btn danger" data-action="clear-all" title="Rensa alla"><i class="icon-trash"></i> Rensa</button>` : ''}
+                </div>
+            </div>`;
+        }
+
+        function renderTabs() {
+            let html = `<div class="gp-tabs">`;
+            state.projects.forEach(p => {
+                const active = p.id === state.activeProjectId;
+                const tc = p.data.tasks.length;
+                if (renamingTab === p.id) {
+                    html += `<div class="gp-tab active"><input class="gp-tab-input" data-action="rename-tab-input" data-pid="${p.id}" value="${esc(p.name)}" autofocus></div>`;
+                } else {
+                    html += `<div class="gp-tab ${active?'active':''}" data-action="switch-tab" data-pid="${p.id}">
+                        ${esc(p.name)} <span class="tab-count">(${tc})</span>
+                        <span class="gp-tab-actions">
+                            <button class="gp-tab-btn" data-action="rename-tab" data-pid="${p.id}" title="Byt namn">✏</button>
+                            ${state.projects.length > 1 ? `<button class="gp-tab-btn" data-action="delete-tab" data-pid="${p.id}" title="Ta bort">×</button>` : ''}
+                        </span>
+                    </div>`;
+                }
+            });
+            if (addingTab) {
+                html += `<div class="gp-tab"><input class="gp-tab-input" data-action="add-tab-input" placeholder="Projektnamn..." autofocus></div>`;
+            } else {
+                html += `<div class="gp-tab gp-tab-add" data-action="start-add-tab">＋ Nytt projekt</div>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function renderToolbar() {
+            const f = state._ui.filters;
+            const hasFilters = f.search || f.statuses.length || f.assignees.length;
+            let html = `<div class="gp-toolbar">
+                <div class="gp-search">
+                    <span class="gp-search-icon"><i class="icon-search"></i></span>
+                    <input type="text" placeholder="Sök guider..." value="${esc(f.search)}" data-action="search-input">
+                    ${f.search ? `<button class="gp-search-clear" data-action="clear-search">×</button>` : ''}
+                </div>
+                <div class="gp-filter-group">
+                    <button class="gp-filter-btn ${f.statuses.length?'has-filter':''}" data-action="toggle-dd" data-dd="status-filter">
+                        Status ${f.statuses.length ? `(${f.statuses.length})` : '▾'}
+                    </button>
+                    <button class="gp-filter-btn ${f.assignees.length?'has-filter':''}" data-action="toggle-dd" data-dd="assignee-filter">
+                        Tilldelad ${f.assignees.length ? `(${f.assignees.length})` : '▾'}
+                    </button>`;
+            // Active filter chips
+            f.statuses.forEach(s => {
+                html += `<span class="gp-chip">${STATUS_CFG[s].label} <span class="gp-chip-x" data-action="remove-status-filter" data-val="${s}">×</span></span>`;
+            });
+            f.assignees.forEach(a => {
+                html += `<span class="gp-chip">${esc(a)} <span class="gp-chip-x" data-action="remove-assignee-filter" data-val="${esc(a)}">×</span></span>`;
+            });
+            if (hasFilters) html += `<button class="gp-filter-btn" data-action="reset-filters" style="color:var(--ic-danger);border-color:var(--ic-danger)">Rensa filter</button>`;
+            html += `</div>`;
+            html += `<div class="gp-expand-btns">
+                <button data-action="expand-all" title="Expandera alla">▼ Alla</button>
+                <button data-action="collapse-all" title="Fäll ihop alla">▲ Alla</button>
+            </div></div>`;
+            return html;
+        }
+
+        function renderBulkBar(filtered) {
+            const n = state._ui.selectedIds.size;
+            return `<div class="gp-bulk">
+                <span class="gp-bulk-count">${n} markerade</span>
+                <select class="gp-bulk-btn" data-action="bulk-status">
+                    <option value="">Ändra status...</option>
+                    ${ALL_STATUSES.map(s => `<option value="${s}">${STATUS_CFG[s].label}</option>`).join('')}
+                </select>
+                <input class="gp-bulk-input" placeholder="Tilldela..." data-action="bulk-assignee-input">
+                <button class="gp-bulk-btn danger" data-action="bulk-delete"><i class="icon-trash"></i> Ta bort</button>
+                <button class="gp-bulk-btn" data-action="clear-selection" style="margin-left:auto;">✕ Avmarkera</button>
+            </div>`;
+        }
+
+        function renderGroup(g) {
+            const tasks = g.tasks;
+            const completed = tasks.filter(t => t.status === 'completed').length;
+            const pct = tasks.length ? Math.round(completed / tasks.length * 100) : 0;
+            const firstName = tasks[0]?.namn || '';
+
+            // Status dots summary
+            const counts = {};
+            tasks.forEach(t => { counts[t.status] = (counts[t.status]||0) + 1; });
+            let dots = '';
+            ALL_STATUSES.forEach(s => {
+                if (counts[s]) dots += `<span class="gp-sdot" style="background:${STATUS_CFG[s].dot}" title="${STATUS_CFG[s].label}: ${counts[s]}"></span>`;
+            });
+
+            let html = `<div class="gp-group" data-gid="${esc(g.guideId)}">
+                <div class="gp-ghdr" data-action="toggle-group" data-gid="${esc(g.guideId)}">
+                    <span class="gp-ghdr-chevron ${g.isExpanded?'open':''}">▶</span>
+                    <span class="gp-ghdr-id">${esc(g.guideId)}</span>
+                    <span class="gp-ghdr-name">${esc(firstName)}</span>
+                    <span class="gp-ghdr-count">${tasks.length} st</span>
+                    <div class="gp-progress"><div class="gp-progress-fill" style="width:${pct}%"></div></div>
+                    <span class="gp-ghdr-pct">${pct}%</span>
+                    <div class="gp-status-dots">${dots}</div>
+                    <button class="gp-ghdr-del" data-action="delete-group" data-gid="${esc(g.guideId)}" title="Ta bort grupp"><i class="icon-trash"></i></button>
+                </div>`;
+            if (g.isExpanded) {
+                html += renderTaskTable(g);
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function renderTaskTable(g) {
+            const sel = state._ui.selectedIds;
+            const allSel = g.tasks.every(t => sel.has(t.id));
+            const someSel = !allSel && g.tasks.some(t => sel.has(t.id));
+            let html = `<table class="gp-table">
+                <thead><tr>
+                    <th style="width:30px"></th>
+                    <th style="width:30px"><input type="checkbox" class="gp-chk" data-action="select-all-group" data-gid="${esc(g.guideId)}" ${allSel?'checked':''} ${someSel?'data-indeterminate="true"':''}></th>
+                    <th style="width:60px">Typ</th>
+                    <th>Namn</th>
+                    <th style="width:180px">ID</th>
+                    <th style="width:110px">Status</th>
+                    <th>Beskrivning</th>
+                    <th style="width:120px">Tilldelad</th>
+                    <th style="width:70px">Tid</th>
+                </tr></thead>
+                <tbody>`;
+            g.tasks.forEach((t, idx) => { html += renderTaskRow(t, idx, g.guideId); });
+            html += `</tbody></table>
+                <button class="gp-add-step" data-action="add-step" data-gid="${esc(g.guideId)}">＋ Lägg till steg</button>`;
+            return html;
+        }
+
+        function renderTaskRow(t, idx, guideId) {
+            const selected = state._ui.selectedIds.has(t.id);
+            const isEditingIds = editingIds === t.id;
+
+            // Name cell
+            let nameCell;
+            if (editing && editing.taskId === t.id && editing.field === 'namn') {
+                nameCell = `<input class="gp-edit-input" data-edit-task="${t.id}" data-edit-field="namn" value="${esc(t.namn)}">`;
+            } else {
+                const href = t.guideId ? `https://support.infocaption.com/${t.guideId}.guide` : '#';
+                nameCell = t.namn
+                    ? `<a class="gp-name-link" href="${href}" target="_blank" title="Öppna guide">${esc(t.namn)}</a>`
+                    : `<span class="gp-editable" data-action="start-edit" data-tid="${t.id}" data-field="namn" style="color:#9ca3af;font-style:italic">Klicka för att namnge...</span>`;
+            }
+
+            // ID cell
+            let idCell;
+            if (isEditingIds) {
+                idCell = `<div class="gp-id-group">
+                    <div class="gp-id-row"><span class="gp-id-label">SV</span><input class="gp-edit-input" data-edit-task="${t.id}" data-edit-field="svId" value="${esc(t.svId)}" style="flex:1"></div>
+                    <div class="gp-id-row"><span class="gp-id-label">EN</span><input class="gp-edit-input" data-edit-task="${t.id}" data-edit-field="enId" value="${esc(t.enId)}" style="flex:1"></div>
+                    <div class="gp-id-row"><span class="gp-id-label">NO</span><input class="gp-edit-input" data-edit-task="${t.id}" data-edit-field="noId" value="${esc(t.noId)}" style="flex:1"></div>
+                </div>`;
+            } else {
+                const ids = [t.svId && `SV`, t.enId && `EN`, t.noId && `NO`].filter(Boolean);
+                idCell = `<div class="gp-editable" data-action="edit-ids" data-tid="${t.id}" title="${esc([t.svId,t.enId,t.noId].filter(Boolean).join(' / '))}">
+                    ${ids.length ? ids.join(' / ') : '<span style="color:#d1d5db">—</span>'}
+                </div>`;
+            }
+
+            // Description cell
+            let descCell;
+            if (editing && editing.taskId === t.id && editing.field === 'description') {
+                descCell = `<textarea class="gp-edit-input" data-edit-task="${t.id}" data-edit-field="description" rows="2">${esc(t.description)}</textarea>`;
+            } else {
+                descCell = t.description
+                    ? `<div class="gp-desc-clamp gp-editable" data-action="start-edit" data-tid="${t.id}" data-field="description">${esc(t.description)}</div>`
+                    : `<span class="gp-editable" data-action="start-edit" data-tid="${t.id}" data-field="description" style="color:#d1d5db;font-style:italic">—</span>`;
+            }
+
+            // Status pill
+            const sc = STATUS_CFG[t.status];
+            const statusPill = `<button class="gp-status" style="background:${sc.bg};color:${sc.text}" data-action="toggle-dd" data-dd="status" data-tid="${t.id}">
+                <span class="gp-status-dot" style="background:${sc.dot}"></span>${sc.label}
+            </button>`;
+
+            // Assignee
+            let assigneeCell;
+            if (editing && editing.taskId === t.id && editing.field === 'assignee') {
+                assigneeCell = `<input class="gp-edit-input" data-edit-task="${t.id}" data-edit-field="assignee" value="${esc(t.assignee)}" placeholder="Namn...">`;
+            } else {
+                const initials = t.assignee ? t.assignee.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) : '';
+                assigneeCell = `<div class="gp-editable" data-action="toggle-dd" data-dd="assignee" data-tid="${t.id}" style="display:flex;align-items:center;gap:6px">
+                    ${t.assignee ? `<span class="gp-avatar">${esc(initials)}</span><span>${esc(t.assignee)}</span>` : '<span style="color:#d1d5db">Ej tilldelad</span>'}
+                </div>`;
+            }
+
+            return `<tr class="${selected?'selected':''}" draggable="true" data-tid="${t.id}" data-gid="${esc(guideId)}" data-idx="${idx}">
+                <td><span class="gp-drag" title="Dra för att flytta">☰</span></td>
+                <td><input type="checkbox" class="gp-chk" data-action="toggle-select" data-tid="${t.id}" ${selected?'checked':''}></td>
+                <td><span class="gp-type ${t.taskType}">${t.taskType === 'new' ? 'Ny' : 'Upd'}</span></td>
+                <td>${nameCell}</td>
+                <td>${idCell}</td>
+                <td>${statusPill}</td>
+                <td>${descCell}</td>
+                <td>${assigneeCell}</td>
+                <td><span class="gp-time">${t.completionTime || ''}</span></td>
+            </tr>`;
+        }
+
+        function renderAddForm() {
+            if (!addFormOpen) {
+                return `<button class="gp-add-toggle" data-action="toggle-add-form">＋ Lägg till ny guide</button>`;
+            }
+            return `<div class="gp-add-panel" id="add-form">
+                <div class="gp-add-row">
+                    <div class="gp-add-field"><label>Guide-ID (SV)</label><input id="af-svid" placeholder="t.ex. SV-1234-01"></div>
+                    <div class="gp-add-field"><label>Guidens namn</label><input id="af-namn" placeholder="Valfritt"></div>
+                    <div class="gp-add-field"><label>Typ</label>
+                        <div class="gp-radio-group">
+                            <label class="gp-radio"><input type="radio" name="af-type" value="update" checked> Uppdatering</label>
+                            <label class="gp-radio"><input type="radio" name="af-type" value="new"> Ny</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="gp-add-field"><label>Beskrivning</label><textarea id="af-desc" rows="2" placeholder="Valfritt"></textarea></div>
+                <div class="gp-add-actions">
+                    <button class="ic-btn ic-btn-ghost" data-action="toggle-add-form">Avbryt</button>
+                    <button class="ic-btn ic-btn-primary" data-action="submit-add-form">Lägg till</button>
+                </div>
+            </div>`;
+        }
+
+        function renderEmptyState() {
+            return `<div class="gp-empty">
+                <div class="gp-empty-icon"><i class="icon-clipboard-list"></i></div>
+                <h2>Inga guider importerade ännu</h2>
+                <p>Importera data från Excel/CSV eller lägg till guider manuellt.</p>
+                <button class="ic-btn ic-btn-primary" data-action="open-import" style="font-size:1rem;padding:10px 24px"><i class="icon-download1"></i> Importera data</button>
+            </div>`;
+        }
+
+        // ── Modals ──
+        function renderImportModal() {
+            const el = document.createElement('div');
+            el.id = 'import-modal-wrap';
+            let body;
+            if (!importPreview) {
+                body = `<div class="gp-import-grid">
+                    <div class="gp-import-zone" data-action="clipboard-import">
+                        <div class="gp-import-icon"><i class="icon-clipboard-list"></i></div>
+                        <h3>Klistra in från urklipp</h3>
+                        <p>Kopiera från Excel och klicka här</p>
+                    </div>
+                    <div class="gp-import-zone" data-action="file-import-zone" id="file-drop-zone">
+                        <div class="gp-import-icon"><i class="icon-folder"></i></div>
+                        <h3>Ladda upp fil</h3>
+                        <p>CSV eller TSV. Dra hit eller klicka.</p>
+                        <input type="file" accept=".csv,.tsv,.txt" style="display:none" id="file-input">
+                    </div>
+                </div>`;
+            } else {
+                const ip = importPreview;
+                body = '';
+                if (ip.errors.length) body += `<div class="ic-alert ic-alert-warning" style="margin-bottom:12px">${ip.errors.map(esc).join('<br>')}</div>`;
+                if (ip.warnings.length) body += `<div class="ic-alert ic-alert-info" style="margin-bottom:12px">${ip.warnings.map(esc).join('<br>')}</div>`;
+                if (ip.rows.length) {
+                    body += `<p style="margin-bottom:8px;font-weight:600">${ip.rows.length} rader redo att importeras</p>`;
+                    body += `<div class="gp-import-mode">
+                        <label><input type="radio" name="imp-mode" value="merge" ${importMode==='merge'?'checked':''}> Sammanfoga (uppdatera befintliga)</label>
+                        <label><input type="radio" name="imp-mode" value="replace" ${importMode==='replace'?'checked':''}> Ersätt allt</label>
+                    </div>`;
+                    body += `<div style="max-height:300px;overflow:auto"><table class="gp-preview-table"><thead><tr><th>Typ</th><th>Namn</th><th>SV</th><th>EN</th><th>NO</th><th>Beskrivning</th></tr></thead><tbody>`;
+                    ip.rows.slice(0, 20).forEach(r => {
+                        body += `<tr><td>${esc(r.taskType||'update')}</td><td>${esc(r.namn||'')}</td><td>${esc(r.svId||'')}</td><td>${esc(r.enId||'')}</td><td>${esc(r.noId||'')}</td><td>${esc((r.description||'').slice(0,60))}</td></tr>`;
+                    });
+                    if (ip.rows.length > 20) body += `<tr><td colspan="6" style="color:#9ca3af;text-align:center">...och ${ip.rows.length-20} till</td></tr>`;
+                    body += `</tbody></table></div>`;
+                }
+            }
+            el.innerHTML = `<div class="gp-overlay" data-action="close-modal" data-modal="import">
+                <div class="gp-modal">
+                    <div class="gp-modal-hdr"><h2>Importera data</h2><button class="gp-modal-close" data-action="close-import">×</button></div>
+                    <div class="gp-modal-body">${body}</div>
+                    ${importPreview && importPreview.rows.length ? `<div class="gp-modal-foot">
+                        <button class="ic-btn ic-btn-ghost" data-action="import-back">← Tillbaka</button>
+                        <button class="ic-btn ic-btn-primary" data-action="do-import">Importera ${importPreview.rows.length} rader</button>
+                    </div>` : ''}
+                </div>
+            </div>`;
+            document.body.appendChild(el);
+        }
+
+        function renderSettingsModal() {
+            const assignees = getAssignees();
+            const el = document.createElement('div');
+            el.id = 'settings-modal-wrap';
+            let list = assignees.map(a => {
+                const ini = a.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+                return `<div class="gp-member"><span class="gp-avatar">${esc(ini)}</span><span class="gp-member-name">${esc(a)}</span><button class="gp-member-del" data-action="remove-assignee" data-name="${esc(a)}">×</button></div>`;
+            }).join('');
+            if (!assignees.length) list = '<p style="color:#9ca3af;padding:12px">Inga teammedlemmar ännu.</p>';
+
+            el.innerHTML = `<div class="gp-overlay" data-action="close-modal" data-modal="settings">
+                <div class="gp-modal" style="max-width:480px">
+                    <div class="gp-modal-hdr"><h2>Teammedlemmar</h2><button class="gp-modal-close" data-action="close-settings">×</button></div>
+                    <div class="gp-modal-body">
+                        <div style="margin-bottom:16px">${list}</div>
+                        <div style="display:flex;gap:8px">
+                            <input class="ic-input" id="new-assignee-input" placeholder="Lägg till person..." style="flex:1">
+                            <button class="ic-btn ic-btn-primary" data-action="add-assignee">Lägg till</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            document.body.appendChild(el);
+        }
+
+        function renderConfirmModal() {
+            const el = document.createElement('div');
+            el.id = 'confirm-modal-wrap';
+            el.innerHTML = `<div class="gp-overlay" data-action="close-confirm">
+                <div class="gp-modal" style="max-width:400px">
+                    <div class="gp-modal-hdr"><h2>Bekräfta</h2></div>
+                    <div class="gp-modal-body"><p>${confirmAction.msg}</p></div>
+                    <div class="gp-modal-foot">
+                        <button class="ic-btn ic-btn-ghost" data-action="confirm-cancel">Avbryt</button>
+                        <button class="ic-btn ic-btn-danger" data-action="confirm-ok">Bekräfta</button>
+                    </div>
+                </div>
+            </div>`;
+            document.body.appendChild(el);
+        }
+
+        function renderDropdown(anchorEl, items, ddId) {
+            closeDropdowns();
+            const rect = anchorEl.getBoundingClientRect();
+            const dd = document.createElement('div');
+            dd.className = 'gp-dropdown';
+            dd.id = 'active-dropdown';
+            dd.dataset.ddId = ddId;
+
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const top = spaceBelow > 200 ? rect.bottom + 4 : rect.top - 4;
+            const placeAbove = spaceBelow <= 200;
+            dd.style.left = rect.left + 'px';
+            dd.style.top = placeAbove ? 'auto' : (rect.bottom + 4) + 'px';
+            if (placeAbove) dd.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+
+            dd.innerHTML = items;
+            document.body.appendChild(dd);
+        }
+
+        function closeDropdowns() {
+            const dd = document.getElementById('active-dropdown');
+            if (dd) dd.remove();
+            openDD = null;
+        }
+
+        // ================================================================
+        //  EVENT HANDLING
+        // ================================================================
+        function setupEvents() {
+            const app = document.getElementById('app');
+
+            // ── Click delegation ──
+            app.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-action]');
+                if (!btn) {
+                    // Click on editable to start edit
+                    const editable = e.target.closest('.gp-editable[data-action="start-edit"]');
+                    if (editable) {
+                        editing = { taskId: parseInt(editable.dataset.tid, 10), field: editable.dataset.field };
+                        render();
+                        return;
+                    }
+                    return;
+                }
+                const action = btn.dataset.action;
+                const tid = btn.dataset.tid != null ? parseInt(btn.dataset.tid, 10) : undefined;
+                const gid = btn.dataset.gid;
+                const pid = btn.dataset.pid != null ? parseInt(btn.dataset.pid, 10) : undefined;
+
+                switch (action) {
+                    case 'scroll-add':
+                        addFormOpen = true;
+                        render();
+                        const af = document.getElementById('add-form') || document.querySelector('.gp-add-toggle');
+                        if (af) af.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        break;
+                    case 'open-import':
+                        dispatch({ type: 'SET_IMPORT_MODAL', payload: true });
+                        break;
+                    case 'export-csv': {
+                        const tasks = getFilteredTasks();
+                        downloadCSV(tasks, 'guide-tasks.csv');
+                        showToast(`Exporterade ${tasks.length} uppgifter`, 'success');
+                        break;
+                    }
+                    case 'open-settings':
+                        dispatch({ type: 'SET_SETTINGS_MODAL', payload: true });
+                        break;
+                    case 'clear-all':
+                        confirmAction = { msg: 'Vill du verkligen rensa alla uppgifter i detta projekt?', fn: () => dispatch({ type: 'CLEAR_ALL_DATA' }) };
+                        render();
+                        break;
+                    case 'switch-tab':
+                        if (pid !== state.activeProjectId) dispatch({ type: 'SWITCH_PROJECT', payload: pid });
+                        break;
+                    case 'rename-tab':
+                        e.stopPropagation();
+                        renamingTab = pid;
+                        render();
+                        break;
+                    case 'delete-tab':
+                        e.stopPropagation();
+                        confirmAction = { msg: `Ta bort projektet "${state.projects.find(p=>p.id===pid)?.name}"?`, fn: () => { dispatch({ type: 'DELETE_PROJECT', payload: pid }); showToast('Projekt borttaget', 'success'); } };
+                        render();
+                        break;
+                    case 'start-add-tab':
+                        addingTab = true;
+                        render();
+                        break;
+                    case 'toggle-group':
+                        dispatch({ type: 'TOGGLE_EXPAND', payload: gid });
+                        break;
+                    case 'delete-group':
+                        e.stopPropagation();
+                        confirmAction = { msg: `Ta bort alla uppgifter i gruppen "${gid}"?`, fn: () => {
+                            const ids = getTasks().filter(t => t.guideId === gid).map(t => t.id);
+                            dispatch({ type: 'DELETE_TASKS', payload: ids });
+                            showToast(`Grupp ${gid} borttagen`, 'success');
+                        }};
+                        render();
+                        break;
+                    case 'toggle-select':
+                        dispatch({ type: 'TOGGLE_SELECTION', payload: tid });
+                        break;
+                    case 'select-all-group': {
+                        const group = getTasks().filter(t => t.guideId === gid);
+                        const allSel = group.every(t => state._ui.selectedIds.has(t.id));
+                        if (allSel) group.forEach(t => state._ui.selectedIds.delete(t.id));
+                        else group.forEach(t => state._ui.selectedIds.add(t.id));
+                        render();
+                        break;
+                    }
+                    case 'edit-ids':
+                        editingIds = tid;
+                        render();
+                        break;
+                    case 'toggle-dd': {
+                        const ddType = btn.dataset.dd;
+                        if (openDD && openDD.type === ddType && openDD.taskId === tid) { closeDropdowns(); return; }
+                        openDD = { type: ddType, taskId: tid };
+                        handleDropdownOpen(btn, ddType, tid);
+                        break;
+                    }
+                    case 'reset-filters':
+                        dispatch({ type: 'RESET_FILTERS' });
+                        break;
+                    case 'clear-search':
+                        dispatch({ type: 'SET_FILTER', payload: { search: '' } });
+                        break;
+                    case 'expand-all': {
+                        const gids = getGroupedTasks(getFilteredTasks()).map(g => g.guideId);
+                        dispatch({ type: 'EXPAND_ALL', payload: gids });
+                        break;
+                    }
+                    case 'collapse-all':
+                        dispatch({ type: 'COLLAPSE_ALL' });
+                        break;
+                    case 'clear-selection':
+                        dispatch({ type: 'CLEAR_SELECTION' });
+                        break;
+                    case 'bulk-delete':
+                        confirmAction = { msg: `Ta bort ${state._ui.selectedIds.size} markerade uppgifter?`, fn: () => {
+                            dispatch({ type: 'DELETE_TASKS', payload: [...state._ui.selectedIds] });
+                            showToast('Uppgifter borttagna', 'success');
+                        }};
+                        render();
+                        break;
+                    case 'toggle-add-form':
+                        addFormOpen = !addFormOpen;
+                        render();
+                        break;
+                    case 'submit-add-form':
+                        handleAddFormSubmit();
+                        break;
+                    case 'add-step':
+                        handleAddStep(gid);
+                        break;
+                    // Filter chip removal
+                    case 'remove-status-filter': {
+                        const val = btn.dataset.val;
+                        dispatch({ type: 'SET_FILTER', payload: { statuses: state._ui.filters.statuses.filter(s => s !== val) } });
+                        break;
+                    }
+                    case 'remove-assignee-filter': {
+                        const val = btn.dataset.val;
+                        dispatch({ type: 'SET_FILTER', payload: { assignees: state._ui.filters.assignees.filter(a => a !== val) } });
+                        break;
+                    }
+                }
+            });
+
+            // ── Change events (selects) ──
+            app.addEventListener('change', (e) => {
+                if (e.target.dataset.action === 'bulk-status' && e.target.value) {
+                    dispatch({ type: 'BULK_UPDATE_STATUS', payload: { ids: [...state._ui.selectedIds], status: e.target.value } });
+                    showToast('Status uppdaterad', 'success');
+                }
+            });
+
+            // ── Input events (search, etc.) ──
+            app.addEventListener('input', (e) => {
+                if (e.target.dataset.action === 'search-input') {
+                    dispatch({ type: 'SET_FILTER', payload: { search: e.target.value } });
+                }
+            });
+
+            // ── Keydown for inline editing ──
+            app.addEventListener('keydown', (e) => {
+                const el = e.target;
+                // Inline edit save/cancel
+                if (el.dataset.editTask) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        saveInlineEdit(el);
+                    } else if (e.key === 'Escape') {
+                        editing = null;
+                        editingIds = null;
+                        render();
+                    } else if (e.key === 'Tab' && editingIds) {
+                        // Tab through ID fields
+                        const fields = ['svId', 'enId', 'noId'];
+                        const idx = fields.indexOf(el.dataset.editField);
+                        if (idx >= 0 && idx < fields.length - 1) {
+                            e.preventDefault();
+                            saveInlineEdit(el, true);
+                            const next = document.querySelector(`[data-edit-task="${el.dataset.editTask}"][data-edit-field="${fields[idx+1]}"]`);
+                            if (next) next.focus();
+                        } else if (idx === fields.length - 1) {
+                            saveInlineEdit(el);
+                            editingIds = null;
+                            render();
+                        }
+                    }
+                }
+                // Tab rename input
+                if (el.dataset.action === 'rename-tab-input' && e.key === 'Enter') {
+                    const name = el.value.trim();
+                    if (name) dispatch({ type: 'RENAME_PROJECT', payload: { id: parseInt(el.dataset.pid, 10), name } });
+                    renamingTab = null;
+                    render();
+                }
+                if (el.dataset.action === 'rename-tab-input' && e.key === 'Escape') {
+                    renamingTab = null;
+                    render();
+                }
+                // Add tab input
+                if (el.dataset.action === 'add-tab-input' && e.key === 'Enter') {
+                    const name = el.value.trim();
+                    if (name) { dispatch({ type: 'ADD_PROJECT', payload: name }); showToast(`Projekt "${name}" skapat`, 'success'); }
+                    addingTab = false;
+                    render();
+                }
+                if (el.dataset.action === 'add-tab-input' && e.key === 'Escape') {
+                    addingTab = false;
+                    render();
+                }
+                // Bulk assignee
+                if (el.dataset.action === 'bulk-assignee-input' && e.key === 'Enter') {
+                    const name = el.value.trim();
+                    if (name) {
+                        dispatch({ type: 'BULK_UPDATE_ASSIGNEE', payload: { ids: [...state._ui.selectedIds], assignee: name } });
+                        showToast(`Tilldelad ${name}`, 'success');
+                    }
+                }
+                // Settings: add assignee
+                if (el.id === 'new-assignee-input' && e.key === 'Enter') {
+                    const name = el.value.trim();
+                    if (name && !getAssignees().includes(name)) {
+                        dispatch({ type: 'SET_ASSIGNEES', payload: [...getAssignees(), name].sort() });
+                        el.value = '';
+                        showToast(`${name} tillagd`, 'success');
+                    }
+                }
+                // Import mode radio
+                if (el.name === 'imp-mode') importMode = el.value;
+            });
+
+            // ── Blur for inline editing ──
+            app.addEventListener('focusout', (e) => {
+                const el = e.target;
+                if (el.dataset.editTask && !el.dataset.editField?.match(/^(svId|enId|noId)$/ ) || (el.dataset.editTask && !editingIds)) {
+                    if (el.dataset.editTask) {
+                        setTimeout(() => {
+                            // Check if focus moved to another edit field of the same task (for ID group)
+                            const active = document.activeElement;
+                            if (active && active.dataset && active.dataset.editTask === el.dataset.editTask) return;
+                            saveInlineEdit(el);
+                            editing = null;
+                            editingIds = null;
+                            render();
+                        }, 100);
+                    }
+                }
+            });
+
+            // ── Drag and drop ──
+            let dragData = null;
+            app.addEventListener('dragstart', (e) => {
+                const row = e.target.closest('tr[data-tid]');
+                if (!row) return;
+                dragData = { taskId: parseInt(row.dataset.tid, 10), guideId: row.dataset.gid, idx: parseInt(row.dataset.idx, 10) };
+                row.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', row.dataset.tid);
+            });
+            app.addEventListener('dragover', (e) => {
+                const row = e.target.closest('tr[data-tid]');
+                if (!row || !dragData || row.dataset.gid !== dragData.guideId) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const rect = row.getBoundingClientRect();
+                const mid = rect.top + rect.height / 2;
+                row.style.borderTop = e.clientY < mid ? '2px solid var(--ic-primary)' : '';
+                row.style.borderBottom = e.clientY >= mid ? '2px solid var(--ic-primary)' : '';
+            });
+            app.addEventListener('dragleave', (e) => {
+                const row = e.target.closest('tr[data-tid]');
+                if (row) { row.style.borderTop = ''; row.style.borderBottom = ''; }
+            });
+            app.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const row = e.target.closest('tr[data-tid]');
+                if (!row || !dragData || row.dataset.gid !== dragData.guideId) return;
+                row.style.borderTop = ''; row.style.borderBottom = '';
+                const newIdx = parseInt(row.dataset.idx, 10);
+                if (newIdx !== dragData.idx) {
+                    dispatch({ type: 'REORDER_TASK', payload: { taskId: dragData.taskId, newIndex: newIdx, guideId: dragData.guideId } });
+                }
+                dragData = null;
+            });
+            app.addEventListener('dragend', () => {
+                document.querySelectorAll('tr.dragging').forEach(r => r.classList.remove('dragging'));
+                document.querySelectorAll('tr[data-tid]').forEach(r => { r.style.borderTop = ''; r.style.borderBottom = ''; });
+                dragData = null;
+            });
+
+            // ── Global: click outside to close dropdowns/modals ──
+            document.addEventListener('click', (e) => {
+                // Close dropdowns
+                const dd = document.getElementById('active-dropdown');
+                if (dd && !dd.contains(e.target) && !e.target.closest('[data-action="toggle-dd"]')) {
+                    closeDropdowns();
+                }
+                // Close modals — ×-button or clicking the overlay background (not the modal content)
+                if (e.target.closest('[data-action="close-import"]') || (e.target.dataset.action === 'close-modal' && e.target.dataset.modal === 'import')) {
+                    cleanupModal('import-modal-wrap');
+                    dispatch({ type: 'SET_IMPORT_MODAL', payload: false });
+                }
+                if (e.target.closest('[data-action="close-settings"]') || (e.target.dataset.action === 'close-modal' && e.target.dataset.modal === 'settings')) {
+                    cleanupModal('settings-modal-wrap');
+                    dispatch({ type: 'SET_SETTINGS_MODAL', payload: false });
+                }
+                // Close confirm modal when clicking overlay background
+                if (e.target.dataset.action === 'close-confirm') {
+                    confirmAction = null;
+                    cleanupModal('confirm-modal-wrap');
+                    render();
+                }
+                // Import actions
+                if (e.target.closest('[data-action="clipboard-import"]')) handleClipboardImport();
+                if (e.target.closest('[data-action="file-import-zone"]')) document.getElementById('file-input')?.click();
+                if (e.target.closest('[data-action="import-back"]')) { importPreview = null; renderRefreshModal('import'); }
+                if (e.target.closest('[data-action="do-import"]')) handleDoImport();
+                // Settings actions
+                if (e.target.closest('[data-action="add-assignee"]')) {
+                    const inp = document.getElementById('new-assignee-input');
+                    if (inp && inp.value.trim() && !getAssignees().includes(inp.value.trim())) {
+                        dispatch({ type: 'SET_ASSIGNEES', payload: [...getAssignees(), inp.value.trim()].sort() });
+                        showToast(`${inp.value.trim()} tillagd`, 'success');
+                    }
+                }
+                if (e.target.closest('[data-action="remove-assignee"]')) {
+                    const name = e.target.closest('[data-action="remove-assignee"]').dataset.name;
+                    dispatch({ type: 'SET_ASSIGNEES', payload: getAssignees().filter(a => a !== name) });
+                }
+                // Confirm modal
+                if (e.target.closest('[data-action="confirm-ok"]') && confirmAction) {
+                    const fn = confirmAction.fn;
+                    confirmAction = null;
+                    cleanupModal('confirm-modal-wrap');
+                    fn();
+                }
+                if (e.target.closest('[data-action="confirm-cancel"]')) {
+                    confirmAction = null;
+                    cleanupModal('confirm-modal-wrap');
+                    render();
+                }
+                // Dropdown items
+                if (e.target.closest('.gp-dropdown-item')) handleDropdownSelect(e.target.closest('.gp-dropdown-item'));
+            });
+
+            // Escape key global
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (document.getElementById('active-dropdown')) { closeDropdowns(); return; }
+                    if (confirmAction) { confirmAction = null; cleanupModal('confirm-modal-wrap'); render(); return; }
+                    if (state._ui.importModalOpen) { cleanupModal('import-modal-wrap'); dispatch({ type: 'SET_IMPORT_MODAL', payload: false }); return; }
+                    if (state._ui.settingsModalOpen) { cleanupModal('settings-modal-wrap'); dispatch({ type: 'SET_SETTINGS_MODAL', payload: false }); return; }
+                }
+            });
+
+            // File input change
+            document.addEventListener('change', (e) => {
+                if (e.target.id === 'file-input' && e.target.files[0]) handleFileImport(e.target.files[0]);
+                if (e.target.name === 'imp-mode') importMode = e.target.value;
+            });
+
+            // File drag-drop on zone
+            document.addEventListener('dragover', (e) => {
+                const zone = document.getElementById('file-drop-zone');
+                if (zone && zone.contains(e.target)) { e.preventDefault(); zone.classList.add('dragover'); }
+            });
+            document.addEventListener('dragleave', (e) => {
+                const zone = document.getElementById('file-drop-zone');
+                if (zone && !zone.contains(e.relatedTarget)) zone.classList.remove('dragover');
+            });
+            document.addEventListener('drop', (e) => {
+                const zone = document.getElementById('file-drop-zone');
+                if (zone && zone.contains(e.target)) {
+                    e.preventDefault(); zone.classList.remove('dragover');
+                    if (e.dataTransfer.files[0]) handleFileImport(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        function cleanupModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+        function renderRefreshModal(type) {
+            cleanupModal(type === 'import' ? 'import-modal-wrap' : 'settings-modal-wrap');
+            if (type === 'import') renderImportModal();
+            else renderSettingsModal();
+        }
+
+        function saveInlineEdit(el, keepEditing) {
+            const taskId = parseInt(el.dataset.editTask, 10);
+            const field = el.dataset.editField;
+            const value = el.value;
+            const updates = { [field]: value };
+            if (field === 'svId') updates.guideId = deriveGuideId(value);
+            dispatch({ type: 'UPDATE_TASK', payload: { id: taskId, updates } });
+            if (!keepEditing) { editing = null; }
+        }
+
+        function handleDropdownOpen(anchor, ddType, tid) {
+            let items = '';
+            if (ddType === 'status') {
+                const task = getTasks().find(t => t.id === tid);
+                ALL_STATUSES.forEach(s => {
+                    const c = STATUS_CFG[s];
+                    const sel = task && task.status === s ? 'selected' : '';
+                    const disabled = s === 'in_progress' && task && !task.assignee ? ' style="opacity:.4;pointer-events:none" title="Kräver tilldelad person"' : '';
+                    items += `<div class="gp-dropdown-item ${sel}" data-dd-action="set-status" data-val="${s}" data-tid="${tid}"${disabled}>
+                        <span class="gp-status-dot" style="background:${c.dot}"></span>${c.label}</div>`;
+                });
+            } else if (ddType === 'assignee') {
+                const assignees = getAssignees();
+                const task = getTasks().find(t => t.id === tid);
+                assignees.forEach(a => {
+                    const sel = task && task.assignee === a ? 'selected' : '';
+                    const ini = a.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+                    items += `<div class="gp-dropdown-item ${sel}" data-dd-action="set-assignee" data-val="${esc(a)}" data-tid="${tid}">
+                        <span class="gp-avatar" style="width:22px;height:22px;font-size:.65rem">${esc(ini)}</span>${esc(a)}</div>`;
+                });
+                items += `<div class="gp-dropdown-sep"></div>`;
+                items += `<div class="gp-dropdown-item" data-dd-action="edit-assignee" data-tid="${tid}">✏ Ange namn...</div>`;
+                if (task && task.assignee) {
+                    items += `<div class="gp-dropdown-item" data-dd-action="clear-assignee" data-tid="${tid}" style="color:var(--ic-danger)">✕ Ta bort tilldelning</div>`;
+                }
+            } else if (ddType === 'status-filter') {
+                const active = state._ui.filters.statuses;
+                ALL_STATUSES.forEach(s => {
+                    const c = STATUS_CFG[s];
+                    const on = active.includes(s);
+                    items += `<div class="gp-dropdown-item" data-dd-action="toggle-status-filter" data-val="${s}">
+                        <span class="gp-dd-check ${on?'on':''}">${on?'✓':''}</span>
+                        <span class="gp-status-dot" style="background:${c.dot}"></span>${c.label}</div>`;
+                });
+            } else if (ddType === 'assignee-filter') {
+                const all = getAssignees();
+                const active = state._ui.filters.assignees;
+                all.forEach(a => {
+                    const on = active.includes(a);
+                    items += `<div class="gp-dropdown-item" data-dd-action="toggle-assignee-filter" data-val="${esc(a)}">
+                        <span class="gp-dd-check ${on?'on':''}">${on?'✓':''}</span>${esc(a)}</div>`;
+                });
+                if (!all.length) items += `<div class="gp-dropdown-item" style="color:#9ca3af">Inga tilldelade ännu</div>`;
+            }
+            renderDropdown(anchor, items, ddType);
+        }
+
+        function handleDropdownSelect(item) {
+            const action = item.dataset.ddAction;
+            const val = item.dataset.val;
+            const tid = item.dataset.tid != null ? parseInt(item.dataset.tid, 10) : undefined;
+            switch (action) {
+                case 'set-status':
+                    dispatch({ type: 'UPDATE_TASK', payload: { id: tid, updates: { status: val } } });
+                    closeDropdowns();
+                    break;
+                case 'set-assignee':
+                    dispatch({ type: 'UPDATE_TASK', payload: { id: tid, updates: { assignee: val } } });
+                    closeDropdowns();
+                    break;
+                case 'edit-assignee':
+                    closeDropdowns();
+                    editing = { taskId: tid, field: 'assignee' };
+                    render();
+                    break;
+                case 'clear-assignee':
+                    dispatch({ type: 'UPDATE_TASK', payload: { id: tid, updates: { assignee: '' } } });
+                    closeDropdowns();
+                    break;
+                case 'toggle-status-filter': {
+                    const cur = [...state._ui.filters.statuses];
+                    const idx = cur.indexOf(val);
+                    if (idx >= 0) cur.splice(idx, 1); else cur.push(val);
+                    dispatch({ type: 'SET_FILTER', payload: { statuses: cur } });
+                    // Re-open dropdown
+                    setTimeout(() => {
+                        const btn = document.querySelector('[data-dd="status-filter"]');
+                        if (btn) handleDropdownOpen(btn, 'status-filter');
+                    }, 50);
+                    break;
+                }
+                case 'toggle-assignee-filter': {
+                    const cur = [...state._ui.filters.assignees];
+                    const idx = cur.indexOf(val);
+                    if (idx >= 0) cur.splice(idx, 1); else cur.push(val);
+                    dispatch({ type: 'SET_FILTER', payload: { assignees: cur } });
+                    setTimeout(() => {
+                        const btn = document.querySelector('[data-dd="assignee-filter"]');
+                        if (btn) handleDropdownOpen(btn, 'assignee-filter');
+                    }, 50);
+                    break;
+                }
+            }
+        }
+
+        function handleAddFormSubmit() {
+            const svId = (document.getElementById('af-svid')?.value || '').trim();
+            const namn = (document.getElementById('af-namn')?.value || '').trim();
+            const desc = (document.getElementById('af-desc')?.value || '').trim();
+            const typeEl = document.querySelector('input[name="af-type"]:checked');
+            const taskType = typeEl ? typeEl.value : 'update';
+
+            if (!svId && !namn) { showToast('Ange minst Guide-ID eller namn', 'error'); return; }
+
+            const guideId = deriveGuideId(svId);
+            const groupTasks = getTasks().filter(t => t.guideId === guideId);
+            const maxSort = groupTasks.length ? Math.max(...groupTasks.map(t => t.sortOrder)) + 1 : 0;
+
+            const task = {
+                id: uid(), guideId, svId, namn, description: desc, enId: '', noId: '',
+                taskType, status: 'not_started', assignee: '',
+                createdAt: nowISO(), updatedAt: nowISO(), sortOrder: maxSort,
+                startedAt: null, completedAt: null, completionTime: null, lockedFields: []
+            };
+            dispatch({ type: 'IMPORT_TASKS', payload: { newTasks: [task], mode: 'merge' } });
+            addFormOpen = false;
+            showToast('Guide tillagd', 'success');
+        }
+
+        function handleAddStep(guideId) {
+            const groupTasks = getTasks().filter(t => t.guideId === guideId);
+            const maxSort = groupTasks.length ? Math.max(...groupTasks.map(t => t.sortOrder)) + 1 : 0;
+            const svId = guideId ? guideId + '-' + String(maxSort + 1).padStart(2, '0') : '';
+            const task = {
+                id: uid(), guideId, svId, namn: '', description: '', enId: '', noId: '',
+                taskType: 'update', status: 'not_started', assignee: '',
+                createdAt: nowISO(), updatedAt: nowISO(), sortOrder: maxSort,
+                startedAt: null, completedAt: null, completionTime: null, lockedFields: []
+            };
+            dispatch({ type: 'ADD_TASK', payload: task });
+            showToast('Steg tillagt', 'info');
+        }
+
+        async function handleClipboardImport() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (!text.trim()) { showToast('Urklipp är tomt', 'error'); return; }
+                importPreview = text.includes('\t') ? parseTSV(text) : parseCSVText(text);
+                renderRefreshModal('import');
+            } catch (e) { showToast('Kunde inte läsa urklipp. Kontrollera behörigheter.', 'error'); }
+        }
+
+        function handleFileImport(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const ext = file.name.split('.').pop().toLowerCase();
+                importPreview = (ext === 'tsv' || ext === 'txt') ? parseTSV(text) : parseCSVText(text);
+                renderRefreshModal('import');
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function handleDoImport() {
+            if (!importPreview || !importPreview.rows.length) return;
+            const tasks = importRowsToTasks(importPreview.rows);
+            dispatch({ type: 'IMPORT_TASKS', payload: { newTasks: tasks, mode: importMode } });
+            importPreview = null;
+            cleanupModal('import-modal-wrap');
+            dispatch({ type: 'SET_IMPORT_MODAL', payload: false });
+            showToast(`${tasks.length} uppgifter importerade`, 'success');
+        }
+
+        // ================================================================
+        //  INITIALIZATION
+        // ================================================================
+        async function init() {
+            state = await loadState();
+            setupEvents();
+            render();
+            if (typeof ICUtils !== 'undefined' && ICUtils.notifyReady) {
+                ICUtils.notifyReady('guide-planner');
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => init());
+        } else {
+            init();
+        }
+
+    })();
+    </script>
+</body>
+</html>

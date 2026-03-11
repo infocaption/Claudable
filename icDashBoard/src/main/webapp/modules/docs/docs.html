@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokumentation - InfoCaption Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/ic-icons.css">
+    <style>
+        :root {
+            --ic-primary: #5458F2;
+            --ic-primary-hover: #4347d9;
+            --ic-secondary: #d4d5fc;
+            --ic-tertiary: #BEC0F9;
+            --ic-accent: #FFE496;
+            --ic-text-dark: #323232;
+            --ic-text-muted: #6c757d;
+            --ic-bg-white: #ffffff;
+            --ic-bg-light: #f8f9fc;
+            --ic-success: #10b981;
+            --ic-success-light: #d1fae5;
+            --ic-danger: #ef4444;
+            --ic-danger-light: #fee2e2;
+            --ic-warning: #f59e0b;
+            --ic-warning-light: #fef3c7;
+            --ic-info: #3b82f6;
+            --ic-info-light: #dbeafe;
+            --ic-radius-sm: 6px;
+            --ic-radius-md: 10px;
+            --ic-radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ic-bg-light);
+            color: var(--ic-text-dark);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .docs-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar navigation */
+        .docs-sidebar {
+            width: 280px;
+            background: var(--ic-bg-white);
+            border-right: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sidebar-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--ic-text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-search {
+            margin-top: 12px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 3px rgba(84, 88, 242, 0.15);
+        }
+
+        .sidebar-nav {
+            padding: 15px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            font-size: 0.7em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ic-text-muted);
+            padding: 0 20px;
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            color: var(--ic-text-dark);
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: var(--ic-bg-light);
+            color: var(--ic-primary);
+        }
+
+        .nav-link.active {
+            background: var(--ic-secondary);
+            color: var(--ic-primary);
+            font-weight: 600;
+        }
+
+        .nav-link-icon {
+            font-size: 1.1em;
+        }
+
+        /* Main content */
+        .docs-content {
+            flex: 1;
+            padding: 40px 50px;
+            max-width: 900px;
+        }
+
+        .doc-section {
+            display: none;
+        }
+
+        .doc-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography */
+        h1 { font-size: 2em; font-weight: 700; color: var(--ic-text-dark); margin-bottom: 15px; letter-spacing: -0.5px; }
+        h2 { font-size: 1.5em; font-weight: 600; color: var(--ic-text-dark); margin-top: 40px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--ic-secondary); }
+        h3 { font-size: 1.2em; font-weight: 600; color: var(--ic-text-dark); margin-top: 30px; margin-bottom: 12px; }
+        p { margin-bottom: 15px; color: var(--ic-text-dark); }
+        .lead { font-size: 1.1em; color: var(--ic-text-muted); margin-bottom: 30px; }
+        ul, ol { margin-bottom: 20px; padding-left: 25px; }
+        li { margin-bottom: 8px; }
+
+        code {
+            background: #f1f3f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            color: var(--ic-primary);
+        }
+
+        pre {
+            background: #1e1e3f;
+            color: #e4e4e7;
+            padding: 18px 22px;
+            border-radius: var(--ic-radius-md);
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        pre code { background: none; padding: 0; color: inherit; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 0.9em; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: var(--ic-bg-light); font-weight: 600; color: var(--ic-text-dark); }
+        tr:hover { background: var(--ic-bg-light); }
+
+        .card {
+            background: var(--ic-bg-white);
+            border-radius: var(--ic-radius-lg);
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #eee;
+        }
+
+        .card-title { font-size: 1.1em; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px; }
+
+        .alert { padding: 15px 20px; border-radius: var(--ic-radius-md); margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px; }
+        .alert-icon { font-size: 1.2em; }
+        .alert-info { background: var(--ic-info-light); color: var(--ic-info); }
+        .alert-success { background: var(--ic-success-light); color: var(--ic-success); }
+        .alert-warning { background: var(--ic-warning-light); color: var(--ic-warning); }
+
+        .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; }
+        .badge-primary { background: var(--ic-secondary); color: var(--ic-primary); }
+        .badge-new { background: var(--ic-accent); color: var(--ic-text-dark); }
+
+        .quick-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+        .quick-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: var(--ic-secondary); color: var(--ic-primary); border-radius: var(--ic-radius-md); text-decoration: none; font-size: 0.9em; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .quick-link:hover { background: var(--ic-tertiary); }
+
+        .feature-list { list-style: none; padding: 0; }
+        .feature-list li { padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; }
+        .feature-list li:last-child { border-bottom: none; }
+        .feature-icon { font-size: 1.2em; }
+
+        .kbd { display: inline-block; padding: 3px 8px; background: #f1f3f5; border: 1px solid #ddd; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 0.85em; box-shadow: 0 1px 0 #ccc; }
+        .version-info { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: var(--ic-text-muted); font-size: 0.85em; }
+
+        @media (max-width: 900px) {
+            .docs-layout { flex-direction: column; }
+            .docs-sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid #eee; }
+            .sidebar-nav { display: flex; gap: 5px; padding: 10px; overflow-x: auto; flex-wrap: nowrap; }
+            .nav-section { display: flex; gap: 5px; margin-bottom: 0; }
+            .nav-section-title { display: none; }
+            .nav-link { padding: 8px 14px; white-space: nowrap; border-radius: var(--ic-radius-sm); }
+            .docs-content { padding: 25px 20px; }
+            h1 { font-size: 1.6em; }
+            h2 { font-size: 1.3em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="docs-layout">
+        <!-- Sidebar -->
+        <aside class="docs-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <span><i class="icon-library"></i></span>
+                    Dokumentation
+                </div>
+                <div class="sidebar-search">
+                    <input type="text" class="search-input" placeholder="Sök i dokumentationen..." id="searchInput" onkeyup="searchDocs()">
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Komma igång</div>
+                    <a class="nav-link active" data-section="overview" onclick="showSection('overview')">
+                        <span class="nav-link-icon"><i class="icon-home1"></i></span>
+                        Översikt
+                    </a>
+                    <a class="nav-link" data-section="getting-started" onclick="showSection('getting-started')">
+                        <span class="nav-link-icon"><i class="icon-lightning-bolt"></i></span>
+                        Snabbstart
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Moduler</div>
+                    <a class="nav-link" data-section="customer-stats" onclick="showSection('customer-stats')">
+                        <span class="nav-link-icon"><i class="icon-trending-up"></i></span>
+                        Kundstatistik
+                    </a>
+                    <a class="nav-link" data-section="utskick" onclick="showSection('utskick')">
+                        <span class="nav-link-icon"><i class="icon-mail1"></i></span>
+                        Utskick
+                    </a>
+                    <a class="nav-link" data-section="server-list" onclick="showSection('server-list')">
+                        <span class="nav-link-icon"><i class="icon-server"></i></span>
+                        Serverlista
+                    </a>
+                    <a class="nav-link" data-section="certificates" onclick="showSection('certificates')">
+                        <span class="nav-link-icon"><i class="icon-lock-closed"></i></span>
+                        Certifikat
+                    </a>
+                    <a class="nav-link" data-section="trigger-builder" onclick="showSection('trigger-builder')">
+                        <span class="nav-link-icon"><i class="icon-lightning-bolt"></i></span>
+                        Trigga Händelser
+                    </a>
+                    <a class="nav-link" data-section="sql-builder" onclick="showSection('sql-builder')">
+                        <span class="nav-link-icon"><i class="icon-database"></i></span>
+                        SQL Builder
+                    </a>
+                    <a class="nav-link" data-section="toolbox" onclick="showSection('toolbox')">
+                        <span class="nav-link-icon"><i class="icon-tools-list"></i></span>
+                        Verktygslåda
+                    </a>
+                    <a class="nav-link" data-section="pong" onclick="showSection('pong')">
+                        <span class="nav-link-icon"><i class="icon-play"></i></span>
+                        Pong
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Plattform</div>
+                    <a class="nav-link" data-section="groups" onclick="showSection('groups')">
+                        <span class="nav-link-icon"><i class="icon-user-group"></i></span>
+                        Grupper
+                    </a>
+                    <a class="nav-link" data-section="widgets" onclick="showSection('widgets')">
+                        <span class="nav-link-icon"><i class="icon-chart-bar1"></i></span>
+                        Widgets
+                    </a>
+                    <a class="nav-link" data-section="admin" onclick="showSection('admin')">
+                        <span class="nav-link-icon"><i class="icon-lock-closed"></i></span>
+                        Administration
+                    </a>
+                    <a class="nav-link" data-section="sso" onclick="showSection('sso')">
+                        <span class="nav-link-icon"><i class="icon-key"></i></span>
+                        SSO & Inloggning
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Utveckling</div>
+                    <a class="nav-link" data-section="create-module" onclick="showSection('create-module')">
+                        <span class="nav-link-icon"><i class="icon-cog1"></i></span>
+                        Skapa moduler
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Hjälp</div>
+                    <a class="nav-link" data-section="shortcuts" onclick="showSection('shortcuts')">
+                        <span class="nav-link-icon"><i class="icon-code"></i></span>
+                        Tangentbordsgenvägar
+                    </a>
+                    <a class="nav-link" data-section="faq" onclick="showSection('faq')">
+                        <span class="nav-link-icon"><i class="icon-question-mark"></i></span>
+                        Vanliga frågor
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main content -->
+        <main class="docs-content">
+            <!-- Overview -->
+            <section class="doc-section active" id="overview">
+                <h1>InfoCaption Dashboard</h1>
+                <p class="lead">
+                    En modulär verktygsplattform för InfoCaptions supportorganisation med verktyg för kundanalys, e-postutskick, serverövervakning, certifikathantering, SQL-frågor, kodning och mycket mer. Enkel att använda och utbyggbar med egna moduler.
+                </p>
+
+                <div class="alert alert-info">
+                    <span class="alert-icon"><i class="icon-light-bulb"></i></span>
+                    <div>
+                        <strong>Tips!</strong> Använd sidomenyn till vänster för att navigera mellan modulerna
+                        eller klicka på modulkorten på startsidan. Alla hanteringssidor (Grupper, Användare, Admin) laddas direkt i dashboarden.
+                    </div>
+                </div>
+
+                <h2>Tillgängliga moduler</h2>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-trending-up"></i></span> Kundstatistik</div>
+                        <p>Analysera kundstatistik med automatisk flaggning av risk- och succékunder. Diagram, Excel-export och historik per server.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-mail1"></i></span> Utskick</div>
+                        <p>Skicka e-post till mottagarlistor med mallar och variabelstöd. Bygg listor från kontaktdatabasen med filter.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-server"></i></span> Serverlista</div>
+                        <p>Översikt av alla InfoCaption-servrar med hälsokontroller, versionsinfo och maskinnamnsynk.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-lock-closed"></i></span> Certifikat</div>
+                        <p>Övervaka SSL/TLS-certifikat med utgångsvarningar och kedjedetaljer.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-lightning-bolt"></i></span> Trigga Händelser</div>
+                        <p>Wizard för att generera JavaScript-kod som automatiserar händelser i InfoCaption.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-database"></i></span> SQL Builder</div>
+                        <p>Bygg SQL-frågor enkelt med variabler. Stödjer MySQL och SQL Server med 60+ fördefinierade frågor.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-tools-list"></i></span> Verktygslåda</div>
+                        <p>Base64, Unicode/UTF-8, hash, JSON, URL, färger, timestamp, regex och mer.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-library"></i></span> Dokumentation</div>
+                        <p>Den här sidan! Genomsökbar dokumentation för alla moduler och plattformsfunktioner.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-play"></i></span> Pong</div>
+                        <p>Klassiskt arkadspel mot datorn. Tre svårighetsgrader.</p>
+                    </div>
+                </div>
+
+                <h2>Plattformsfunktioner</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-user-group"></i></span> Grupper</div>
+                        <p>Gruppbaserad åtkomstkontroll styr vilka moduler och widgets som visas för varje användare.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-chart-bar1"></i></span> Widgets</div>
+                        <p>Konfigurerbar widget-bar med klocka, serverstatus, certifikat, snabblänkar och mer.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-key"></i></span> SSO</div>
+                        <p>SAML2 Single Sign-On med Microsoft Entra ID. Automatisk grupptilldelning baserat på avdelning.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-title"><span><i class="icon-lock-closed"></i></span> Admin</div>
+                        <p>Adminpanel med 5 flikar: Användare, Grupper, Datasynk, Widgets och Inställningar.</p>
+                    </div>
+                </div>
+
+                <h2>Snabblänkar</h2>
+                <div class="quick-links">
+                    <a class="quick-link" onclick="showSection('getting-started')"><span><i class="icon-lightning-bolt"></i></span> Kom igång</a>
+                    <a class="quick-link" onclick="showSection('groups')"><span><i class="icon-user-group"></i></span> Grupper</a>
+                    <a class="quick-link" onclick="showSection('admin')"><span><i class="icon-lock-closed"></i></span> Admin</a>
+                    <a class="quick-link" onclick="showSection('create-module')"><span><i class="icon-cog1"></i></span> Skapa moduler</a>
+                    <a class="quick-link" onclick="showSection('faq')"><span><i class="icon-question-mark"></i></span> Vanliga frågor</a>
+                </div>
+
+                <div class="version-info">
+                    <p><strong>Version:</strong> 2.0 | <strong>Senast uppdaterad:</strong> Februari 2026</p>
+                </div>
+            </section>
+
+            <!-- Getting Started -->
+            <section class="doc-section" id="getting-started">
+                <h1>Snabbstart</h1>
+                <p class="lead">Lär dig grunderna i InfoCaption Dashboard på några minuter.</p>
+
+                <h2>Navigera i dashboarden</h2>
+                <p>Dashboarden består av fyra huvuddelar:</p>
+                <ol>
+                    <li><strong>Sidopanelen (vänster)</strong> — Navigation till alla moduler och hanteringssidor</li>
+                    <li><strong>Widget-baren (överst)</strong> — Kompakta data-widgets (klocka, serverstatus, certifikat, etc.)</li>
+                    <li><strong>Topbaren</strong> — Breadcrumb-navigation och modulens namn</li>
+                    <li><strong>Innehållsområdet</strong> — Där den aktiva modulen visas i en iframe</li>
+                </ol>
+
+                <h2>Använda moduler</h2>
+                <p>För att öppna en modul:</p>
+                <ol>
+                    <li>Klicka på modulens namn i sidopanelen, eller</li>
+                    <li>Klicka på modulkortet på startsidan</li>
+                </ol>
+
+                <h2>Hanteringssidor</h2>
+                <p>Under rubriken <strong>"Hantera"</strong> i sidomenyn finns:</p>
+                <ul>
+                    <li><strong>Skapa modul</strong> — Ladda upp nya HTML-moduler</li>
+                    <li><strong>Mina moduler</strong> — Redigera, ta bort och ändra gruppsynlighet</li>
+                    <li><strong>Grupper</strong> — Gå med/lämna grupper, hantera medlemmar</li>
+                    <li><strong>Användare</strong> — Se alla användare, starta Teams-chatt</li>
+                    <li><strong>Admin</strong> — Adminpanel (kräver admin-rättigheter)</li>
+                </ul>
+                <p>Alla hanteringssidor laddas direkt i dashboardens iframe — du lämnar aldrig huvudsidan.</p>
+
+                <div class="alert alert-success">
+                    <span class="alert-icon"><i class="icon-check-circle"></i></span>
+                    <div>
+                        <strong>Bra att veta!</strong> Du kan dölja sidopanelen genom att klicka på menyknappen (☰)
+                        i topbaren för att få mer utrymme.
+                    </div>
+                </div>
+
+                <h2>URL-parametrar</h2>
+                <p>Du kan länka direkt till en specifik modul eller hanteringssida:</p>
+                <pre><code>dashboard.jsp?module=customer-stats
+dashboard.jsp?module=utskick
+dashboard.jsp?manage=manage-groups
+dashboard.jsp?manage=admin</code></pre>
+
+                <h2>Modulens <i class="icon-question-mark"></i>-knapp</h2>
+                <p>Varje modul har en flytande <strong><i class="icon-question-mark"></i></strong>-knapp (nere till höger) som öppnar en dokumentationspanel med modulens beskrivning och AI-specifikation.</p>
+            </section>
+
+            <!-- Customer Stats -->
+            <section class="doc-section" id="customer-stats">
+                <h1><i class="icon-trending-up"></i> Kundstatistik</h1>
+                <p class="lead">Analysera och visualisera kundstatistik med automatisk flaggning av risk- och succékunder.</p>
+
+                <h2>Funktioner</h2>
+                <ul class="feature-list">
+                    <li><span class="feature-icon"><i class="icon-target"></i></span> Succékunder-analys med anpassningsbara kriterier</li>
+                    <li><span class="feature-icon"><i class="icon-exclamation-circle"></i></span> Riskkunder-flaggning baserat på trendanalys</li>
+                    <li><span class="feature-icon"><i class="icon-chart-bar1"></i></span> Historikdiagram per kund (dag/månad, datumväljare)</li>
+                    <li><span class="feature-icon"><i class="icon-clipboard"></i></span> Tabell- och kortvy med växlingsknapp</li>
+                    <li><span class="feature-icon"><i class="icon-download1"></i></span> Excel-export med SheetJS</li>
+                    <li><span class="feature-icon"><i class="icon-cog1"></i></span> Anpassningsbara risk-/succétröskelvärden</li>
+                </ul>
+
+                <h2>Datakälla</h2>
+                <p>Statistik samlas in per server (URL) via PowerShell-skriptet <code>allstats.ps1</code> som körs dagligen. API:et <code>/api/customer-stats</code> aggregerar data i 30-dagarsperioder. Diagram hämtar historik via <code>/api/customer-stats/history</code>.</p>
+
+                <h2>Riskkriterier</h2>
+                <p>En kund flaggas som <strong>risk</strong> om <em>något</em> av följande stämmer:</p>
+                <table>
+                    <thead><tr><th>Prio</th><th>Kriterium</th><th>Beskrivning</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td>Trend: Visningar ↓</td><td>Minskning ≥30% (30d vs föregående 30d)</td></tr>
+                        <tr><td>2</td><td>Ingen inloggning</td><td>&lt;1 inloggning senaste månaden</td></tr>
+                        <tr><td>3</td><td>Inloggningskollaps</td><td>Inloggningar &lt;20% av totala</td></tr>
+                        <tr><td>4</td><td>Trend: Guider ↓</td><td>Minskning ≥30%</td></tr>
+                        <tr><td>5</td><td>Låg publicering</td><td>&lt;10 publiseringar senaste månaden</td></tr>
+                        <tr><td>6</td><td>Trend: Processer ↓</td><td>Minskning ≥30%</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>Succékriterier</h2>
+                <p>En kund räknas som <strong>succé</strong> om <em>alla</em> villkor uppfylls:</p>
+                <table>
+                    <thead><tr><th>Prio</th><th>Kriterium</th><th>Beskrivning</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td>Trend: Visningar ↑</td><td>Ökning ≥30%</td></tr>
+                        <tr><td>2</td><td>Hög inloggning</td><td>&gt;100 inloggningar senaste månaden</td></tr>
+                        <tr><td>3</td><td>Trend: Guider ↑</td><td>Ökning ≥30%</td></tr>
+                        <tr><td>4</td><td>Trend: Unika producenter ↑</td><td>Ökning ≥20%</td></tr>
+                        <tr><td>5</td><td>Hög publicering</td><td>&gt;100 publiseringar senaste månaden</td></tr>
+                        <tr><td>6</td><td>Trend: Processer ↑</td><td>Ökning ≥30%</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Utskick -->
+            <section class="doc-section" id="utskick">
+                <h1><i class="icon-mail1"></i> Utskick</h1>
+                <p class="lead">Skicka e-post till mottagarlistor med mallar, variabelstöd och kontaktlistor från extern databas.</p>
+
+                <h2>Flikar</h2>
+                <ul class="feature-list">
+                    <li><span class="feature-icon"><i class="icon-mail1"></i></span> <strong>Nytt utskick</strong> — Välj mall, redigera HTML, ange mottagare, skicka</li>
+                    <li><span class="feature-icon"><i class="icon-clipboard"></i></span> <strong>Listor</strong> — Bygg mottagarlistor från kontaktdatabasen med filter (server, domän, företag, språk)</li>
+                    <li><span class="feature-icon"><i class="icon-pencil-alt"></i></span> <strong>Mallar</strong> — Skapa, redigera och ta bort e-postmallar</li>
+                    <li><span class="feature-icon"><i class="icon-document-text"></i></span> <strong>Historik</strong> — Se tidigare utskick med mottagarstatus per e-post</li>
+                </ul>
+
+                <h2>Mallvariabler</h2>
+                <p>Följande variabler ersätts per mottagare vid sändning:</p>
+                <table>
+                    <thead><tr><th>Variabel</th><th>Beskrivning</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>{{serverUrl}}</code></td><td>Mottagarens server-URL (från Listor)</td></tr>
+                        <tr><td><code>{{email}}</code></td><td>Mottagarens e-postadress</td></tr>
+                        <tr><td><code>{{companyName}}</code></td><td>Företagsnamn (från Listor)</td></tr>
+                        <tr><td><code>{{updateDate}}</code></td><td>Globalt datumfält i sändformuläret</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>Listor — Filter</h2>
+                <p>Bygg mottagarlistor genom att filtrera den externa kontaktdatabasen:</p>
+                <ul>
+                    <li>ServerUrl, MachineName, Domain (fritext)</li>
+                    <li>CompanyName, CompanyCategory, PersonCategory</li>
+                    <li>Language — resultaten visar språkfördelning med per-språk "Utskick"-knapp</li>
+                </ul>
+
+                <div class="alert alert-info">
+                    <span class="alert-icon"><i class="icon-light-bulb"></i></span>
+                    <div>
+                        <strong>Tips!</strong> Klicka "Använd i utskick" på en lista för att föra över alla e-postadresser till sändfliken. Du kan filtrera per språk för att skicka språkanpassade utskick.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Server List -->
+            <section class="doc-section" id="server-list">
+                <h1><i class="icon-server"></i> Serverlista</h1>
+                <p class="lead">Översikt av alla InfoCaption-servrar med hälsokontroller, version och maskinnamn.</p>
+
+                <h2>Funktioner</h2>
+                <ul class="feature-list">
+                    <li><span class="feature-icon">🟢</span> Asynkrona hälsokontroller med statuskoder och allvarlighetsbedömning</li>
+                    <li><span class="feature-icon"><i class="icon-refresh"></i></span> Automatisk maskinnamnsynk från extern databas var 10:e minut</li>
+                    <li><span class="feature-icon"><i class="icon-clipboard"></i></span> Företagskoppling via <code>customers</code>-tabellen</li>
+                    <li><span class="feature-icon"><i class="icon-chart-bar1"></i></span> Versionsinfo hämtad från <code>.version.xml</code></li>
+                </ul>
+
+                <h2>Hälsokontroll-allvarlighet</h2>
+                <table>
+                    <thead><tr><th>Statuskod</th><th>Allvarlighet</th><th>Färg</th></tr></thead>
+                    <tbody>
+                        <tr><td>200-299</td><td>OK</td><td>Grön</td></tr>
+                        <tr><td>404</td><td>Medium</td><td>Orange</td></tr>
+                        <tr><td>401/403</td><td>Låg</td><td>Gul</td></tr>
+                        <tr><td>500+</td><td>Allvarlig</td><td>Röd</td></tr>
+                        <tr><td>Timeout/Fel</td><td>Allvarlig</td><td>Röd</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Certificates -->
+            <section class="doc-section" id="certificates">
+                <h1><i class="icon-lock-closed"></i> Certifikat</h1>
+                <p class="lead">Övervaka SSL/TLS-certifikat i servrarnas Java keystores.</p>
+
+                <h2>Funktioner</h2>
+                <ul class="feature-list">
+                    <li><span class="feature-icon"><i class="icon-calendar"></i></span> Dagar kvar till utgång med färgkodning</li>
+                    <li><span class="feature-icon"><i class="icon-link9"></i></span> Kedjedetaljer (certifikatkedja visas)</li>
+                    <li><span class="feature-icon"><i class="icon-search"></i></span> Serienummer, utfärdare, ägare</li>
+                    <li><span class="feature-icon"><i class="icon-chart-bar1"></i></span> Widget "Certifikat" i widget-baren visar antal som snart utgår</li>
+                </ul>
+
+                <p>Certifikatdata samlas in av PowerShell-skriptet <code>getcerts.ps1</code> som skannar Java keystores via <code>keytool</code> och skriver till databasen.</p>
+            </section>
+
+            <!-- Trigger Builder -->
+            <section class="doc-section" id="trigger-builder">
+                <h1><i class="icon-lightning-bolt"></i> Trigga Händelser</h1>
+                <p class="lead">Wizard för att generera JavaScript-kod som automatiserar händelser i InfoCaption.</p>
+
+                <h2>Funktioner</h2>
+                <ul class="feature-list">
+                    <li><span class="feature-icon"><i class="icon-sparkles"></i></span> 3-stegs wizard: Välj trigger → Lägg till events → Generera kod</li>
+                    <li><span class="feature-icon"><i class="icon-clipboard"></i></span> Kopiera genererad kod till urklipp</li>
+                    <li><span class="feature-icon"><i class="icon-switch-horizontal"></i></span> Stöd för switch/case-flöden</li>
+                </ul>
+
+                <h2>Tillgängliga triggers</h2>
+                <table>
+                    <thead><tr><th>Trigger</th><th>Beskrivning</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>user_created</code></td><td>Ny användare skapad</td></tr>
+                        <tr><td><code>user_updated</code></td><td>Användare uppdaterad</td></tr>
+                        <tr><td><code>user_deleted</code></td><td>Användare borttagen</td></tr>
+                        <tr><td><code>course_approved</code></td><td>Kurs godkänd</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>Tillgängliga events</h2>
+                <ul>
+                    <li>Grupptilldelning (statisk/dynamisk)</li>
+                    <li>Skicka e-post</li>
+                    <li>Skicka notifikation</li>
+                    <li>Kursflöde (switch/case)</li>
+                </ul>
+            </section>
+
+            <!-- SQL Builder -->
+            <section class="doc-section" id="sql-builder">
+                <h1><i class="icon-database"></i> SQL Builder</h1>
+                <p class="lead">Bygg SQL-frågor enkelt med variabler. Stöd för MySQL och SQL Server.</p>
+
+                <h2>Funktioner</h2>
+                <ul class="feature-list">
+                    <li><span class="feature-icon"><i class="icon-pencil-alt"></i></span> 60+ fördefinierade SQL-frågor</li>
+                    <li><span class="feature-icon"><i class="icon-refresh"></i></span> Automatisk konvertering MySQL ↔ SQL Server</li>
+                    <li><span class="feature-icon"><i class="icon-tag1"></i></span> Variabel-substitution med ${variabelnamn}</li>
+                    <li><span class="feature-icon"><i class="icon-plus"></i></span> Skapa och spara egna SQL-frågor (localStorage)</li>
+                    <li><span class="feature-icon"><i class="icon-color-swatch"></i></span> Syntaxmarkering för lättläst kod</li>
+                </ul>
+
+                <h2>Använda variabler</h2>
+                <p>Variabler definieras med syntaxen <code>${variabelnamn}</code> i SQL-frågan:</p>
+                <pre><code>SELECT * FROM users
+WHERE company_id = ${companyId}
+AND created_date >= '${startDate}'</code></pre>
+                <p>Inputfält visas automatiskt för varje variabel.</p>
+
+                <h2>Databassyntax</h2>
+                <table>
+                    <thead><tr><th>MySQL</th><th>SQL Server</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>CURDATE()</code></td><td><code>GETDATE()</code></td></tr>
+                        <tr><td><code>DATE_SUB()</code></td><td><code>DATEADD()</code></td></tr>
+                        <tr><td><code>LIMIT n</code></td><td><code>TOP n</code></td></tr>
+                        <tr><td><code>IFNULL()</code></td><td><code>ISNULL()</code></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Toolbox -->
+            <section class="doc-section" id="toolbox">
+                <h1><i class="icon-tools-list"></i> Verktygslåda</h1>
+                <p class="lead">En samling praktiska verktyg för utveckling och felsökning.</p>
+
+                <h2>Tillgängliga verktyg</h2>
+                <div class="card-grid">
+                    <div class="card"><div class="card-title"><span><i class="icon-lock-closed"></i></span> Base64</div><p>Koda och avkoda text till/från Base64.</p></div>
+                    <div class="card"><div class="card-title"><span>🔤</span> Unicode/UTF-8</div><p>Analysera tecken och visa kodpunkter.</p></div>
+                    <div class="card"><div class="card-title"><span><i class="icon-lock-closed"></i></span> Certifikat</div><p>Analysera SSL/TLS-certifikat.</p></div>
+                    <div class="card"><div class="card-title"><span><i class="icon-hashtag"></i></span> Hash</div><p>MD5, SHA-1, SHA-256, SHA-512.</p></div>
+                    <div class="card"><div class="card-title"><span><i class="icon-clipboard"></i></span> JSON</div><p>Formatera, validera och minimera.</p></div>
+                    <div class="card"><div class="card-title"><span><i class="icon-link9"></i></span> URL</div><p>Koda och avkoda URL-komponenter.</p></div>
+                    <div class="card"><div class="card-title"><span><i class="icon-color-swatch"></i></span> Färgkonverterare</div><p>HEX, RGB, HSL med förhandsvisning.</p></div>
+                    <div class="card"><div class="card-title"><span><i class="icon-clock1"></i></span> Timestamp</div><p>Unix-timestamp ↔ datum/tid.</p></div>
+                    <div class="card"><div class="card-title"><span><i class="icon-search"></i></span> Regex-testare</div><p>Testa regex och se matchningar.</p></div>
+                    <div class="card"><div class="card-title"><span><i class="icon-pencil-alt"></i></span> Text diff</div><p>Jämför två texter och visa skillnader.</p></div>
+                </div>
+            </section>
+
+            <!-- Pong -->
+            <section class="doc-section" id="pong">
+                <h1><i class="icon-play"></i> Pong</h1>
+                <p class="lead">Klassiskt arkadspel — spela mot datorn och bli först till 10 poäng!</p>
+
+                <h2>Kontroller</h2>
+                <table>
+                    <thead><tr><th>Tangent</th><th>Funktion</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="kbd">W</span> / <span class="kbd">↑</span></td><td>Flytta paddeln uppåt</td></tr>
+                        <tr><td><span class="kbd">S</span> / <span class="kbd">↓</span></td><td>Flytta paddeln nedåt</td></tr>
+                        <tr><td><span class="kbd">Space</span></td><td>Pausa/återuppta</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>Svårighetsgrader</h2>
+                <table>
+                    <thead><tr><th>Nivå</th><th>AI-hastighet</th><th>Bollhastighet</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Lätt</strong></td><td>Långsam</td><td>Långsam</td></tr>
+                        <tr><td><strong>Medel</strong></td><td>Medel</td><td>Medel</td></tr>
+                        <tr><td><strong>Svår</strong></td><td>Snabb</td><td>Snabb</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Groups -->
+            <section class="doc-section" id="groups">
+                <h1><i class="icon-user-group"></i> Grupper</h1>
+                <p class="lead">Gruppbaserad åtkomstkontroll styr vilka moduler och widgets som visas för varje användare.</p>
+
+                <h2>Grundkoncept</h2>
+                <ul>
+                    <li><strong>"Alla"-gruppen</strong> — Alla användare är implicita medlemmar. Moduler tilldelade "Alla" syns för alla.</li>
+                    <li><strong>Synliga grupper</strong> — Användare kan själva gå med/lämna via Grupper-sidan.</li>
+                    <li><strong>Dolda grupper</strong> — Syns inte för icke-medlemmar, kan inte självjoinas. Medlemmar hanteras av admin.</li>
+                    <li><strong>Modulfiltrering</strong> — En modul syns om du tillhör <em>någon</em> av dess grupper. Moduler utan grupp syns för alla.</li>
+                </ul>
+
+                <h2>Standardgrupper</h2>
+                <table>
+                    <thead><tr><th>Namn</th><th>Ikon</th><th>Dold</th><th>Beskrivning</th></tr></thead>
+                    <tbody>
+                        <tr><td>Alla</td><td><i class="icon-globe"></i></td><td>Nej</td><td>Alla användare (implicit)</td></tr>
+                        <tr><td>Kundvård</td><td><i class="icon-chat"></i></td><td>Nej</td><td>Kundvårdsteamet</td></tr>
+                        <tr><td>Utveckling</td><td><i class="icon-desktop-computer"></i></td><td>Nej</td><td>Utvecklingsteamet</td></tr>
+                        <tr><td>Support</td><td><i class="icon-microphone"></i></td><td>Nej</td><td>Supportteamet</td></tr>
+                        <tr><td>Ledning</td><td><i class="icon-identification"></i></td><td>Ja</td><td>Ledningsgruppen</td></tr>
+                        <tr><td>IT-säkerhet</td><td><i class="icon-lock-closed"></i></td><td>Ja</td><td>IT-säkerhetsteamet</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>SSO-avdelningsgrupper</h2>
+                <p>Grupper kan kopplas till SSO-avdelningar. Vid SSO-inloggning tilldelas användare automatiskt till grupper som matchar deras avdelning. Stöd för pipe-separerade multi-avdelningar (t.ex. <code>Utveckling|Kundvård</code>). Se <strong>SSO & Inloggning</strong>-sektionen.</p>
+
+                <h2>Hantera grupper</h2>
+                <p>Under <strong>Hantera → Grupper</strong> kan du:</p>
+                <ul>
+                    <li>Se "Mina grupper" och "Tillgängliga grupper"</li>
+                    <li>Gå med/lämna synliga grupper</li>
+                    <li>Se och hantera medlemmar</li>
+                    <li>Skapa/redigera/ta bort grupper (med rättigheter)</li>
+                </ul>
+                <p>Admins kan hantera alla grupper i <strong>Admin → Grupper</strong>.</p>
+            </section>
+
+            <!-- Widgets -->
+            <section class="doc-section" id="widgets">
+                <h1><i class="icon-chart-bar1"></i> Widgets</h1>
+                <p class="lead">Konfigurerbar widget-bar i dashboarden med kompakta data-widgets.</p>
+
+                <h2>Inbyggda widgets</h2>
+                <table>
+                    <thead><tr><th>Widget</th><th>Ikon</th><th>Auto-uppdatering</th><th>Datakälla</th></tr></thead>
+                    <tbody>
+                        <tr><td>Datum & Vecka</td><td><i class="icon-calendar"></i></td><td>1 min</td><td>Klient</td></tr>
+                        <tr><td>Klocka</td><td><i class="icon-clock1"></i></td><td>1 s</td><td>Klient</td></tr>
+                        <tr><td>Serverstatus</td><td><i class="icon-server"></i></td><td>5 min</td><td><code>/api/servers/health</code></td></tr>
+                        <tr><td>Certifikat</td><td><i class="icon-lock-closed"></i></td><td>10 min</td><td><code>/api/certificates</code></td></tr>
+                        <tr><td>Kundöversikt</td><td><i class="icon-user-group"></i></td><td>10 min</td><td><code>/api/servers</code></td></tr>
+                        <tr><td>Snabblänkar</td><td><i class="icon-link9"></i></td><td>Aldrig</td><td>localStorage</td></tr>
+                        <tr><td>Teamöversikt</td><td><i class="icon-chat"></i></td><td>10 min</td><td><code>/api/groups</code></td></tr>
+                    </tbody>
+                </table>
+
+                <h2>Inställningar</h2>
+                <p>Klicka på kugghjulet i widget-baren för att:</p>
+                <ul>
+                    <li>Aktivera/avaktivera widgets</li>
+                    <li>Ändra ordning</li>
+                    <li>Välja position: överst eller underst</li>
+                </ul>
+                <p>Inställningarna sparas i webbläsarens localStorage.</p>
+
+                <h2>Anpassade widgets</h2>
+                <p>Admins kan skapa anpassade widgets med egen HTML/JS i <strong>Admin → Widgets</strong>. Anpassade widgets kan tilldelas grupper precis som moduler.</p>
+            </section>
+
+            <!-- Admin -->
+            <section class="doc-section" id="admin">
+                <h1><i class="icon-lock-closed"></i> Administration</h1>
+                <p class="lead">Adminpanelen ger åtkomst till systemkonfiguration och användarhantering.</p>
+
+                <div class="alert alert-warning">
+                    <span class="alert-icon"><i class="icon-exclamation-circle"></i></span>
+                    <div><strong>Admin-rättigheter krävs.</strong> Kontakta en befintlig admin om du behöver åtkomst.</div>
+                </div>
+
+                <h2>Flikar</h2>
+
+                <h3>1. Användare</h3>
+                <p>Hantera användarkonton:</p>
+                <ul>
+                    <li>Se alla användare med namn, e-post, senaste inloggning</li>
+                    <li>Toggla admin-status per användare</li>
+                    <li>Ta bort användare</li>
+                    <li>Sök och filtrera</li>
+                </ul>
+
+                <h3>2. Grupper</h3>
+                <p>Hantera grupper och SSO-koppling:</p>
+                <ul>
+                    <li>Skapa/redigera/ta bort grupper</li>
+                    <li>Koppla grupp till SSO-avdelning</li>
+                    <li>Hantera medlemmar (lägg till/ta bort)</li>
+                    <li>Toggla dold/synlig</li>
+                </ul>
+
+                <h3>3. Datasynk</h3>
+                <p>Konfigurera automatisk dataimport från externa API:er:</p>
+                <ul>
+                    <li>Steg-för-steg wizard: URL → Test → Fältmappning → Schema</li>
+                    <li>Stöd för API-nyckel, Bearer, Basic-autentisering</li>
+                    <li>FK-lookup (t.ex. company_name → customer_id)</li>
+                    <li>Manuell eller schemalagd körning (5/10/30/60 min)</li>
+                    <li>Körhistorik med felmeddelanden</li>
+                </ul>
+
+                <h3>4. Widgets</h3>
+                <p>Hantera dashboard-widgets:</p>
+                <ul>
+                    <li>Se alla widgets (inbyggda + anpassade)</li>
+                    <li>Skapa anpassade widgets med HTML/JS</li>
+                    <li>Grupptilldelning</li>
+                </ul>
+
+                <h3>5. Inställningar</h3>
+                <p>Centraliserad konfiguration för hela systemet:</p>
+                <ul>
+                    <li>Alla nycklar grupperade: Databas, E-post, Säkerhet, Allmänt</li>
+                    <li>Hemliga värden maskerade (lösenord, API-nycklar)</li>
+                    <li>Sök och filtrera</li>
+                    <li>Ändringar gäller direkt (5 min cache)</li>
+                </ul>
+            </section>
+
+            <!-- SSO -->
+            <section class="doc-section" id="sso">
+                <h1><i class="icon-key"></i> SSO & Inloggning</h1>
+                <p class="lead">SAML2 Single Sign-On med Microsoft Entra ID och konfigurerbar inloggning.</p>
+
+                <h2>Inloggningsmetoder</h2>
+                <p>Konfigureras via <code>auth.loginMethods</code> i Admin → Inställningar:</p>
+                <table>
+                    <thead><tr><th>Värde</th><th>Beteende</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>both</code></td><td>Lösenord + SSO-knapp (standard)</td></tr>
+                        <tr><td><code>password</code></td><td>Bara lösenord</td></tr>
+                        <tr><td><code>sso</code></td><td>Bara SSO — auto-redirect till Entra ID</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>SSO-flöde</h2>
+                <ol>
+                    <li>Användaren klickar "Logga in med Microsoft"</li>
+                    <li>Redirect till Microsoft Entra ID</li>
+                    <li>Microsoft autentiserar och returnerar SAML-assertion</li>
+                    <li>Dashboarden skapar/uppdaterar användarkonto automatiskt</li>
+                    <li>Om <code>sso.autoAssignGroups=true</code>: synkar gruppmedlemskap baserat på avdelning</li>
+                </ol>
+
+                <h2>Automatisk grupptilldelning</h2>
+                <p>SSO-inloggning kan automatiskt tilldela användare till grupper baserat på deras avdelning:</p>
+                <ul>
+                    <li>Läser <code>department</code>-claim från SAML-assertion</li>
+                    <li>Stöd för pipe-separerade avdelningar: <code>Utveckling|Kundvård</code></li>
+                    <li>3-stegs matchning: sso_department → gruppnamn → auto-skapa</li>
+                    <li>Gamla SSO-grupper rensas — synkas till aktuella avdelningar</li>
+                </ul>
+
+                <h2>Konfigurerbara claim-URI:er</h2>
+                <p>Alla SAML claim-URI:er kan ändras i Admin → Inställningar utan kodändring:</p>
+                <ul>
+                    <li><code>sso.emailClaimUri</code> — E-postadress</li>
+                    <li><code>sso.givenNameClaimUri</code> — Förnamn</li>
+                    <li><code>sso.surnameClaimUri</code> — Efternamn</li>
+                    <li><code>sso.departmentClaimUri</code> — Avdelning</li>
+                </ul>
+            </section>
+
+            <!-- Create Module -->
+            <section class="doc-section" id="create-module">
+                <h1><i class="icon-cog1"></i> Skapa nya moduler</h1>
+                <p class="lead">Skapa och registrera nya moduler i InfoCaption Dashboard.</p>
+
+                <div class="alert alert-info">
+                    <span class="alert-icon"><i class="icon-document-text"></i></span>
+                    <div>
+                        <strong>Fullständig dokumentation:</strong> Se <code>docs/MODULE-GUIDE.md</code> för detaljerad guide
+                        och <code>docs/MODULE-SPEC.md</code> för teknisk specifikation (AI-vänlig).
+                    </div>
+                </div>
+
+                <h2>Via webben (enklaste sättet)</h2>
+                <ol>
+                    <li>Klicka <strong><i class="icon-plus"></i> Skapa modul</strong> i sidomenyn</li>
+                    <li>Fyll i namn, ikon (emoji), beskrivning, kategori</li>
+                    <li>Välj synlighet: Privat eller Delad (med gruppval)</li>
+                    <li>Ladda upp HTML-fil eller ZIP-arkiv (max 50MB)</li>
+                    <li>Skriv valfri AI-specifikation och generera AI-prompt</li>
+                    <li>Klicka Skapa</li>
+                </ol>
+
+                <h2>Manuellt (för utvecklare)</h2>
+                <ol>
+                    <li>Skapa mapp: <code>webapp/modules/min-modul/</code></li>
+                    <li>Lägg HTML-fil i mappen</li>
+                    <li>Registrera i <code>modules</code>-tabellen i MySQL</li>
+                </ol>
+                <pre><code>INSERT INTO modules (module_type, name, icon, description, entry_file, directory_name)
+VALUES ('system', 'Min Modul', '🚀', 'Beskrivning', 'index.html', 'min-modul');</code></pre>
+
+                <h2>Minimal modulmall</h2>
+                <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="sv"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Min Modul&lt;/title&gt;
+    &lt;link rel="stylesheet" href="../../shared/ic-styles.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="ic-container"&gt;
+        &lt;div class="ic-header"&gt;
+            &lt;h1 class="ic-title"&gt;🚀 Min Modul&lt;/h1&gt;
+        &lt;/div&gt;
+        &lt;div class="ic-card"&gt;
+            &lt;div class="ic-card-body"&gt;Innehåll&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;script src="../../shared/ic-utils.js"&gt;&lt;/script&gt;
+    &lt;script&gt;ICUtils.notifyReady('min-modul');&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+                <h2>ICUtils API</h2>
+                <pre><code>// Dashboard-kommunikation
+ICUtils.isInDashboard()              // true om i iframe
+ICUtils.notifyReady('module-id')     // Meddela att redo
+ICUtils.showToast('Meddelande')      // Visa notifikation
+ICUtils.showDocPopup()               // Öppna modulens dokumentation
+
+// Formatering
+ICUtils.formatNumber(1234567)        // "1 234 567"
+ICUtils.formatPercent(25.5)          // "+26%"
+ICUtils.formatDate(new Date())       // "2026-02-12"
+
+// Lagring (localStorage)
+ICUtils.saveToStorage('key', data)
+ICUtils.loadFromStorage('key', defaultValue)
+
+// Export
+ICUtils.exportToCSV(data, 'fil.csv', columns)
+ICUtils.copyToClipboard('text')</code></pre>
+
+                <h2>Checklista</h2>
+                <ul class="feature-list">
+                    <li><span class="feature-icon">☐</span> HTML-fil i <code>modules/min-modul/</code></li>
+                    <li><span class="feature-icon">☐</span> Inkluderar <code>ic-styles.css</code> och <code>ic-utils.js</code></li>
+                    <li><span class="feature-icon">☐</span> Registrerad i <code>modules</code>-tabellen</li>
+                    <li><span class="feature-icon">☐</span> Använder <code>ICUtils.notifyReady()</code></li>
+                    <li><span class="feature-icon">☐</span> Responsiv design</li>
+                    <li><span class="feature-icon">☐</span> Svenskt gränssnitt</li>
+                    <li><span class="feature-icon">☐</span> Testad i dashboarden</li>
+                </ul>
+            </section>
+
+            <!-- Shortcuts -->
+            <section class="doc-section" id="shortcuts">
+                <h1><i class="icon-code"></i> Tangentbordsgenvägar</h1>
+                <p class="lead">Effektivisera ditt arbete med tangentbordsgenvägar.</p>
+
+                <h2>Globala</h2>
+                <table>
+                    <thead><tr><th>Genväg</th><th>Funktion</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="kbd">Ctrl</span>+<span class="kbd">K</span></td><td>Fokusera sökfältet</td></tr>
+                        <tr><td><span class="kbd">Esc</span></td><td>Stäng modaler</td></tr>
+                    </tbody>
+                </table>
+
+                <h2>SQL Builder</h2>
+                <table>
+                    <thead><tr><th>Genväg</th><th>Funktion</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="kbd">Ctrl</span>+<span class="kbd">C</span></td><td>Kopiera SQL till urklipp</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- FAQ -->
+            <section class="doc-section" id="faq">
+                <h1><i class="icon-question-mark"></i> Vanliga frågor</h1>
+                <p class="lead">Svar på vanliga frågor om InfoCaption Dashboard.</p>
+
+                <h2>Allmänt</h2>
+
+                <h3>Vilka webbläsare stöds?</h3>
+                <p>Alla moderna webbläsare: Chrome, Firefox, Edge och Safari. Vi rekommenderar senaste versionen.</p>
+
+                <h3>Hur loggar jag in?</h3>
+                <p>Antingen med lösenord eller via "Logga in med Microsoft" (SAML2 SSO). Vilka metoder som visas beror på konfigurationen (<code>auth.loginMethods</code>).</p>
+
+                <h3>Varför ser jag inte alla moduler?</h3>
+                <p>Moduler kan vara begränsade till specifika grupper. Gå till <strong>Hantera → Grupper</strong> för att se tillgängliga grupper och gå med.</p>
+
+                <h2>Kundstatistik</h2>
+
+                <h3>Var kommer kunddata ifrån?</h3>
+                <p>Statistik samlas in dagligen per server via PowerShell-skriptet <code>allstats.ps1</code> och lagras i databasen. API:et aggregerar data i 30-dagarsperioder.</p>
+
+                <h3>Varför ser jag inte alla kunder?</h3>
+                <p>Kunder med färre än 5 producenter exkluderas automatiskt. Tröskelvärdet kan justeras i kriterier-inställningarna (<i class="icon-cog1"></i>).</p>
+
+                <h2>Utskick</h2>
+
+                <h3>Varifrån skickas e-posten?</h3>
+                <p>Via Azure Communication Services. Avsändaradress konfigureras i Admin → Inställningar (<code>acs.senderAddress</code>).</p>
+
+                <h3>Hur bygger jag en mottagarlista?</h3>
+                <p>Använd <strong>Listor</strong>-fliken i Utskick-modulen. Filtrera på server, domän, företag, språk och klicka "Använd i utskick".</p>
+
+                <h2>Administration</h2>
+
+                <h3>Hur blir jag admin?</h3>
+                <p>En befintlig admin kan ge dig admin-rättigheter via Admin → Användare. Första admin sätts via SQL: <code>UPDATE users SET is_admin = 1 WHERE id = 1;</code></p>
+
+                <h3>Hur kopplar jag en grupp till en SSO-avdelning?</h3>
+                <p>I Admin → Grupper, redigera gruppen och fyll i fältet "SSO-avdelning (department)" med exakt det värde som Azure skickar.</p>
+
+                <h3>Var ändrar jag inställningar?</h3>
+                <p>Admin → Inställningar. Alla konfigurationsnycklar (databas, e-post, SSO, timeouts) kan ändras där. Ändringar gäller inom 5 minuter (cache).</p>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.doc-section').forEach(function(s) { s.classList.remove('active'); });
+            document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.remove('active'); });
+            var section = document.getElementById(sectionId);
+            if (section) section.classList.add('active');
+            var navLink = document.querySelector('.nav-link[data-section="' + sectionId + '"]');
+            if (navLink) navLink.classList.add('active');
+            document.querySelector('.docs-content').scrollTop = 0;
+        }
+
+        function searchDocs() {
+            var query = document.getElementById('searchInput').value.toLowerCase();
+            if (!query) return;
+            var sections = document.querySelectorAll('.doc-section');
+            for (var i = 0; i < sections.length; i++) {
+                if (sections[i].textContent.toLowerCase().indexOf(query) !== -1) {
+                    showSection(sections[i].id);
+                    break;
+                }
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchDocs();
+        });
+
+        if (window.location.hash) {
+            showSection(window.location.hash.substring(1));
+        }
+    </script>
+</body>
+</html>

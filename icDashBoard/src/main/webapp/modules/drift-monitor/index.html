@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drift Övervakning</title>
+    <link rel="stylesheet" href="../../shared/ic-styles.css">
+    <style>
+        /* ===== Layout ===== */
+        .dm-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        /* ===== Summary cards ===== */
+        .dm-summary { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .dm-summary-card {
+            flex: 1; min-width: 140px; background: var(--ic-bg-white);
+            border-radius: var(--ic-radius-md); padding: 16px 20px;
+            box-shadow: var(--ic-shadow-sm); border-left: 4px solid var(--ic-primary);
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .dm-summary-card.ok { border-left-color: var(--ic-success); }
+        .dm-summary-card.warning { border-left-color: var(--ic-warning); }
+        .dm-summary-card.error { border-left-color: var(--ic-danger); }
+        .dm-summary-value { font-size: 1.8em; font-weight: 700; color: var(--ic-text-dark); }
+        .dm-summary-label { font-size: 0.85em; color: var(--ic-text-muted); }
+
+        /* ===== Version pills ===== */
+        .dm-versions { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .dm-version-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--ic-bg-white); border-radius: 20px; padding: 6px 14px;
+            font-size: 0.85em; box-shadow: var(--ic-shadow-sm); border: 1px solid #e5e7eb;
+        }
+        .dm-version-pill .count { font-weight: 700; color: var(--ic-primary); }
+
+        /* ===== Machine card ===== */
+        .dm-machine {
+            background: var(--ic-bg-white); border-radius: var(--ic-radius-md);
+            box-shadow: var(--ic-shadow-sm); margin-bottom: 12px; overflow: hidden;
+            border-left: 4px solid var(--ic-success);
+            transition: box-shadow 0.2s;
+        }
+        .dm-machine:hover { box-shadow: var(--ic-shadow-md); }
+        .dm-machine.health-warning { border-left-color: var(--ic-warning); }
+        .dm-machine.health-error { border-left-color: var(--ic-danger); }
+        .dm-machine.health-unknown { border-left-color: #9ca3af; }
+
+        .dm-machine-header {
+            display: flex; align-items: center; padding: 16px 20px;
+            cursor: pointer; user-select: none; gap: 16px;
+        }
+        .dm-machine-header:hover { background: rgba(0,0,0,0.015); }
+
+        .dm-chevron {
+            font-size: 0.8em; color: var(--ic-text-muted);
+            transition: transform 0.2s; flex-shrink: 0; width: 16px;
+        }
+        .dm-machine.expanded .dm-chevron { transform: rotate(90deg); }
+
+        .dm-machine-name { font-weight: 700; font-size: 1.05em; color: var(--ic-text-dark); }
+        .dm-machine-ip { font-size: 0.85em; color: var(--ic-text-muted); margin-left: 4px; }
+
+        .dm-machine-meta {
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+            margin-left: auto; font-size: 0.82em; color: var(--ic-text-muted);
+        }
+
+        /* ===== Service pills on machine header ===== */
+        .dm-svc-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+        .dm-svc-pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 12px; font-size: 0.8em;
+            background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;
+        }
+        .dm-svc-pill.stopped { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+        .dm-svc-pill.unknown { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+        .dm-svc-pill .dm-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .dm-svc-pill .dm-dot.running { background: #22c55e; }
+        .dm-svc-pill .dm-dot.stopped { background: #ef4444; }
+        .dm-svc-pill .dm-dot.unknown { background: #9ca3af; }
+
+        /* ===== Host count badge ===== */
+        .dm-host-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px; border-radius: 12px; font-size: 0.82em;
+            background: var(--ic-bg-light); font-weight: 600;
+        }
+        .dm-host-badge .dot-ok { color: var(--ic-success); }
+        .dm-host-badge .dot-warn { color: var(--ic-warning); }
+        .dm-host-badge .dot-err { color: var(--ic-danger); }
+
+        /* ===== Expandable host table ===== */
+        .dm-hosts-panel {
+            display: none; border-top: 1px solid #f0f0f0;
+            padding: 0 20px 16px; background: #fafbfc;
+        }
+        .dm-machine.expanded .dm-hosts-panel { display: block; }
+
+        .dm-hosts-table { width: 100%; border-collapse: collapse; font-size: 0.88em; margin-top: 12px; }
+        .dm-hosts-table th {
+            text-align: left; padding: 8px 12px; color: var(--ic-text-muted);
+            font-weight: 600; font-size: 0.85em; text-transform: uppercase;
+            letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;
+        }
+        .dm-hosts-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        .dm-hosts-table tr:last-child td { border-bottom: none; }
+        .dm-hosts-table tr:hover td { background: rgba(84,88,242,0.03); }
+
+        /* ===== Health status dot ===== */
+        .dm-health {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 3px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 600;
+        }
+        .dm-health.ok { background: #d1fae5; color: #065f46; }
+        .dm-health.warning { background: #fef3c7; color: #92400e; }
+        .dm-health.error { background: #fee2e2; color: #991b1b; }
+        .dm-health.unknown { background: #f3f4f6; color: #374151; }
+        .dm-health-dot {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+        }
+        .dm-health-dot.ok { background: #10b981; }
+        .dm-health-dot.warning { background: #f59e0b; }
+        .dm-health-dot.error { background: #ef4444; }
+        .dm-health-dot.unknown { background: #9ca3af; }
+
+        /* ===== Version badge ===== */
+        .dm-ver-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 10px;
+            font-size: 0.82em; font-weight: 600; font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        .dm-ver-latest { background: #d1fae5; color: #065f46; }
+        .dm-ver-prev { background: #fef3c7; color: #92400e; }
+        .dm-ver-old { background: #fee2e2; color: #991b1b; }
+
+        /* ===== Tomcat service subheader ===== */
+        .dm-tc-header {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 0 4px; font-size: 0.88em; color: var(--ic-text-muted);
+            font-weight: 600; border-bottom: 1px dashed #e0e0e0; margin-bottom: 4px;
+        }
+        .dm-tc-header:first-child { padding-top: 12px; }
+
+        /* ===== OS info ===== */
+        .dm-os-tag {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.78em; color: var(--ic-text-muted); white-space: nowrap;
+        }
+
+        /* ===== Environment badge ===== */
+        .dm-env-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 10px;
+            font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .dm-env-production { background: #dbeafe; color: #1e40af; }
+        .dm-env-staging { background: #fef3c7; color: #92400e; }
+        .dm-env-test { background: #e0e7ff; color: #3730a3; }
+        .dm-env-development { background: #f3f4f6; color: #374151; }
+
+        /* ===== Loading ===== */
+        .dm-loading {
+            display: flex; align-items: center; justify-content: center;
+            padding: 60px; color: var(--ic-text-muted); font-size: 1.1em; gap: 12px;
+        }
+
+        /* ===== Toolbar ===== */
+        .dm-toolbar {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .dm-search {
+            flex: 1; min-width: 200px; padding: 8px 14px; border: 1px solid #d1d5db;
+            border-radius: var(--ic-radius-sm); font-size: 0.9em; outline: none;
+            transition: border-color 0.2s;
+        }
+        .dm-search:focus { border-color: var(--ic-primary); box-shadow: 0 0 0 3px rgba(84,88,242,0.1); }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .dm-summary { flex-direction: column; }
+            .dm-machine-header { flex-wrap: wrap; }
+            .dm-machine-meta { margin-left: 0; margin-top: 8px; }
+            .dm-hosts-table { font-size: 0.82em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dm-container">
+        <div class="ic-header" style="margin-bottom: 20px;">
+            <h1 class="ic-title">Drift Övervakning</h1>
+            <p class="ic-subtitle">Infrastrukturöversikt — maskiner, tjänster och applikationer</p>
+        </div>
+
+        <div id="summaryArea"></div>
+        <div id="versionArea"></div>
+
+        <div class="dm-toolbar">
+            <input type="text" class="dm-search" id="searchInput" placeholder="Sök maskin, host, IP...">
+        </div>
+
+        <div id="machineList">
+            <div class="dm-loading"><div class="ic-spinner"></div> Laddar infrastruktur...</div>
+        </div>
+    </div>
+
+    <script src="../../shared/ic-utils.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        const API_BASE = '../../api/drift';
+        let machines = [];
+        let summary = null;
+        let expandedMachines = new Set();
+        let hostCache = {};
+        let searchTerm = '';
+        let latestVersion = null;
+
+        // ===== INIT =====
+        async function init() {
+            try {
+                const [machinesResp, summaryResp] = await Promise.all([
+                    fetch(API_BASE + '/machines'),
+                    fetch(API_BASE + '/summary')
+                ]);
+                machines = await machinesResp.json();
+                summary = await summaryResp.json();
+
+                // Determine latest version from version distribution
+                if (summary.versionDistribution && summary.versionDistribution.length > 0) {
+                    latestVersion = summary.versionDistribution[0].version;
+                }
+
+                renderSummary();
+                renderVersions();
+                renderMachines();
+            } catch (e) {
+                document.getElementById('machineList').innerHTML =
+                    '<div class="ic-alert ic-alert-danger">Kunde inte ladda data: ' + escHtml(e.message) + '</div>';
+            }
+            ICUtils.notifyReady('drift-monitor');
+        }
+
+        // ===== RENDER SUMMARY =====
+        function renderSummary() {
+            if (!summary) return;
+            const el = document.getElementById('summaryArea');
+            const errCount = summary.hostsError || 0;
+            const warnCount = summary.hostsWarning || 0;
+            el.innerHTML =
+                '<div class="dm-summary">' +
+                    card(summary.totalMachines, 'Maskiner', '') +
+                    card(summary.totalHosts, 'Hosts', '') +
+                    card(summary.hostsOk || 0, 'OK', 'ok') +
+                    card(warnCount, 'Varning', warnCount > 0 ? 'warning' : 'ok') +
+                    card(errCount, 'Fel', errCount > 0 ? 'error' : 'ok') +
+                '</div>';
+        }
+
+        function card(value, label, cls) {
+            return '<div class="dm-summary-card ' + cls + '">' +
+                '<div class="dm-summary-value">' + value + '</div>' +
+                '<div class="dm-summary-label">' + label + '</div></div>';
+        }
+
+        // ===== RENDER VERSIONS =====
+        function renderVersions() {
+            if (!summary || !summary.versionDistribution) return;
+            const el = document.getElementById('versionArea');
+            let html = '<div class="dm-versions">';
+            summary.versionDistribution.forEach(function(v) {
+                html += '<div class="dm-version-pill">' +
+                    '<span class="dm-ver-badge ' + versionClass(v.version) + '">' + escHtml(v.version) + '</span>' +
+                    '<span class="count">' + v.count + '</span> hosts</div>';
+            });
+            html += '</div>';
+            el.innerHTML = html;
+        }
+
+        // ===== RENDER MACHINES =====
+        function renderMachines() {
+            const el = document.getElementById('machineList');
+            const filtered = machines.filter(function(m) {
+                if (!searchTerm) return true;
+                const s = searchTerm.toLowerCase();
+                if (m.hostname.toLowerCase().includes(s)) return true;
+                if (m.ipAddress && m.ipAddress.includes(s)) return true;
+                if (m.location && m.location.toLowerCase().includes(s)) return true;
+                // Search in services
+                if (m.services && m.services.some(function(svc) {
+                    return svc.version && svc.version.includes(s) ||
+                           svc.displayName && svc.displayName.toLowerCase().includes(s);
+                })) return true;
+                return false;
+            });
+
+            if (filtered.length === 0) {
+                el.innerHTML = '<div class="dm-loading">Inga maskiner matchar sökningen</div>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(function(m) {
+                const isExpanded = expandedMachines.has(m.id);
+                const healthClass = 'health-' + (m.machineHealth || 'unknown');
+
+                html += '<div class="dm-machine ' + healthClass + (isExpanded ? ' expanded' : '') + '" data-mid="' + m.id + '">';
+
+                // Header
+                html += '<div class="dm-machine-header" data-action="toggle" data-mid="' + m.id + '">';
+                html += '<span class="dm-chevron">▶</span>';
+                html += '<div>';
+                html += '<span class="dm-machine-name">' + escHtml(m.hostname) + '</span>';
+                if (m.ipAddress) html += '<span class="dm-machine-ip">(' + escHtml(m.ipAddress) + ')</span>';
+                html += '</div>';
+
+                // Service pills
+                html += '<div class="dm-svc-pills">';
+                if (m.services) {
+                    m.services.forEach(function(svc) {
+                        const icon = svcIcon(svc.serviceType);
+                        const statusCls = svc.status === 'running' ? '' : svc.status === 'stopped' ? ' stopped' : ' unknown';
+                        html += '<div class="dm-svc-pill' + statusCls + '">';
+                        html += '<span class="dm-dot ' + (svc.status || 'unknown') + '"></span>';
+                        html += icon + ' ' + escHtml(svc.version || '?');
+                        html += '</div>';
+                    });
+                }
+                html += '</div>';
+
+                // Meta right side
+                html += '<div class="dm-machine-meta">';
+                if (m.environment) {
+                    html += '<span class="dm-env-badge dm-env-' + m.environment + '">' + escHtml(m.environment) + '</span>';
+                }
+                if (m.osName) {
+                    html += '<span class="dm-os-tag">' + escHtml(m.osName) + '</span>';
+                }
+                if (m.ramGb) {
+                    html += '<span class="dm-os-tag">' + m.ramGb + ' GB RAM</span>';
+                }
+
+                // Host badge
+                if (m.hostCount > 0) {
+                    html += '<span class="dm-host-badge">';
+                    html += m.hostCount + ' hosts';
+                    if (m.hostsError > 0) html += ' <span class="dot-err">' + m.hostsError + ' fel</span>';
+                    if (m.hostsWarning > 0) html += ' <span class="dot-warn">' + m.hostsWarning + ' varning</span>';
+                    html += '</span>';
+                }
+                html += '</div>'; // meta
+
+                html += '</div>'; // header
+
+                // Hosts panel (populated on expand)
+                html += '<div class="dm-hosts-panel" id="hosts-' + m.id + '">';
+                if (isExpanded && hostCache[m.id]) {
+                    html += renderHostsTable(m);
+                } else if (isExpanded) {
+                    html += '<div class="dm-loading" style="padding:20px;"><div class="ic-spinner"></div> Laddar hosts...</div>';
+                }
+                html += '</div>';
+
+                html += '</div>'; // machine
+            });
+
+            el.innerHTML = html;
+        }
+
+        // ===== RENDER HOSTS TABLE =====
+        function renderHostsTable(machine) {
+            const hosts = hostCache[machine.id];
+            if (!hosts || hosts.length === 0) {
+                return '<div style="padding:16px;color:var(--ic-text-muted);">Inga hosts konfigurerade</div>';
+            }
+
+            // Group hosts by Tomcat service
+            const byService = {};
+            hosts.forEach(function(h) {
+                const key = h.tomcatService || 'Okänd';
+                if (!byService[key]) byService[key] = { version: h.tomcatVersion, hosts: [] };
+                byService[key].hosts.push(h);
+            });
+
+            let html = '';
+            const serviceKeys = Object.keys(byService);
+
+            serviceKeys.forEach(function(svcName) {
+                const group = byService[svcName];
+                if (serviceKeys.length > 1) {
+                    html += '<div class="dm-tc-header">' +
+                        '<span>🐱</span> ' + escHtml(svcName) +
+                        ' <span style="font-weight:400">v' + escHtml(group.version || '?') + '</span>' +
+                        ' <span style="font-weight:400;color:var(--ic-text-muted)">(' + group.hosts.length + ' hosts)</span>' +
+                        '</div>';
+                }
+
+                html += '<table class="dm-hosts-table"><thead><tr>';
+                html += '<th>Status</th><th>Hostname</th><th>Version</th><th>Databas</th><th>Företag</th><th>Meddelande</th>';
+                html += '</tr></thead><tbody>';
+
+                group.hosts.forEach(function(h) {
+                    const hs = h.healthStatus || 'unknown';
+                    html += '<tr>';
+                    html += '<td><span class="dm-health ' + hs + '"><span class="dm-health-dot ' + hs + '"></span>' + healthLabel(hs) + '</span></td>';
+                    html += '<td><strong>' + escHtml(h.hostname) + '</strong></td>';
+                    html += '<td><span class="dm-ver-badge ' + versionClass(h.appVersion) + '">' + escHtml(h.appVersion || '—') + '</span></td>';
+                    html += '<td>' + escHtml(h.dbName || '—') + '</td>';
+                    html += '<td>' + escHtml(h.companyName || '—') + '</td>';
+                    html += '<td style="color:var(--ic-text-muted);font-size:0.9em;">' + escHtml(h.healthMessage || '') + '</td>';
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+            });
+
+            return html;
+        }
+
+        // ===== TOGGLE EXPAND =====
+        async function toggleMachine(machineId) {
+            if (expandedMachines.has(machineId)) {
+                expandedMachines.delete(machineId);
+                renderMachines();
+                return;
+            }
+
+            expandedMachines.add(machineId);
+            renderMachines(); // show loading
+
+            if (!hostCache[machineId]) {
+                try {
+                    const resp = await fetch(API_BASE + '/machines/' + machineId + '/hosts');
+                    hostCache[machineId] = await resp.json();
+                } catch (e) {
+                    hostCache[machineId] = [];
+                }
+            }
+            renderMachines();
+        }
+
+        // ===== HELPERS =====
+        function escHtml(s) {
+            if (s == null) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+        }
+
+        function svcIcon(type) {
+            switch(type) {
+                case 'java': return '☕';
+                case 'mysql': return '🐬';
+                case 'tomcat': return '🐱';
+                case 'iis': return '🌐';
+                default: return '⚙️';
+            }
+        }
+
+        function healthLabel(hs) {
+            switch(hs) {
+                case 'ok': return 'OK';
+                case 'warning': return 'Varning';
+                case 'error': return 'Fel';
+                default: return 'Okänd';
+            }
+        }
+
+        function versionClass(v) {
+            if (!v || !latestVersion) return 'dm-ver-prev';
+            if (v === latestVersion) return 'dm-ver-latest';
+            // Compare: 5.100 > 5.99 > 5.98
+            const parts = v.split('.').map(Number);
+            const latestParts = latestVersion.split('.').map(Number);
+            // If one version behind
+            if (parts[0] === latestParts[0]) {
+                const diff = latestParts[1] - parts[1];
+                if (diff <= 1) return 'dm-ver-prev';
+            }
+            return 'dm-ver-old';
+        }
+
+        // ===== EVENTS =====
+        document.addEventListener('click', function(e) {
+            const header = e.target.closest('[data-action="toggle"]');
+            if (header) {
+                const mid = parseInt(header.dataset.mid, 10);
+                toggleMachine(mid);
+            }
+        });
+
+        document.getElementById('searchInput').addEventListener('input',
+            ICUtils.debounce(function(e) {
+                searchTerm = e.target.value.trim();
+                renderMachines();
+            }, 200)
+        );
+
+        // ===== START =====
+        document.addEventListener('DOMContentLoaded', init);
+    })();
+    </script>
+</body>
+</html>

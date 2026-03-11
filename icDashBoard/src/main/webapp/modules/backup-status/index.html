@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backup-status</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/ic-styles.css">
+    <style>
+        :root {
+            --ic-primary: #5458F2;
+            --ic-primary-hover: #4347d9;
+            --ic-secondary: #D4D5FC;
+            --ic-text-dark: #323232;
+            --ic-text-muted: #6c757d;
+            --ic-bg-white: #ffffff;
+            --ic-bg-light: #f8f9fc;
+            --ic-success: #10b981;
+            --ic-success-light: #d1fae5;
+            --ic-danger: #ef4444;
+            --ic-danger-light: #fee2e2;
+            --ic-warning: #f59e0b;
+            --ic-warning-light: #fef3c7;
+            --ic-radius-sm: 6px;
+            --ic-radius-md: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ic-bg-light);
+            min-height: 100vh;
+            color: var(--ic-text-dark);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: var(--ic-bg-white);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--ic-bg-white);
+            padding: 25px 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        h1 {
+            font-size: 1.6em;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subtitle {
+            color: var(--ic-text-muted);
+            font-size: 0.95em;
+        }
+
+        /* Summary cards */
+        .summary {
+            display: flex;
+            gap: 15px;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            flex-wrap: wrap;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 18px 22px;
+            border-radius: var(--ic-radius-md);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            min-width: 140px;
+            border-left: 4px solid var(--ic-primary);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+        }
+
+        .summary-card.critical { border-left-color: var(--ic-danger); }
+        .summary-card.warning { border-left-color: var(--ic-warning); }
+        .summary-card.ok { border-left-color: var(--ic-success); }
+        .summary-card.total { border-left-color: var(--ic-primary); }
+
+        .summary-card h3 {
+            font-size: 0.8em;
+            color: var(--ic-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .summary-card .value {
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .summary-card.critical .value { color: var(--ic-danger); }
+        .summary-card.warning .value { color: var(--ic-warning); }
+        .summary-card.ok .value { color: var(--ic-success); }
+        .summary-card.total .value { color: var(--ic-primary); }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .search-input {
+            padding: 8px 14px;
+            border: 1px solid #dee2e6;
+            border-radius: var(--ic-radius-sm);
+            font-size: 0.9em;
+            font-family: inherit;
+            width: 300px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 2px rgba(84, 88, 242, 0.15);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: #f0f0f5;
+            border-radius: var(--ic-radius-sm);
+            padding: 3px;
+        }
+
+        .view-toggle button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: inherit;
+            cursor: pointer;
+            background: transparent;
+            color: var(--ic-text-muted);
+            transition: all 0.2s;
+        }
+
+        .view-toggle button.active {
+            background: white;
+            color: var(--ic-text-dark);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .last-updated {
+            margin-left: auto;
+            font-size: 0.85em;
+            color: var(--ic-text-muted);
+        }
+
+        /* Table view */
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 30px 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--ic-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover { color: var(--ic-primary); }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9em;
+        }
+
+        tr:hover { background: #f8f9fc; }
+
+        /* Card view */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 16px;
+            padding: 20px 30px 30px;
+        }
+
+        .server-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--ic-radius-md);
+            padding: 20px;
+            transition: box-shadow 0.2s;
+        }
+
+        .server-card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .server-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .server-card-ip {
+            font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+            font-size: 1.1em;
+            font-weight: 600;
+            background: #f0f0f5;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        .server-card-files {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--ic-bg-light);
+            border-radius: var(--ic-radius-sm);
+            border-left: 3px solid #dee2e6;
+        }
+
+        .file-row.critical { border-left-color: var(--ic-danger); background: #fef2f2; }
+        .file-row.warning { border-left-color: var(--ic-warning); background: #fffbeb; }
+        .file-row.ok { border-left-color: var(--ic-success); background: #f0fdf4; }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 3px;
+        }
+
+        .file-meta {
+            font-size: 0.8em;
+            color: var(--ic-text-muted);
+        }
+
+        .file-reason {
+            font-size: 0.75em;
+            color: var(--ic-danger);
+            margin-top: 2px;
+            font-style: italic;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-critical {
+            background: var(--ic-danger-light);
+            color: #991b1b;
+        }
+
+        .status-warning {
+            background: var(--ic-warning-light);
+            color: #92400e;
+        }
+
+        .status-ok {
+            background: var(--ic-success-light);
+            color: #065f46;
+        }
+
+        .server-ip {
+            font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+            font-size: 0.85em;
+            background: #f0f0f5;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .size-cell {
+            font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+            font-size: 0.85em;
+        }
+
+        .size-cell.critical { color: var(--ic-danger); font-weight: 600; }
+        .size-cell.warning { color: var(--ic-warning); font-weight: 600; }
+
+        .date-cell {
+            white-space: nowrap;
+            font-size: 0.85em;
+        }
+
+        .date-cell.old {
+            color: var(--ic-danger);
+            font-weight: 600;
+        }
+
+        /* Empty & loading states */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ic-text-muted);
+        }
+
+        .empty-state .icon { font-size: 3em; margin-bottom: 15px; }
+        .empty-state h2 { font-size: 1.2em; margin-bottom: 8px; color: var(--ic-text-dark); }
+        .empty-state p { font-size: 0.95em; }
+        .empty-state code { background: #f0f0f5; padding: 2px 8px; border-radius: 4px; font-size: 0.9em; }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--ic-text-muted);
+        }
+
+        .loading .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: var(--ic-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="icon-save1"></i> Backup-status</h1>
+            <p class="subtitle" id="subtitleText">SQL-backupfiler per server</p>
+        </header>
+
+        <div class="summary" id="summary">
+            <div class="summary-card critical" onclick="filterByStatus('critical')">
+                <h3>Kritiska</h3>
+                <div class="value" id="criticalCount">-</div>
+            </div>
+            <div class="summary-card warning" onclick="filterByStatus('warning')">
+                <h3>Varning</h3>
+                <div class="value" id="warningCount">-</div>
+            </div>
+            <div class="summary-card ok" onclick="filterByStatus('ok')">
+                <h3>OK</h3>
+                <div class="value" id="okCount">-</div>
+            </div>
+            <div class="summary-card total" onclick="filterByStatus(null)">
+                <h3>Totalt</h3>
+                <div class="value" id="totalCount">-</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" class="search-input" id="searchInput" placeholder="Sok server, filnamn..." oninput="render()">
+            <div class="view-toggle">
+                <button id="btnTableView" class="active" onclick="setView('table')">Tabell</button>
+                <button id="btnCardView" onclick="setView('card')">Kort</button>
+            </div>
+            <span class="last-updated" id="lastUpdated"></span>
+        </div>
+
+        <div class="table-wrapper" id="tableView">
+            <div class="loading" id="loadingState">
+                <div class="spinner"></div>
+                <p>Laddar backupstatus...</p>
+            </div>
+            <table id="backupTable" style="display:none;">
+                <thead>
+                    <tr>
+                        <th onclick="sortBy('serverIp')">Server</th>
+                        <th onclick="sortBy('fileName')">Fil</th>
+                        <th onclick="sortBy('fileSizeMb')">Storlek</th>
+                        <th onclick="sortBy('databaseCount')">Databaser</th>
+                        <th onclick="sortBy('lastModified')">Senast andrad</th>
+                        <th onclick="sortBy('hoursSinceModified')">Alder</th>
+                        <th onclick="sortBy('status')">Status</th>
+                        <th>Orsak</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="card-grid" id="cardView" style="display:none;"></div>
+
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <div class="icon"><i class="icon-save1" style="font-size:inherit"></i></div>
+            <h2>Ingen backupdata hittad</h2>
+            <p>Kor <code>check-backups.ps1</code> for att skanna backupfiler och importera data.</p>
+        </div>
+    </div>
+
+    <script src="../../shared/ic-utils.js"></script>
+    <script>
+        let allBackups = [];
+        let currentSort = { field: 'status', dir: 'asc' };
+        let statusFilter = null;
+        let currentView = 'table';
+
+        // Status priority for sorting
+        const STATUS_ORDER = { critical: 0, warning: 1, ok: 2 };
+
+        (async function() {
+            try {
+                const resp = await fetch('../../api/backups');
+                if (!resp.ok) throw new Error('API svarade ' + resp.status);
+                allBackups = await resp.json();
+
+                document.getElementById('loadingState').style.display = 'none';
+
+                if (allBackups.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                } else {
+                    document.getElementById('backupTable').style.display = 'table';
+                    updateSummary();
+                    render();
+                    updateLastScanned();
+                }
+            } catch (err) {
+                document.getElementById('loadingState').innerHTML =
+                    '<div class="icon" style="font-size:2em;"><i class="icon-exclamation-circle" style="font-size:inherit"></i></div>' +
+                    '<p>Kunde inte ladda backupdata: ' + esc(err.message) + '</p>';
+            }
+
+            if (typeof ICUtils !== 'undefined') ICUtils.notifyReady('backup-status');
+        })();
+
+        function updateSummary() {
+            const critical = allBackups.filter(b => b.status === 'critical').length;
+            const warning = allBackups.filter(b => b.status === 'warning').length;
+            const ok = allBackups.filter(b => b.status === 'ok').length;
+
+            document.getElementById('criticalCount').textContent = critical;
+            document.getElementById('warningCount').textContent = warning;
+            document.getElementById('okCount').textContent = ok;
+            document.getElementById('totalCount').textContent = allBackups.length;
+
+            const servers = new Set(allBackups.map(b => b.serverIp)).size;
+            document.getElementById('subtitleText').textContent =
+                allBackups.length + ' backupfiler pa ' + servers + ' servrar';
+        }
+
+        function updateLastScanned() {
+            const scanned = allBackups.filter(b => b.lastScanned).map(b => new Date(b.lastScanned));
+            if (scanned.length > 0) {
+                const latest = new Date(Math.max(...scanned));
+                document.getElementById('lastUpdated').textContent =
+                    'Senast skannad: ' + latest.toLocaleString('sv-SE');
+            }
+        }
+
+        function filterByStatus(status) {
+            statusFilter = statusFilter === status ? null : status;
+            render();
+        }
+
+        function setView(view) {
+            currentView = view;
+            document.getElementById('btnTableView').className = view === 'table' ? 'active' : '';
+            document.getElementById('btnCardView').className = view === 'card' ? 'active' : '';
+            document.getElementById('tableView').style.display = view === 'table' ? 'block' : 'none';
+            document.getElementById('cardView').style.display = view === 'card' ? 'grid' : 'none';
+            render();
+        }
+
+        function getFiltered() {
+            let items = [...allBackups];
+            const query = document.getElementById('searchInput').value.toLowerCase();
+
+            if (query) {
+                items = items.filter(b =>
+                    (b.serverIp || '').toLowerCase().includes(query) ||
+                    (b.fileName || '').toLowerCase().includes(query) ||
+                    (b.filePath || '').toLowerCase().includes(query) ||
+                    (b.statusReason || '').toLowerCase().includes(query)
+                );
+            }
+
+            if (statusFilter) {
+                items = items.filter(b => b.status === statusFilter);
+            }
+
+            items.sort((a, b) => {
+                let valA = a[currentSort.field];
+                let valB = b[currentSort.field];
+
+                // Special sort for status
+                if (currentSort.field === 'status') {
+                    valA = STATUS_ORDER[valA] !== undefined ? STATUS_ORDER[valA] : 9;
+                    valB = STATUS_ORDER[valB] !== undefined ? STATUS_ORDER[valB] : 9;
+                }
+
+                if (valA == null) valA = currentSort.dir === 'asc' ? Infinity : -Infinity;
+                if (valB == null) valB = currentSort.dir === 'asc' ? Infinity : -Infinity;
+
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+
+                if (valA < valB) return currentSort.dir === 'asc' ? -1 : 1;
+                if (valA > valB) return currentSort.dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            return items;
+        }
+
+        function sortBy(field) {
+            if (currentSort.field === field) {
+                currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.dir = 'asc';
+            }
+            render();
+        }
+
+        function render() {
+            if (currentView === 'table') renderTable();
+            else renderCards();
+        }
+
+        function renderTable() {
+            const items = getFiltered();
+            const tbody = document.getElementById('tableBody');
+
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;padding:30px;">Inga backupfiler matchar filtret</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = items.map(b => {
+                const statusClass = 'status-' + b.status;
+                const statusLabel = getStatusLabel(b.status);
+                const statusIcon = getStatusIcon(b.status);
+                const sizeStr = b.fileSizeMb != null ? formatSize(b.fileSizeMb) : 'Saknas';
+                const sizeClass = b.fileSizeMb == null ? 'critical' : (b.fileSizeMb < 500 ? 'critical' : (b.fileSizeMb < 1000 ? 'warning' : ''));
+                const dateStr = b.lastModified ? formatDate(b.lastModified) : 'N/A';
+                const dateClass = b.hoursSinceModified != null && b.hoursSinceModified > 48 ? 'old' : '';
+                const ageStr = b.hoursSinceModified != null ? formatAge(b.hoursSinceModified) : 'N/A';
+
+                const dbCountStr = b.databaseCount != null ? String(b.databaseCount) : '-';
+
+                return '<tr>' +
+                    '<td><span class="server-ip">' + esc(b.serverIp) + '</span></td>' +
+                    '<td>' + esc(b.fileName) + '</td>' +
+                    '<td><span class="size-cell ' + sizeClass + '">' + esc(sizeStr) + '</span></td>' +
+                    '<td style="text-align:center;font-family:monospace;">' + esc(dbCountStr) + '</td>' +
+                    '<td class="date-cell ' + dateClass + '">' + esc(dateStr) + '</td>' +
+                    '<td class="date-cell ' + dateClass + '">' + esc(ageStr) + '</td>' +
+                    '<td><span class="status-badge ' + statusClass + '">' + statusIcon + ' ' + statusLabel + '</span></td>' +
+                    '<td style="font-size:0.8em;color:var(--ic-text-muted);">' + esc(b.statusReason || '') + '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        function renderCards() {
+            const items = getFiltered();
+            const container = document.getElementById('cardView');
+
+            // Group by server IP
+            const byServer = {};
+            items.forEach(b => {
+                if (!byServer[b.serverIp]) byServer[b.serverIp] = [];
+                byServer[b.serverIp].push(b);
+            });
+
+            // Sort servers: worst status first
+            const serverIPs = Object.keys(byServer).sort((a, b) => {
+                const worstA = Math.min(...byServer[a].map(f => STATUS_ORDER[f.status] !== undefined ? STATUS_ORDER[f.status] : 9));
+                const worstB = Math.min(...byServer[b].map(f => STATUS_ORDER[f.status] !== undefined ? STATUS_ORDER[f.status] : 9));
+                return worstA - worstB || a.localeCompare(b);
+            });
+
+            if (serverIPs.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Inga backupfiler matchar filtret</p></div>';
+                return;
+            }
+
+            container.innerHTML = serverIPs.map(ip => {
+                const files = byServer[ip];
+                const worstStatus = files.reduce((w, f) => {
+                    const order = STATUS_ORDER[f.status] !== undefined ? STATUS_ORDER[f.status] : 9;
+                    return order < (STATUS_ORDER[w] !== undefined ? STATUS_ORDER[w] : 9) ? f.status : w;
+                }, 'ok');
+
+                return '<div class="server-card">' +
+                    '<div class="server-card-header">' +
+                        '<span class="server-card-ip">' + esc(ip) + '</span>' +
+                        '<span class="status-badge status-' + worstStatus + '">' + getStatusIcon(worstStatus) + ' ' + getStatusLabel(worstStatus) + '</span>' +
+                    '</div>' +
+                    '<div class="server-card-files">' +
+                        files.map(f => {
+                            const sizeStr = f.fileSizeMb != null ? formatSize(f.fileSizeMb) : 'Saknas';
+                            const dateStr = f.lastModified ? formatDate(f.lastModified) : 'N/A';
+                            const ageStr = f.hoursSinceModified != null ? formatAge(f.hoursSinceModified) : '';
+
+                            const dbStr = f.databaseCount != null ? f.databaseCount + ' db' : '';
+
+                            return '<div class="file-row ' + f.status + '">' +
+                                '<div class="file-info">' +
+                                    '<div class="file-name">' + esc(f.fileName) + '</div>' +
+                                    '<div class="file-meta">' + esc(sizeStr) + ' &middot; ' + esc(dateStr) + (dbStr ? ' &middot; ' + esc(dbStr) : '') + (ageStr ? ' &middot; ' + esc(ageStr) : '') + '</div>' +
+                                    (f.statusReason ? '<div class="file-reason">' + esc(f.statusReason) + '</div>' : '') +
+                                '</div>' +
+                                '<span class="status-badge status-' + f.status + '">' + getStatusIcon(f.status) + '</span>' +
+                            '</div>';
+                        }).join('') +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function getStatusLabel(status) {
+            switch (status) {
+                case 'critical': return 'Kritisk';
+                case 'warning': return 'Varning';
+                case 'ok': return 'OK';
+                default: return status;
+            }
+        }
+
+        function getStatusIcon(status) {
+            switch (status) {
+                case 'critical': return '🔴';
+                case 'warning': return '🟡';
+                case 'ok': return '🟢';
+                default: return '';
+            }
+        }
+
+        function formatSize(mb) {
+            if (mb >= 1000) return (mb / 1000).toFixed(1) + ' GB';
+            return mb.toFixed(0) + ' MB';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatAge(hours) {
+            if (hours < 1) return 'Just nu';
+            if (hours < 24) return Math.round(hours) + ' tim';
+            const days = Math.round(hours / 24 * 10) / 10;
+            return days + ' dagar';
+        }
+
+        function esc(str) {
+            if (str == null) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>

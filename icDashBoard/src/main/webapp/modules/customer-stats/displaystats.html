@@ -1,0 +1,4576 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Succé- och riskfaktor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="../../shared/ic-icons.css">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha384-T0jARMiyENrhSuDpEHTOGRubCFMH6jJC0fBVDxIRcxgKGXVbt3V3JVXxwaOb6VJB" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-UPJBMirSlEKpBUM4kJNQ9FIe3JQQQHIB7TFzEMjRWQFHbHFrM65TMr+X5EDEbwaO" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" integrity="sha384-0tMNhEzr/MBYDRMiSeHGMMpbFnZqKn1rNbWJB2hCH/0R4jASfBXYPfJxyXOkuig/" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --ic-primary: #5458F2;
+            --ic-primary-hover: #4347d9;
+            --ic-secondary: #D4D5FC;
+            --ic-tertiary: #BEC0F9;
+            --ic-accent: #FFE496;
+            --ic-text-dark: #323232;
+            --ic-text-muted: #6c757d;
+            --ic-bg-white: #ffffff;
+            --ic-bg-light: #f8f9fc;
+            --ic-success: #10b981;
+            --ic-success-light: #d1fae5;
+            --ic-danger: #ef4444;
+            --ic-danger-light: #fee2e2;
+            --ic-radius-sm: 6px;
+            --ic-radius-md: 10px;
+            --ic-radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ic-bg-light);
+            min-height: 100vh;
+            color: var(--ic-text-dark);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: var(--ic-bg-white);
+            min-height: 100vh;
+        }
+
+
+        /* Tab bar */
+        .tab-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0;
+            flex: 1;
+        }
+
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 22px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.92em;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--ic-text-dark);
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .tab-btn.active {
+            color: var(--ic-primary);
+            border-bottom-color: var(--ic-primary);
+            font-weight: 600;
+        }
+
+        .tab-btn[data-tab="success"].active {
+            color: var(--ic-success);
+            border-bottom-color: var(--ic-success);
+        }
+
+        .tab-btn[data-tab="risk"].active {
+            color: var(--ic-danger);
+            border-bottom-color: var(--ic-danger);
+        }
+
+        .tab-icon {
+            font-size: 1em;
+        }
+
+        .tab-count {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.82em;
+            font-weight: 700;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .tab-btn.active .tab-count {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .tab-btn[data-tab="success"].active .tab-count {
+            background: var(--ic-success);
+        }
+
+        .tab-btn[data-tab="risk"].active .tab-count {
+            background: var(--ic-danger);
+        }
+
+        .tab-score {
+            font-size: 0.78em;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 6px;
+        }
+
+        .tab-score.success {
+            color: var(--ic-success);
+            background: var(--ic-success-light);
+        }
+
+        .tab-score.risk {
+            color: var(--ic-danger);
+            background: var(--ic-danger-light);
+        }
+
+        /* (tab-actions removed — export moved to download popout) */
+
+        /* Tab panels */
+        .tab-panel {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--ic-secondary);
+            border-top: 4px solid var(--ic-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1em;
+            font-weight: 500;
+            color: var(--ic-text-muted);
+        }
+
+        /* Scroll-to-top button */
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #2d3748;
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.3em;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s, transform 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .scroll-top-btn.visible {
+            opacity: 0.4;
+            pointer-events: auto;
+        }
+
+        .scroll-top-btn.visible:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            background: var(--ic-primary);
+        }
+
+        /* Toolbar — compact icon buttons with popouts */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-icon-btn {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            color: #4a5568;
+            transition: all 0.2s;
+            padding: 0;
+            font-family: inherit;
+        }
+
+        .toolbar-icon-btn:hover {
+            background: #f0f0ff;
+            border-color: var(--ic-primary);
+            color: var(--ic-primary);
+        }
+
+        .toolbar-icon-btn.active {
+            background: var(--ic-primary);
+            color: white;
+            border-color: var(--ic-primary);
+        }
+
+        .toolbar-icon-btn .date-preset-label {
+            font-weight: 700;
+            font-size: 0.82em;
+            letter-spacing: -0.3px;
+        }
+
+        .filter-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            width: 8px;
+            height: 8px;
+            background: var(--ic-primary);
+            border-radius: 50%;
+            border: 1.5px solid white;
+            display: none;
+        }
+
+        .filter-badge.visible {
+            display: block;
+        }
+
+        /* Popout panels (shared) */
+        .toolbar-popout-wrapper {
+            position: relative;
+        }
+
+        .toolbar-popout {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            background: white;
+            border-radius: var(--ic-radius-md);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+            z-index: 500;
+            display: none;
+            padding: 12px;
+        }
+
+        .toolbar-popout.show {
+            display: block;
+        }
+
+        .toolbar-popout.right-aligned {
+            left: auto;
+            right: 0;
+        }
+
+        /* Date picker popout */
+        .date-popout {
+            width: 320px;
+        }
+
+        .date-presets {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .date-preset-btn {
+            flex: 1;
+            padding: 8px 0;
+            background: #f8f9fc;
+            border: 1px solid #dee2e6;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85em;
+            font-weight: 500;
+            color: #4a5568;
+            transition: all 0.15s;
+        }
+
+        .date-preset-btn:hover {
+            border-color: var(--ic-primary);
+            color: var(--ic-primary);
+        }
+
+        .date-preset-btn.active {
+            background: var(--ic-primary);
+            color: white;
+            border-color: var(--ic-primary);
+        }
+
+        .date-info {
+            font-size: 0.82em;
+            color: var(--ic-text-muted);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .date-info strong {
+            color: var(--ic-text-dark);
+        }
+
+        .date-custom-section {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 10px;
+        }
+
+        .date-custom-section label {
+            font-size: 0.82em;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .date-custom-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .date-custom-row input[type="date"] {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid #dee2e6;
+            border-radius: var(--ic-radius-sm);
+            font-family: inherit;
+            font-size: 0.82em;
+            color: var(--ic-text-dark);
+        }
+
+        .date-custom-row input[type="date"]:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 2px rgba(84, 88, 242, 0.2);
+        }
+
+        .date-apply-btn {
+            width: 100%;
+            margin-top: 6px;
+            padding: 7px 14px;
+            background: var(--ic-primary);
+            color: white;
+            border: none;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82em;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+
+        .date-apply-btn:hover {
+            background: var(--ic-primary-hover);
+        }
+
+        .date-custom-warning {
+            display: none;
+            font-size: 0.78em;
+            color: #b45309;
+            margin-top: 8px;
+            padding: 6px 8px;
+            background: #fef3c7;
+            border-radius: var(--ic-radius-sm);
+        }
+
+        .date-custom-warning.visible {
+            display: block;
+        }
+
+        /* Coach filter popout */
+        .coach-popout {
+            width: 280px;
+        }
+
+        .coach-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .coach-list label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 4px;
+            font-size: 0.85em;
+            color: var(--ic-text-dark);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .coach-list label:hover {
+            background: #f7fafc;
+        }
+
+        .coach-list input[type="checkbox"] {
+            accent-color: var(--ic-primary);
+        }
+
+        .coach-popout-actions {
+            display: flex;
+            gap: 6px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+        }
+
+        .coach-popout-actions button {
+            flex: 1;
+            padding: 6px 0;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82em;
+            font-weight: 500;
+            border: 1px solid #dee2e6;
+            transition: all 0.15s;
+        }
+
+        .coach-clear-btn {
+            background: white;
+            color: #4a5568;
+        }
+
+        .coach-clear-btn:hover {
+            border-color: var(--ic-danger);
+            color: var(--ic-danger);
+        }
+
+        .coach-apply-btn {
+            background: var(--ic-primary);
+            color: white;
+            border-color: var(--ic-primary) !important;
+        }
+
+        .coach-apply-btn:hover {
+            background: var(--ic-primary-hover);
+        }
+
+        /* Track filter popout */
+        .track-popout {
+            width: 220px;
+        }
+
+        .track-list {
+            margin-bottom: 10px;
+        }
+
+        .track-list label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 4px;
+            font-size: 0.85em;
+            color: var(--ic-text-dark);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: opacity 0.15s;
+        }
+
+        .track-list label:hover {
+            background: #f7fafc;
+        }
+
+        .track-list input[type="checkbox"] {
+            accent-color: var(--ic-primary);
+        }
+
+        .track-popout-actions {
+            display: flex;
+            gap: 6px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+        }
+
+        .track-popout-actions button {
+            flex: 1;
+            padding: 6px 0;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82em;
+            font-weight: 500;
+            border: 1px solid #dee2e6;
+            transition: all 0.15s;
+        }
+
+        .track-clear-btn {
+            background: white;
+            color: #4a5568;
+        }
+
+        .track-clear-btn:hover {
+            border-color: var(--ic-danger);
+            color: var(--ic-danger);
+        }
+
+        .track-apply-btn {
+            background: var(--ic-primary);
+            color: white;
+            border-color: var(--ic-primary) !important;
+        }
+
+        .track-apply-btn:hover {
+            background: var(--ic-primary-hover);
+        }
+
+        /* Download popout */
+        .download-popout {
+            width: 180px;
+            padding: 6px;
+        }
+
+        .download-popout button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.88em;
+            font-weight: 500;
+            transition: filter 0.15s;
+        }
+
+        .download-popout button:hover {
+            filter: brightness(0.95);
+        }
+
+        .dl-excel-btn {
+            background: #d4edda;
+            color: #217346;
+            margin-bottom: 4px;
+        }
+
+        .dl-csv-btn {
+            background: #e9ecef;
+            color: #4a5568;
+        }
+
+        /* API timestamp */
+        .api-timestamp {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.72em;
+            color: #a0aec0;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        /* Settings panel */
+        .settings-panel {
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+            padding: 20px;
+            width: 380px;
+            z-index: 1001;
+            display: none;
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+
+        .settings-panel.show {
+            display: block;
+        }
+
+        .settings-panel h3 {
+            font-size: 1.1em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-section h4 {
+            font-size: 0.9em;
+            color: var(--ic-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .settings-section.risk h4 {
+            color: #c53030;
+        }
+
+        .settings-section.success h4 {
+            color: #276749;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .setting-label {
+            font-size: 0.85em;
+            color: #4a5568;
+            flex: 1;
+        }
+
+        .setting-input {
+            width: 80px;
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.9em;
+            text-align: right;
+            font-family: inherit;
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .setting-suffix {
+            font-size: 0.85em;
+            color: #718096;
+            margin-left: 5px;
+            width: 20px;
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .settings-btn-action {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .settings-btn-apply {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .settings-btn-apply:hover {
+            background: #5a6fd6;
+        }
+
+        .settings-btn-reset {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .settings-btn-reset:hover {
+            background: #cbd5e0;
+        }
+
+        /* Help/Guide toggle button */
+        .help-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            cursor: pointer;
+            color: var(--ic-primary);
+            font-size: 0.85em;
+            font-weight: 500;
+            border: 1px dashed var(--ic-primary);
+            border-radius: 6px;
+            margin-bottom: 15px;
+            transition: background 0.2s;
+        }
+
+        .help-toggle:hover {
+            background: #f7fafc;
+        }
+
+        .help-toggle.expanded {
+            background: var(--ic-primary);
+            color: white;
+            border-style: solid;
+        }
+
+        /* Help panel - positioned to the right */
+        .help-panel {
+            position: fixed;
+            bottom: 100px;
+            left: 430px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+            padding: 20px;
+            width: 380px;
+            z-index: 1001;
+            display: none;
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+
+        .help-panel.show {
+            display: block;
+        }
+
+        .help-panel h4 {
+            font-size: 1.1em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .help-panel h5 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1em;
+            margin-top: 15px;
+        }
+
+        .help-panel h5:first-of-type {
+            margin-top: 0;
+        }
+
+        .help-panel p {
+            color: #4a5568;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .help-panel ul {
+            margin-left: 20px;
+            color: #4a5568;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .help-panel li {
+            margin-bottom: 8px;
+        }
+
+        .help-panel .example {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 4px solid var(--ic-primary);
+            font-size: 0.9em;
+        }
+
+        .help-panel .example-risk {
+            border-left-color: #c53030;
+        }
+
+        .help-panel .example-success {
+            border-left-color: #276749;
+        }
+
+        .help-panel .close-help {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: #718096;
+            padding: 5px;
+        }
+
+        .help-panel .close-help:hover {
+            color: #2d3748;
+        }
+
+        /* Toast notification - from top, larger */
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-150px);
+            background: linear-gradient(135deg, #48bb78 0%, #276749 100%);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 1.1em;
+            font-weight: 500;
+            z-index: 2000;
+            opacity: 0;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast .toast-icon {
+            font-size: 2em;
+        }
+
+        .toast .toast-message {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toast .toast-title {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .toast .toast-subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        /* Table styles */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th.sortable:hover {
+            background: #e9ecef;
+        }
+
+        th .sort-icon {
+            margin-left: 5px;
+            opacity: 0.3;
+        }
+
+        th.sort-asc .sort-icon,
+        th.sort-desc .sort-icon {
+            opacity: 1;
+        }
+
+        .version-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .version-dropdown.show {
+            display: block;
+        }
+
+        .version-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .version-option:hover {
+            background: #f8f9fa;
+        }
+
+        .version-option input {
+            margin: 0;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .site-url {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .site-url a {
+            color: var(--ic-primary);
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .site-url a:hover {
+            color: #5a6fd6;
+            text-decoration: underline;
+        }
+
+        .company-name {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .company-name a {
+            color: #38a169;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .company-name a:hover {
+            color: #2f855a;
+            text-decoration: underline;
+        }
+
+        .company-name .no-match {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .number {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .version-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #e7f3ff;
+            color: #0066cc;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        /* License cell */
+        .license-cell {
+            font-size: 0.82em;
+            white-space: nowrap;
+        }
+        .license-cell .license-holder {
+            display: block;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--ic-text-dark);
+        }
+        .license-expiry {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        .license-expiry.ok { background: #e8f5e9; color: #2e7d32; }
+        .license-expiry.warn { background: #fff3e0; color: #e65100; }
+        .license-expiry.expired { background: #ffebee; color: #c62828; }
+        .license-expiry.none { background: #f5f5f5; color: #999; }
+
+        /* Track icons in table */
+        .track-cell {
+            white-space: nowrap;
+        }
+        .track-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            font-size: 0.85em;
+            margin-right: 3px;
+        }
+        .track-icon:last-child { margin-right: 0; }
+        .track-assist { background: #ede9fe; color: #7c3aed; }
+        .track-train  { background: #dbeafe; color: #2563eb; }
+        .track-map    { background: #d1fae5; color: #059669; }
+        .track-none   { color: #cbd5e0; font-size: 0.9em; }
+
+        /* Flag badges */
+        .flags-cell {
+            max-width: 250px;
+        }
+
+        .flag-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin: 1px;
+            white-space: nowrap;
+        }
+
+        .flag-success {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .flag-risk {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+
+        /* Empty state */
+        .empty-state {
+            padding: 30px;
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+        }
+
+        /* (date-range-picker removed — replaced by toolbar popout) */
+
+        /* Chart button in table */
+        .chart-btn {
+            background: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 1em;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .chart-btn:hover {
+            background: #f0f0ff;
+            border-color: var(--ic-primary);
+        }
+
+
+        .weight-badge {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #4a5568;
+            font-size: 0.7em;
+            font-weight: 600;
+            padding: 2px 5px;
+            border-radius: 4px;
+            margin-right: 5px;
+            min-width: 24px;
+            text-align: center;
+        }
+        .settings-section.risk .weight-badge { background: #fee2e2; color: #c53030; }
+        .settings-section.success .weight-badge { background: #d1fae5; color: #276749; }
+
+        .setting-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .setting-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--ic-primary);
+        }
+
+        .weighted-score {
+            font-weight: 700;
+            font-size: 0.85em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .weighted-score.risk { background: #fee2e2; color: #c53030; }
+        .weighted-score.success { background: #d1fae5; color: #276749; }
+
+        /* ===== "Newly Classified" Indicator System ===== */
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        @keyframes pulseGlowRisk {
+            0%, 100% { box-shadow: 0 0 4px rgba(239, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 14px rgba(239, 68, 68, 0.6); }
+        }
+        @keyframes pulseGlowSuccess {
+            0%, 100% { box-shadow: 0 0 4px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 14px rgba(16, 185, 129, 0.6); }
+        }
+        .new-badge {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+        .new-badge.risk {
+            background: #ef4444;
+        }
+        .new-badge.success {
+            background: #10b981;
+        }
+        tr.newly-classified-risk {
+            background: linear-gradient(90deg, #fff5f5 0%, transparent 40%) !important;
+            border-left: 3px solid #ef4444;
+        }
+        tr.newly-classified-success {
+            background: linear-gradient(90deg, #f0fdf4 0%, transparent 40%) !important;
+            border-left: 3px solid #10b981;
+        }
+        .tab-new-count {
+            font-size: 0.72em;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 8px;
+            color: white;
+            margin-left: 3px;
+            vertical-align: middle;
+        }
+        .tab-btn[data-tab="success"] .tab-new-count {
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+        }
+        .tab-btn[data-tab="risk"] .tab-new-count {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+        }
+
+        /* ===== Unified Search Bar ===== */
+        .unified-search-bar {
+            position: relative;
+            flex: 1;
+            min-width: 180px;
+            max-width: 340px;
+            margin: 0 4px;
+        }
+        .unified-search-wrapper {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .unified-search-icon {
+            position: absolute;
+            left: 12px;
+            font-size: 0.85em;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.5;
+        }
+        .unified-search-input {
+            width: 100%;
+            padding: 7px 32px 7px 32px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85em;
+            color: var(--ic-text-dark);
+            background: white;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .unified-search-input:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 3px rgba(84, 88, 242, 0.15);
+        }
+        .unified-search-clear {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            color: #a0aec0;
+            cursor: pointer;
+            padding: 2px 6px;
+            line-height: 1;
+        }
+        .unified-search-clear:hover { color: var(--ic-text-dark); }
+
+        /* Dropdown */
+        .unified-search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            min-width: 340px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            z-index: 200;
+            display: none;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+        .unified-search-dropdown.visible { display: block; }
+
+        .search-section-label {
+            padding: 8px 14px 4px;
+            font-size: 0.72em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #a0aec0;
+        }
+        .search-separator {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 4px 14px;
+        }
+        .search-result-item {
+            padding: 9px 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.12s;
+        }
+        .search-result-item:hover,
+        .search-result-item.active { background: #f0f0ff; }
+        .search-result-text { flex: 1; min-width: 0; }
+        .search-result-primary {
+            font-size: 0.88em;
+            font-weight: 500;
+            color: var(--ic-text-dark);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .search-result-secondary {
+            font-size: 0.76em;
+            color: #a0aec0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .search-result-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .search-result-badge.success { background: #d1fae5; color: #276749; }
+        .search-result-badge.risk { background: #fee2e2; color: #c53030; }
+        .search-result-badge.other { background: #e2e8f0; color: #4a5568; }
+        .search-result-count {
+            font-size: 0.78em;
+            color: #a0aec0;
+            margin-left: 4px;
+        }
+        .search-result-sub {
+            display: block;
+            font-size: 0.78em;
+            color: #a0aec0;
+            margin-top: 1px;
+        }
+        .search-no-results {
+            padding: 16px 14px;
+            text-align: center;
+            color: #a0aec0;
+            font-size: 0.88em;
+        }
+
+        /* Highlight for selected row */
+        tr.search-highlight {
+            background-color: #fffbeb !important;
+            outline: 2px solid #f59e0b;
+            outline-offset: -2px;
+            animation: highlight-fade 3s ease-out forwards;
+        }
+        @keyframes highlight-fade {
+            0%  { background-color: #fffbeb; outline-color: #f59e0b; }
+            70% { background-color: #fffbeb; outline-color: #f59e0b; }
+            100% { background-color: transparent; outline-color: transparent; }
+        }
+
+        /* ===== Column Header Search ===== */
+        .header-searchable {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .header-searchable:hover { color: var(--ic-primary); }
+        .col-search-label {
+            display: inline;
+            pointer-events: none;
+        }
+        .col-search-icon {
+            font-size: 0.7em;
+            opacity: 0.35;
+            margin-left: 3px;
+            vertical-align: middle;
+            pointer-events: none;
+            transition: opacity 0.15s;
+        }
+        .header-searchable:hover .col-search-icon { opacity: 0.8; }
+        /* When filter is active but collapsed: highlight header */
+        .header-searchable.has-filter {
+            color: var(--ic-primary);
+            font-weight: 700;
+        }
+        .header-searchable.has-filter .col-search-icon { opacity: 1; color: var(--ic-primary); }
+        /* The search input overlay */
+        .col-search-input {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            padding: 0 24px 0 8px;
+            border: 2px solid var(--ic-primary);
+            border-radius: 3px;
+            font-size: inherit;
+            font-family: inherit;
+            background: white;
+            z-index: 10;
+            box-sizing: border-box;
+            display: none;
+        }
+        .col-search-input.expanded { display: block; }
+        .col-search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(84,88,242,0.18);
+        }
+        .col-search-clear {
+            position: absolute;
+            right: 2px; top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1.1em;
+            color: #a0aec0;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            z-index: 11;
+            display: none;
+        }
+        .col-search-clear:hover { color: var(--ic-text-dark); }
+        .col-search-input.expanded ~ .col-search-clear { display: block; }
+        .version-filter-btn-inline {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.75em;
+            opacity: 0.5;
+            padding: 2px 4px;
+            transition: opacity 0.2s;
+        }
+        .version-filter-btn-inline:hover { opacity: 1; }
+        .version-filter-btn-inline.filter-active { opacity: 1; color: var(--ic-primary); }
+
+        /* ===== Detail Pop-in Panel ===== */
+        .detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .detail-overlay.show {
+            display: flex;
+        }
+        .detail-panel {
+            background: var(--ic-bg-white);
+            width: 92vw;
+            max-width: 1400px;
+            height: 92vh;
+            border-radius: var(--ic-radius-lg);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 28px;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            background: var(--ic-bg-light);
+        }
+        .detail-header-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .detail-header-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--ic-text-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .detail-header-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .detail-header-title a:hover {
+            color: var(--ic-primary);
+        }
+        .detail-header-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+            font-size: 0.85em;
+            color: var(--ic-text-muted);
+            flex-wrap: wrap;
+        }
+        .detail-header-meta a {
+            color: #38a169;
+            text-decoration: none;
+        }
+        .detail-header-meta a:hover {
+            text-decoration: underline;
+        }
+        .detail-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.8em;
+            color: #a0aec0;
+            cursor: pointer;
+            padding: 4px 12px;
+            line-height: 1;
+            border-radius: var(--ic-radius-sm);
+            transition: background 0.2s, color 0.2s;
+            flex-shrink: 0;
+        }
+        .detail-close-btn:hover {
+            background: #fee2e2;
+            color: var(--ic-danger);
+        }
+        .detail-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px;
+        }
+
+        /* Metrics grid */
+        .detail-metrics-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 28px;
+        }
+        .detail-metric-row {
+            display: grid;
+            grid-template-columns: 180px repeat(3, 1fr);
+            gap: 0;
+            background: var(--ic-bg-light);
+            border-radius: var(--ic-radius-sm);
+            overflow: hidden;
+            border: 1px solid #edf2f7;
+        }
+        .detail-metric-label {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 0.85em;
+            color: var(--ic-text-dark);
+            background: #f7fafc;
+            border-right: 1px solid #edf2f7;
+        }
+        .detail-metric-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-right: 1px solid #edf2f7;
+            position: relative;
+        }
+        .detail-metric-card:last-child {
+            border-right: none;
+        }
+        .detail-metric-card:hover {
+            background: #f0f0ff;
+        }
+        .detail-metric-card.selected {
+            background: #f0f0ff;
+            box-shadow: inset 0 -3px 0 var(--metric-color, var(--ic-primary));
+        }
+        .detail-metric-period {
+            font-size: 0.7em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #a0aec0;
+            margin-bottom: 2px;
+        }
+        .detail-metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--ic-text-dark);
+            line-height: 1.2;
+        }
+        .detail-metric-value.loading {
+            color: #cbd5e0;
+            font-size: 0.9em;
+        }
+        .detail-metric-change {
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-top: 1px;
+        }
+        .detail-metric-change.positive { color: var(--ic-success); }
+        .detail-metric-change.negative { color: var(--ic-danger); }
+        .detail-metric-change.neutral  { color: #a0aec0; }
+
+        /* Chart section */
+        .detail-chart-section {
+            border-top: 1px solid #edf2f7;
+            padding-top: 20px;
+        }
+        .detail-chart-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .detail-chart-controls label {
+            font-size: 0.85em;
+            color: var(--ic-text-muted);
+        }
+        .detail-chart-controls input[type="date"] {
+            padding: 5px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--ic-radius-sm);
+            font-family: inherit;
+            font-size: 0.85em;
+        }
+        .detail-mode-toggle {
+            display: flex;
+            gap: 2px;
+            background: #f0f0f0;
+            border-radius: var(--ic-radius-sm);
+            padding: 2px;
+        }
+        .detail-mode-btn {
+            padding: 5px 14px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82em;
+            font-weight: 500;
+            color: var(--ic-text-muted);
+            transition: all 0.2s;
+        }
+        .detail-mode-btn.active {
+            background: white;
+            color: var(--ic-text-dark);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .detail-chart-canvas-wrapper {
+            position: relative;
+            height: 350px;
+        }
+        .detail-chart-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--ic-text-muted);
+            font-size: 0.9em;
+        }
+        .detail-chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .detail-legend-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.78em;
+            font-weight: 500;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+        .detail-legend-chip:hover {
+            border-color: #cbd5e0;
+        }
+        .detail-legend-chip.active {
+            color: white;
+            border-color: transparent;
+        }
+        .detail-legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        @media (max-width: 768px) {
+            th, td {
+                padding: 8px 5px;
+                font-size: 0.8em;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .tab-bar {
+                flex-wrap: wrap;
+                padding: 0 10px;
+            }
+
+            .tab-btn {
+                padding: 10px 14px;
+                font-size: 0.85em;
+            }
+
+            .tab-label {
+                display: none;
+            }
+
+            .toolbar {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            /* Detail panel responsive */
+            .detail-panel {
+                width: 98vw;
+                height: 96vh;
+                border-radius: var(--ic-radius-sm);
+            }
+            .detail-header {
+                padding: 14px 16px;
+                gap: 10px;
+            }
+            .detail-header-title {
+                font-size: 1.1em;
+            }
+            .detail-body {
+                padding: 16px;
+            }
+            .detail-metric-row {
+                grid-template-columns: 1fr;
+            }
+            .detail-metric-label {
+                border-right: none;
+                border-bottom: 1px solid #edf2f7;
+                padding: 8px 12px;
+            }
+            .detail-metric-card {
+                border-right: none;
+                border-bottom: 1px solid #edf2f7;
+            }
+            .detail-chart-canvas-wrapper {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading overlay (active on page load) -->
+    <div class="loading-overlay active" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">Laddar kundstatistik...</div>
+    </div>
+
+    <div class="container">
+        <!-- Hidden date inputs (used by JS) -->
+        <input type="hidden" id="dateFrom">
+        <input type="hidden" id="dateTo">
+
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <!-- Date picker button -->
+                <div class="toolbar-popout-wrapper">
+                    <button class="toolbar-icon-btn" id="datePickerBtn" onclick="toggleDatePicker()" title="Datumperiod">
+                        <span class="date-preset-label" id="datePresetLabel">3m</span>
+                    </button>
+                    <div class="toolbar-popout date-popout" id="datePopout">
+                        <div class="date-presets">
+                            <button class="date-preset-btn" data-months="1" onclick="selectPreset(1, this)">1 m&aring;nad</button>
+                            <button class="date-preset-btn active" data-months="3" onclick="selectPreset(3, this)">3 m&aring;nader</button>
+                            <button class="date-preset-btn" data-months="6" onclick="selectPreset(6, this)">6 m&aring;nader</button>
+                        </div>
+                        <div class="date-info" id="dateInfo"></div>
+                        <div class="date-custom-section">
+                            <label>Anpassad period</label>
+                            <div class="date-custom-row">
+                                <input type="date" id="customDateFrom" title="Fr&aring;n">
+                                <span style="color:#a0aec0;font-size:0.85em">—</span>
+                                <input type="date" id="customDateTo" title="Till">
+                            </div>
+                            <button class="date-apply-btn" onclick="applyCustomDates()">Tillämpa</button>
+                            <div class="date-custom-warning" id="dateCustomWarning">
+                                Anpassad period g&ouml;r att resultat inte kan j&auml;mf&ouml;ras med tidigare bed&ouml;mningar.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coach filter button -->
+                <div class="toolbar-popout-wrapper">
+                    <button class="toolbar-icon-btn" id="coachFilterBtn" onclick="toggleCoachFilter()" title="Filtrera coach">
+                        <i class="icon-user-circle"></i>
+                        <span class="filter-badge" id="coachBadge"></span>
+                    </button>
+                    <div class="toolbar-popout coach-popout" id="coachPopout">
+                        <div class="coach-list" id="coachList">
+                            <div style="color:#a0aec0;font-size:0.85em;padding:8px">Ingen coachdata tillg&auml;nglig</div>
+                        </div>
+                        <div class="coach-popout-actions">
+                            <button class="coach-clear-btn" onclick="clearCoachFilter()">Rensa</button>
+                            <button class="coach-apply-btn" onclick="applyCoachFilter()">Tillämpa</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Track filter button -->
+                <div class="toolbar-popout-wrapper">
+                    <button class="toolbar-icon-btn" id="trackFilterBtn" onclick="toggleTrackFilter()" title="Filtrera sp&aring;r">
+                        <i class="icon-flag"></i>
+                        <span class="filter-badge" id="trackBadge"></span>
+                    </button>
+                    <div class="toolbar-popout track-popout" id="trackPopout">
+                        <div class="track-list" id="trackList">
+                            <label>
+                                <input type="checkbox" value="assist" onchange="applyTrackFilter()">
+                                <span>Assist</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="train" onchange="applyTrackFilter()">
+                                <span>Train</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="map" onchange="applyTrackFilter()">
+                                <span>Map</span>
+                            </label>
+                        </div>
+                        <div class="track-popout-actions">
+                            <button class="track-clear-btn" onclick="clearTrackFilter()">Rensa</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reset filters button (hidden when no active filters) -->
+                <button class="toolbar-icon-btn" id="resetFiltersBtn" onclick="resetAllFilters()" title="&Aring;terst&auml;ll alla filter" style="display:none">
+                    <i class="icon-refresh"></i>
+                </button>
+            </div>
+
+            <!-- Unified search (centered in toolbar) -->
+            <div class="unified-search-bar">
+                <div class="unified-search-wrapper">
+                    <span class="unified-search-icon"><i class="icon-search"></i></span>
+                    <input type="text" id="unifiedSearch" class="unified-search-input"
+                           placeholder="Sök kund eller URL..." autocomplete="off">
+                    <button class="unified-search-clear" id="unifiedSearchClear" style="display:none;">&times;</button>
+                </div>
+                <div class="unified-search-dropdown" id="unifiedSearchDropdown"></div>
+            </div>
+
+            <div class="toolbar-right">
+                <!-- Criteria button (icon only) -->
+                <button class="toolbar-icon-btn" id="settingsBtn" onclick="toggleSettings()" title="Kriterier">
+                    <i class="icon-cog1"></i>
+                </button>
+
+                <!-- Download button -->
+                <div class="toolbar-popout-wrapper">
+                    <button class="toolbar-icon-btn" id="downloadBtn" onclick="toggleDownload()" title="Ladda ned">
+                        <i class="icon-download1"></i>
+                    </button>
+                    <div class="toolbar-popout download-popout right-aligned" id="downloadPopout">
+                        <button class="dl-excel-btn" onclick="exportToExcel(); closeAllPopouts()"><i class="icon-chart-bar1"></i> Excel</button>
+                        <button class="dl-csv-btn" onclick="exportCSV(activeTab); closeAllPopouts()"><i class="icon-document-text"></i> CSV (aktiv flik)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab bar: summary counts as tab buttons + action buttons on right -->
+        <div class="tab-bar">
+            <div class="tab-buttons" id="tabButtons">
+                <button class="tab-btn active" data-tab="alla" onclick="switchTab('alla', this)">
+                    <span class="tab-icon"><i class="icon-trending-up"></i></span>
+                    <span class="tab-label">Alla</span>
+                    <span class="tab-count" id="allaCount">0</span>
+                </button>
+                <button class="tab-btn" data-tab="success" onclick="switchTab('success', this)">
+                    <span class="tab-icon">&#x2714;</span>
+                    <span class="tab-label">Succékunder</span>
+                    <span class="tab-count" id="successCount">0</span>
+                    <span class="tab-score success" id="successAvgScore"></span>
+                    <span class="tab-new-count" id="successNewCount" style="display:none"></span>
+                </button>
+                <button class="tab-btn" data-tab="risk" onclick="switchTab('risk', this)">
+                    <span class="tab-icon">&#x26A0;</span>
+                    <span class="tab-label">Riskkunder</span>
+                    <span class="tab-count" id="riskCount">0</span>
+                    <span class="tab-score risk" id="riskAvgScore"></span>
+                    <span class="tab-new-count" id="riskNewCount" style="display:none"></span>
+                </button>
+                <button class="tab-btn" data-tab="other" onclick="switchTab('other', this)">
+                    <span class="tab-icon">&#x2022;</span>
+                    <span class="tab-label">Övriga</span>
+                    <span class="tab-count" id="otherCount">0</span>
+                </button>
+            </div>
+            <label id="newOnlyFilter" style="display:none;margin-left:auto;font-size:0.82em;cursor:pointer;align-self:center;white-space:nowrap;padding-right:12px">
+                <input type="checkbox" id="filterNewOnly" onchange="applyNewOnlyFilter()"> Visa bara nya
+            </label>
+        </div>
+
+        <!-- Tab panels -->
+        <div class="tab-panel active" id="allaSection">
+            <div class="table-wrapper" id="allaTableWrapper">
+                <table id="allaTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Site URL</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Site URL" data-filter="name" data-table="alla"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Företag</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Företag" data-filter="company" data-table="alla"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('alla', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-alla"></div></th>
+                            <th>Spår</th>
+                            <th>Kategori</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allaTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="successSection">
+            <div class="table-wrapper" id="successTableWrapper">
+                <table id="successTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Site URL</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Site URL" data-filter="name" data-table="success"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Företag</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Företag" data-filter="company" data-table="success"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('success', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-success"></div></th>
+                            <th>Spår</th>
+                            <th>Flaggor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="successTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="riskSection">
+            <div class="table-wrapper" id="riskTableWrapper">
+                <table id="riskTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Site URL</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Site URL" data-filter="name" data-table="risk"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Företag</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Företag" data-filter="company" data-table="risk"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('risk', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-risk"></div></th>
+                            <th>Spår</th>
+                            <th>Flaggor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="riskTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="otherSection">
+            <div class="table-wrapper" id="otherTableWrapper">
+                <table id="otherTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Site URL</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Site URL" data-filter="name" data-table="other"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Företag</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Företag" data-filter="company" data-table="other"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('other', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-other"></div></th>
+                            <th>Spår</th>
+                        </tr>
+                    </thead>
+                    <tbody id="otherTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Pop-in Panel -->
+    <div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetailPanel()">
+        <div class="detail-panel">
+            <div class="detail-header">
+                <div class="detail-header-info">
+                    <div class="detail-header-title" id="detailTitle"></div>
+                    <div class="detail-header-meta" id="detailMeta"></div>
+                </div>
+                <button class="detail-close-btn" onclick="closeDetailPanel()">&times;</button>
+            </div>
+            <div class="detail-body">
+                <div class="detail-metrics-grid" id="detailMetricsGrid"></div>
+                <div class="detail-chart-section">
+                    <div class="detail-chart-controls">
+                        <label>Fr&aring;n:</label>
+                        <input type="date" id="detailChartFrom" onchange="updateDetailChart()">
+                        <label>Till:</label>
+                        <input type="date" id="detailChartTo" onchange="updateDetailChart()">
+                        <div class="detail-mode-toggle">
+                            <button class="detail-mode-btn active" onclick="setDetailChartMode('week', this)">Vecka</button>
+                            <button class="detail-mode-btn" onclick="setDetailChartMode('month', this)">M&aring;nad</button>
+                        </div>
+                    </div>
+                    <div class="detail-chart-loading" id="detailChartLoading">Laddar historik...</div>
+                    <div class="detail-chart-canvas-wrapper" id="detailChartWrapper" style="display:none;">
+                        <canvas id="detailChart"></canvas>
+                    </div>
+                    <div class="detail-chart-legend" id="detailChartLegend"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="scroll-top-btn" id="topBtn" onclick="scrollToTop()" title="Till toppen"><i class="icon-arrow-up1"></i></button>
+    <div class="api-timestamp" id="apiTimestamp"></div>
+
+    <div class="settings-panel" id="settingsPanel">
+        <h3><i class="icon-cog1"></i> Kriteriejustering</h3>
+
+        <div class="help-toggle" id="helpToggle" onclick="toggleHelp()">
+            <span><i class="icon-book-open"></i> Visa lathund</span>
+        </div>
+
+        <div class="settings-section risk">
+            <h4>Riskkriterier</h4>
+            <div class="setting-row">
+                <span class="weight-badge">V6</span>
+                <span class="setting-label">Minskning visningar (3m vs 3m)</span>
+                <input type="number" class="setting-input" id="riskViewDecreaseThreshold" value="-30">
+                <span class="setting-suffix">%</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V5</span>
+                <span class="setting-label">Min. inloggningar prod/admin</span>
+                <input type="number" class="setting-input" id="riskMinLoginsThreshold" value="1">
+                <span class="setting-suffix">st</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V4</span>
+                <span class="setting-label">Inloggningar ned under % av 30d</span>
+                <input type="number" class="setting-input" id="riskLoginDropPercent" value="20">
+                <span class="setting-suffix">%</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V3</span>
+                <span class="setting-label">Minskning guider (3m vs 3m)</span>
+                <input type="number" class="setting-input" id="riskGuideDecreaseThreshold" value="-30">
+                <span class="setting-suffix">%</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V2</span>
+                <span class="setting-label">Min. publiceringar (under = risk)</span>
+                <input type="number" class="setting-input" id="riskMinPublications" value="10">
+                <span class="setting-suffix">st</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V1</span>
+                <span class="setting-label">Minskning processer (3m vs 3m)</span>
+                <input type="number" class="setting-input" id="riskProcessDecreaseThreshold" value="-30">
+                <span class="setting-suffix">%</span>
+            </div>
+        </div>
+
+        <div class="settings-section success">
+            <h4>Succékriterier</h4>
+            <div class="setting-row">
+                <span class="weight-badge">V6</span>
+                <span class="setting-label">Ökning visningar (3m vs 3m)</span>
+                <input type="number" class="setting-input" id="successViewIncreaseThreshold" value="30">
+                <span class="setting-suffix">%</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V5</span>
+                <span class="setting-label">Inloggningar prod/admin senaste mån</span>
+                <input type="number" class="setting-input" id="successMinLogins" value="100">
+                <span class="setting-suffix">st</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V4</span>
+                <span class="setting-label">Ökning guider (3m vs 3m)</span>
+                <input type="number" class="setting-input" id="successGuideIncreaseThreshold" value="30">
+                <span class="setting-suffix">%</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V3</span>
+                <span class="setting-label">Ökning unika publicerande prod</span>
+                <input type="number" class="setting-input" id="successUniquePublishersIncrease" value="20">
+                <span class="setting-suffix">%</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V2</span>
+                <span class="setting-label">Min. publiceringar för succé</span>
+                <input type="number" class="setting-input" id="successMinPublications" value="100">
+                <span class="setting-suffix">st</span>
+            </div>
+            <div class="setting-row">
+                <span class="weight-badge">V1</span>
+                <span class="setting-label">Ökning processer (3m vs 3m)</span>
+                <input type="number" class="setting-input" id="successProcessIncreaseThreshold" value="30">
+                <span class="setting-suffix">%</span>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h4>Generellt</h4>
+            <div class="setting-row">
+                <span class="setting-label">Min. producenter för analys</span>
+                <input type="number" class="setting-input" id="minProducers" value="5">
+                <span class="setting-suffix">st</span>
+            </div>
+            <div class="setting-row">
+                <div class="setting-checkbox">
+                    <input type="checkbox" id="excludeHolidays">
+                    <label for="excludeHolidays" class="setting-label">Exkludera jul/sommar</label>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Min. viktad poäng för succé</span>
+                <input type="number" class="setting-input" id="successMinScore" value="10">
+                <span class="setting-suffix">p</span>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Max risk-poäng för att ändå bli succé</span>
+                <input type="number" class="setting-input" id="riskMaxScoreForSuccess" value="3">
+                <span class="setting-suffix">p</span>
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button class="settings-btn-action settings-btn-reset" onclick="resetSettings()">Återställ</button>
+            <button class="settings-btn-action settings-btn-apply" onclick="applySettings()">Tillämpa</button>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon"><i class="icon-check-circle"></i></span>
+        <div class="toast-message">
+            <span class="toast-title">Inställningar sparade!</span>
+            <span class="toast-subtitle">Dashboarden har uppdaterats</span>
+        </div>
+    </div>
+
+    <!-- Help panel - separate, to the right of settings -->
+    <div class="help-panel" id="helpPanel">
+        <button class="close-help" onclick="toggleHelp()">✕</button>
+        <h4><i class="icon-book-open"></i> Lathund — Viktat poängsystem</h4>
+
+        <p>Varje kriterium har en <strong>vikt (V1–V6)</strong> där V6 = tyngst och V1 = lättast. Poängen summeras och avgör klassificering.</p>
+
+        <h5><i class="icon-exclamation-circle" style="color:#e74c3c"></i> Riskkriterier (6 st)</h5>
+        <ul>
+            <li><strong>V6</strong> — Trend: Minskning visningar (30% minskning 3 mån vs 3 mån)</li>
+            <li><strong>V5</strong> — Antal inloggningar (prod/admin) < 1 senaste månaden</li>
+            <li><strong>V4</strong> — Inloggningar ned under 20% av totala 30 dagarna</li>
+            <li><strong>V3</strong> — Trend: Minskning guider (30% 3 mån vs 3 mån)</li>
+            <li><strong>V2</strong> — Antal om-/nypubliceringar < 10 senaste månaden (ignorera om < 5 producenter)</li>
+            <li><strong>V1</strong> — Trend: Minskning processer (30% 3 mån vs 3 mån)</li>
+        </ul>
+        <div class="example example-risk">
+            <strong>Exempel:</strong> En kund med minskning visningar (V6) + låga inloggningar (V5) = riskpoäng 11. Ju högre poäng, desto allvarligare risk.
+        </div>
+
+        <h5><i class="icon-check-circle" style="color:#27ae60"></i> Succékriterier (6 st)</h5>
+        <ul>
+            <li><strong>V6</strong> — Trend: Ökning visningar 30% (3 mån vs 3 mån)</li>
+            <li><strong>V5</strong> — Antal inloggningar (prod/admin) > 100 senaste månaden</li>
+            <li><strong>V4</strong> — Trend: Ökning guider 30% (3 mån vs 3 mån)</li>
+            <li><strong>V3</strong> — Ökning unika publicerande producenter +20% (3 mån)</li>
+            <li><strong>V2</strong> — Antal publiceringar > 100 senaste månaden</li>
+            <li><strong>V1</strong> — Trend: Ökning processer 30% (3 mån vs 3 mån)</li>
+        </ul>
+        <div class="example example-success">
+            <strong>Exempel:</strong> En kund med ökning visningar (V6) + höga inloggningar (V5) + ökning guider (V4) = succépoäng 15.
+        </div>
+
+        <h5><i class="icon-chart-bar1"></i> Klassificering</h5>
+        <ul>
+            <li><strong>Succékund:</strong> Succépoäng >= minpoäng (standard 10) OCH inga riskflaggor</li>
+            <li><strong>Riskkund:</strong> Har minst en riskflagga</li>
+            <li><strong>Övrig:</strong> Varken succé eller risk</li>
+        </ul>
+
+        <h5><i class="icon-cog1"></i> Generellt</h5>
+        <ul>
+            <li><strong>Min. producenter</strong> — Kunder med färre producenter analyseras inte (för små)</li>
+            <li><strong>Exkludera jul/sommar</strong> — Kan räkna bort semesterperioder från trendberäkningar</li>
+            <li><strong>Min. viktad poäng</strong> — Lägsta succépoäng för att klassas som succékund</li>
+        </ul>
+    </div>
+
+    <script>
+        let globalData = { success: [], risk: [], other: [], all: [] };
+        let customerLookup = {}; // URL → customer object for detail panel (used by onclick)
+        let companyData = {}; // SuperOffice company lookup
+        let filters = {
+            success: { name: '', company: '', versions: [] },
+            risk: { name: '', company: '', versions: [] },
+            other: { name: '', company: '', versions: [] },
+            alla: { name: '', company: '', versions: [] }
+        };
+        let sortState = {
+            success: { field: null, dir: null },
+            risk: { field: null, dir: null },
+            other: { field: null, dir: null },
+            alla: { field: null, dir: null }
+        };
+
+        let dataSource = 'file'; // 'api' or 'file' — tracks where data came from
+        let currentDateRange = { from: null, to: null }; // Current selected date range
+        let currentDayCount = 30; // Days in selected range (for dynamic column labels)
+        let activeTab = 'alla'; // Currently active tab
+        let renderedTabs = { success: false, risk: false, other: false, alla: false }; // Lazy render tracking
+        let unifiedSearchIndex = -1; // Keyboard nav index in unified search dropdown
+        let lastSearchResults = { companies: [], urls: [] }; // Last unified search results
+
+        // Toolbar state
+        let datePreset = 3;      // 1, 3, 6 or null (custom)
+        let coachFilter = [];    // Selected coach emails
+        let trackFilter = [];    // Selected tracks (map, train, assist) — derived from license_keys
+        let allCoaches = [];     // All unique coaches from data
+
+        // Loading overlay helpers
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text || 'Laddar kundstatistik...';
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        // Debounce utility for filter inputs
+        function debounce(fn, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        // Calculate days in current date range and update column headers
+        function updateDayLabels() {
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
+            if (from && to) {
+                const diff = Math.round((new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24));
+                currentDayCount = diff > 0 ? diff : 30;
+            } else {
+                currentDayCount = 30;
+            }
+            // Metric columns removed from table — currentDayCount still used by export functions
+        }
+
+        // Sync date range to URL params so the link is shareable
+        function syncUrlParams() {
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
+            const url = new URL(window.location);
+            if (from) url.searchParams.set('from', from); else url.searchParams.delete('from');
+            if (to) url.searchParams.set('to', to); else url.searchParams.delete('to');
+            if (activeTab !== 'success') url.searchParams.set('tab', activeTab); else url.searchParams.delete('tab');
+            history.replaceState(null, '', url);
+        }
+
+        // Read URL params on load
+        function readUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('from')) document.getElementById('dateFrom').value = params.get('from');
+            if (params.get('to')) document.getElementById('dateTo').value = params.get('to');
+            if (params.get('tab')) activeTab = params.get('tab');
+        }
+
+        // URL normalization for matching - extracts domain/hostname
+        function normalizeUrl(url) {
+            if (!url) return '';
+            return url.toLowerCase()
+                .replace(/^https?:\/\//, '')
+                .replace(/\/.*$/, '')  // Remove path after domain
+                .replace(/\/$/, '');
+        }
+
+        // Company info lookup cache — avoids O(n) scan per row
+        const companyInfoCache = {};
+
+        // Get company info for a site URL
+        // Checks API-provided companyId/companyName first, then falls back to SuperOffice lookup
+        function getCompanyInfo(siteUrl, siteRecord) {
+            // If the site record has company data from API, use it directly
+            if (siteRecord && siteRecord.companyId && siteRecord.companyName) {
+                return {
+                    companyId: siteRecord.companyId,
+                    companyName: siteRecord.companyName
+                };
+            }
+
+            if (!siteUrl) return null;
+            const normalizedSite = normalizeUrl(siteUrl);
+
+            // Check cache first
+            if (normalizedSite in companyInfoCache) {
+                return companyInfoCache[normalizedSite];
+            }
+
+            // Fallback: lookup from companies.json
+            let result = null;
+            if (companyData[normalizedSite]) {
+                result = companyData[normalizedSite];
+            } else {
+                for (const [companyUrl, info] of Object.entries(companyData)) {
+                    if (normalizedSite.includes(companyUrl) || companyUrl.includes(normalizedSite)) {
+                        result = info;
+                        break;
+                    }
+                }
+            }
+
+            companyInfoCache[normalizedSite] = result;
+            return result;
+        }
+
+        // Default criteria settings — weighted 6+6 system
+        const defaultCriteria = {
+            // Risk criteria thresholds
+            riskViewDecreaseThreshold: -30,       // Risk #1 (weight 6): Views decrease %
+            riskMinLoginsThreshold: 1,            // Risk #2 (weight 5): Min logins (prod/admin)
+            riskLoginDropPercent: 20,             // Risk #3 (weight 4): Login drop % of 30d total
+            riskGuideDecreaseThreshold: -30,      // Risk #4 (weight 3): Guides decrease %
+            riskMinPublications: 10,              // Risk #5 (weight 2): Min publications
+            riskProcessDecreaseThreshold: -30,    // Risk #6 (weight 1): Process decrease %
+            // Success criteria thresholds
+            successViewIncreaseThreshold: 30,     // Success #1 (weight 6): Views increase %
+            successMinLogins: 100,                // Success #2 (weight 5): Min logins for success
+            successGuideIncreaseThreshold: 30,    // Success #3 (weight 4): Guides increase %
+            successUniquePublishersIncrease: 20,  // Success #4 (weight 3): Unique publishers increase %
+            successMinPublications: 100,          // Success #5 (weight 2): Min publications
+            successProcessIncreaseThreshold: 30,  // Success #6 (weight 1): Process increase %
+            // General
+            minProducers: 5,                      // Min producers for analysis
+            excludeHolidays: false,               // Exclude jul/sommar from calculations
+            successMinScore: 10,                  // Min weighted score to be classified as success
+            riskMaxScoreForSuccess: 3             // Max allowed risk score to still qualify as success
+        };
+
+        let criteria = { ...defaultCriteria };
+
+        // Load company data from companies.json (fallback for when API doesn't provide it)
+        function loadCompanyData() {
+            return fetch('companies.json')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.serverCompanyLink) {
+                        data.serverCompanyLink.forEach(item => {
+                            if (item.serverUrl) {
+                                const normalized = normalizeUrl(item.serverUrl);
+                                companyData[normalized] = {
+                                    companyId: item.companyId,
+                                    companyName: item.companyName
+                                };
+                            }
+                        });
+                    }
+                    console.log('Loaded', Object.keys(companyData).length, 'company mappings from companies.json');
+                })
+                .catch(() => {
+                    console.warn('companies.json not found — company data will come from API or be empty.');
+                });
+        }
+
+        // Process and display stats data (shared by API and file loading)
+        function handleStatsData(statsData) {
+            globalData.all = statsData;
+            const analysis = analyzeCustomers(statsData);
+
+            // Detect newly classified customers by simulating previous-period classification
+            const shiftedData = statsData.map(buildShiftedSite);
+            const previousAnalysis = analyzeCustomers(shiftedData);
+            detectNewlyClassified(analysis, previousAnalysis);
+
+            globalData.success = analysis.success;
+            globalData.risk = analysis.risk;
+            globalData.other = analysis.other;
+            globalData.alla = [...analysis.success, ...analysis.risk, ...analysis.other];
+
+            updateDayLabels();
+            buildCoachList();
+            displaySummary(statsData, analysis);
+            setupFilters();
+            // Lazy render: only render the active tab now, others on switchTab()
+            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderTabContent(activeTab);
+            setupSorting();
+        }
+
+        // Render table for a single tab (lazy — skips if already rendered)
+        function renderTabContent(tab) {
+            if (renderedTabs[tab]) return;
+            renderedTabs[tab] = true;
+            renderTable(tab);
+        }
+
+        // HTML escape utility to prevent XSS in dynamically rendered content
+        function escHtml(s) {
+            if (s == null) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+        }
+
+        /**
+         * Build license cell HTML from site data.
+         * Shows holder name + expiry badge with color coding.
+         */
+        function buildTrackCell(site) {
+            const tracks = (site.track || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+            if (tracks.length === 0) {
+                return '<td class="track-cell"><span class="track-none">–</span></td>';
+            }
+            const icons = [];
+            if (tracks.includes('assist')) icons.push('<span class="track-icon track-assist" title="Assist"><i class="icon-play-filled1"></i></span>');
+            if (tracks.includes('train'))  icons.push('<span class="track-icon track-train" title="Train"><i class="icon-graduation-cap2"></i></span>');
+            if (tracks.includes('map'))    icons.push('<span class="track-icon track-map" title="Map"><i class="icon-workflow"></i></span>');
+            return `<td class="track-cell">${icons.join('')}</td>`;
+        }
+
+        // Normalize string for diacritics-insensitive search (åäö ↔ aao etc.)
+        function norm(s) {
+            return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        // ==============================
+        // TOOLBAR: Date picker popout
+        // ==============================
+
+        function toggleDatePicker() {
+            closeAllPopouts('datePopout');
+            document.getElementById('datePopout').classList.toggle('show');
+        }
+
+        function selectPreset(months, btn) {
+            datePreset = months;
+            const today = new Date();
+            const from = new Date(today);
+            from.setMonth(from.getMonth() - months);
+
+            document.getElementById('dateFrom').value = from.toISOString().split('T')[0];
+            document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+
+            // Update preset button states
+            document.querySelectorAll('.date-preset-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            updateDateButtonLabel();
+            updateDateInfo();
+            document.getElementById('dateCustomWarning').classList.remove('visible');
+            closeAllPopouts();
+            loadDataForRange();
+        }
+
+        function applyCustomDates() {
+            const from = document.getElementById('customDateFrom').value;
+            const to = document.getElementById('customDateTo').value;
+            if (!from || !to) return;
+
+            datePreset = null;
+            document.getElementById('dateFrom').value = from;
+            document.getElementById('dateTo').value = to;
+
+            // Deactivate preset buttons
+            document.querySelectorAll('.date-preset-btn').forEach(b => b.classList.remove('active'));
+
+            updateDateButtonLabel();
+            updateDateInfo();
+            document.getElementById('dateCustomWarning').classList.add('visible');
+            updateResetButtonVisibility();
+            closeAllPopouts();
+            loadDataForRange();
+        }
+
+        function updateDateButtonLabel() {
+            const label = document.getElementById('datePresetLabel');
+            if (datePreset) {
+                label.textContent = datePreset + 'm';
+                label.style.display = '';
+                document.getElementById('datePickerBtn').querySelector('i')?.remove();
+            } else {
+                label.textContent = '';
+                label.style.display = 'none';
+                // Show calendar icon for custom
+                if (!document.getElementById('datePickerBtn').querySelector('i')) {
+                    const icon = document.createElement('i');
+                    icon.className = 'icon-calendar';
+                    document.getElementById('datePickerBtn').appendChild(icon);
+                }
+            }
+        }
+
+        function updateDateInfo() {
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
+            if (!from || !to) return;
+
+            const fromD = new Date(from);
+            const toD = new Date(to);
+            const days = Math.round((toD - fromD) / (1000 * 60 * 60 * 24));
+            const prevTo = new Date(fromD);
+            prevTo.setDate(prevTo.getDate() - 1);
+            const prevFrom = new Date(prevTo);
+            prevFrom.setDate(prevFrom.getDate() - days);
+
+            const fmt = d => d.toISOString().split('T')[0];
+            document.getElementById('dateInfo').innerHTML =
+                '<strong>Nuvarande:</strong> ' + fmt(fromD) + ' — ' + fmt(toD) +
+                '<br><strong>Jämförelse:</strong> ' + fmt(prevFrom) + ' — ' + fmt(prevTo);
+
+            // Sync custom date inputs
+            document.getElementById('customDateFrom').value = from;
+            document.getElementById('customDateTo').value = to;
+        }
+
+        // ==============================
+        // TOOLBAR: Coach filter
+        // ==============================
+
+        // Map coach email → display name (full name from users table, or email fallback)
+        let coachDisplayNames = {};
+
+        function buildCoachList() {
+            coachDisplayNames = {};
+            (globalData.alla || []).forEach(c => {
+                const email = c.site.coachEmail;
+                if (!email) return;
+                // Prefer coachName (from users table), fallback to email
+                if (!coachDisplayNames[email] && c.site.coachName) {
+                    coachDisplayNames[email] = c.site.coachName;
+                }
+                if (!coachDisplayNames[email]) {
+                    coachDisplayNames[email] = email;
+                }
+            });
+            allCoaches = Object.keys(coachDisplayNames).sort((a, b) =>
+                coachDisplayNames[a].localeCompare(coachDisplayNames[b], 'sv')
+            );
+
+            const container = document.getElementById('coachList');
+            if (allCoaches.length === 0) {
+                container.innerHTML = '<div style="color:#a0aec0;font-size:0.85em;padding:8px">Ingen coachdata tillg\u00e4nglig</div>';
+                return;
+            }
+
+            container.innerHTML = allCoaches.map(email => {
+                const checked = coachFilter.includes(email) ? 'checked' : '';
+                const displayName = coachDisplayNames[email];
+                return '<label><input type="checkbox" value="' + escHtml(email) + '" ' + checked + '><span>' + escHtml(displayName) + '</span></label>';
+            }).join('');
+        }
+
+        function toggleCoachFilter() {
+            closeAllPopouts('coachPopout');
+            document.getElementById('coachPopout').classList.toggle('show');
+        }
+
+        function applyCoachFilter() {
+            const checkboxes = document.querySelectorAll('#coachList input[type="checkbox"]');
+            coachFilter = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) coachFilter.push(cb.value);
+            });
+
+            // Show/hide badge
+            const badge = document.getElementById('coachBadge');
+            badge.classList.toggle('visible', coachFilter.length > 0);
+
+            updateResetButtonVisibility();
+            closeAllPopouts();
+            // Re-render all tabs
+            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderTabContent(activeTab);
+        }
+
+        function clearCoachFilter() {
+            coachFilter = [];
+            document.querySelectorAll('#coachList input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('coachBadge').classList.remove('visible');
+            updateResetButtonVisibility();
+            closeAllPopouts();
+            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderTabContent(activeTab);
+        }
+
+        // ==============================
+        // TOOLBAR: Track filter
+        // ==============================
+
+        function toggleTrackFilter() {
+            closeAllPopouts('trackPopout');
+            document.getElementById('trackPopout').classList.toggle('show');
+        }
+
+        function applyTrackFilter() {
+            const checkboxes = document.querySelectorAll('#trackList input[type="checkbox"]');
+            trackFilter = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) trackFilter.push(cb.value);
+            });
+
+            const badge = document.getElementById('trackBadge');
+            badge.classList.toggle('visible', trackFilter.length > 0);
+
+            updateResetButtonVisibility();
+            // Don't close popout — let user toggle multiple tracks
+            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderTabContent(activeTab);
+        }
+
+        function clearTrackFilter() {
+            trackFilter = [];
+            document.querySelectorAll('#trackList input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('trackBadge').classList.remove('visible');
+            updateResetButtonVisibility();
+            closeAllPopouts();
+            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderTabContent(activeTab);
+        }
+
+        // ==============================
+        // TOOLBAR: Reset & download
+        // ==============================
+
+        function resetAllFilters() {
+            // Reset date to 3 months
+            selectPreset(3, document.querySelector('.date-preset-btn[data-months="3"]'));
+            // Clear coach filter
+            coachFilter = [];
+            document.querySelectorAll('#coachList input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('coachBadge').classList.remove('visible');
+            // Clear track filter
+            trackFilter = [];
+            document.querySelectorAll('#trackList input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('trackBadge').classList.remove('visible');
+            // Clear unified search
+            closeUnifiedSearch();
+            // Clear column filters on all tabs
+            ['alla', 'success', 'risk', 'other'].forEach(t => resetColFilters(t));
+            updateResetButtonVisibility();
+        }
+
+        function updateResetButtonVisibility() {
+            const hasDateFilter = datePreset !== 3;
+            const hasCoach = coachFilter.length > 0;
+            const hasTrack = trackFilter.length > 0;
+            const hasSearch = document.getElementById('unifiedSearch')?.value.trim().length > 0;
+            const btn = document.getElementById('resetFiltersBtn');
+            btn.style.display = (hasDateFilter || hasCoach || hasTrack || hasSearch) ? '' : 'none';
+        }
+
+        function toggleDownload() {
+            closeAllPopouts('downloadPopout');
+            document.getElementById('downloadPopout').classList.toggle('show');
+        }
+
+        function closeAllPopouts(except) {
+            ['datePopout', 'coachPopout', 'trackPopout', 'downloadPopout'].forEach(id => {
+                if (id !== except) document.getElementById(id)?.classList.remove('show');
+            });
+        }
+
+        // Load data from API with optional date range
+        function loadDataForRange() {
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
+
+            let apiUrl;
+            if (from && to) {
+                apiUrl = `../../api/customer-stats?from=${from}&to=${to}`;
+                currentDateRange = { from, to };
+            } else {
+                apiUrl = '../../api/customer-stats';
+                currentDateRange = { from: null, to: null };
+            }
+
+            syncUrlParams();
+            updateDayLabels();
+            showLoading('Hämtar data från API...');
+
+            const t0 = performance.now();
+            fetch(apiUrl)
+                .then(r => {
+                    if (!r.ok) throw new Error('API returned ' + r.status);
+                    console.log(`[perf] API response received in ${Math.round(performance.now() - t0)}ms`);
+                    return r.json();
+                })
+                .then(statsData => {
+                    console.log(`[perf] JSON parsed in ${Math.round(performance.now() - t0)}ms (${statsData.length} records)`);
+                    dataSource = 'api';
+                    showLoading('Bearbetar ' + statsData.length + ' applikationer...');
+                    // Yield to browser to show loading text update, then process
+                    return new Promise(resolve => {
+                        requestAnimationFrame(() => {
+                            const t1 = performance.now();
+                            handleStatsData(statsData);
+                            console.log(`[perf] handleStatsData completed in ${Math.round(performance.now() - t1)}ms`);
+                            resolve();
+                        });
+                    });
+                })
+                .then(() => {
+                    console.log(`[perf] Total load time: ${Math.round(performance.now() - t0)}ms`);
+                    hideLoading();
+                    // Update API timestamp
+                    const ts = document.getElementById('apiTimestamp');
+                    if (ts) ts.textContent = 'API: ' + new Date().toLocaleString('sv-SE');
+                })
+                .catch(err => {
+                    console.warn('API unavailable, falling back to allstats.json:', err.message);
+                    showLoading('Läser lokal data...');
+                    fetch('allstats.json')
+                        .then(r => r.json())
+                        .then(statsData => {
+                            dataSource = 'file';
+                            showLoading('Bearbetar ' + statsData.length + ' applikationer...');
+                            requestAnimationFrame(() => {
+                                handleStatsData(statsData);
+                                hideLoading();
+                            });
+                        })
+                        .catch(e => {
+                            console.error('Error loading data:', e);
+                            hideLoading();
+                        });
+                });
+        }
+
+        // Initialize: set default dates (or from URL params) and load data
+        (function init() {
+            const today = new Date();
+            const threeMonthsAgo = new Date(today);
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+            document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+            document.getElementById('dateFrom').value = threeMonthsAgo.toISOString().split('T')[0];
+
+            // Override with URL params if present
+            readUrlParams();
+
+            // Detect if URL dates match a preset (1m, 3m, 6m)
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
+            if (from && to) {
+                const fromD = new Date(from), toD = new Date(to);
+                const diffMonths = (toD.getFullYear() - fromD.getFullYear()) * 12 + toD.getMonth() - fromD.getMonth();
+                if ([1, 3, 6].includes(diffMonths) && Math.abs(toD.getDate() - fromD.getDate()) <= 1) {
+                    datePreset = diffMonths;
+                } else {
+                    datePreset = null;
+                }
+            }
+            updateDateButtonLabel();
+            updateDateInfo();
+
+            // Load stats from API immediately; company data loaded in parallel as fallback
+            loadCompanyData();
+            loadDataForRange();
+        })();
+
+        // Show/hide top button based on scroll
+        window.addEventListener('scroll', () => {
+            const topBtn = document.getElementById('topBtn');
+            if (window.scrollY > 300) {
+                topBtn.classList.add('visible');
+            } else {
+                topBtn.classList.remove('visible');
+            }
+        });
+
+        // Close dropdowns and panels when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.version-filter-btn-inline') && !e.target.closest('.version-dropdown')) {
+                document.querySelectorAll('.version-dropdown').forEach(d => d.classList.remove('show'));
+            }
+            if (!e.target.closest('.settings-panel') && !e.target.closest('#settingsBtn') && !e.target.closest('.help-panel')) {
+                document.getElementById('settingsPanel').classList.remove('show');
+                document.getElementById('settingsBtn').classList.remove('active');
+                document.getElementById('helpPanel').classList.remove('show');
+                document.getElementById('helpToggle').classList.remove('expanded');
+            }
+            // Close unified search dropdown
+            if (!e.target.closest('.unified-search-bar')) {
+                const dd = document.getElementById('unifiedSearchDropdown');
+                if (dd) dd.classList.remove('visible');
+            }
+            // Collapse column search inputs when clicking outside (keeps filter value)
+            if (!e.target.closest('.header-searchable')) {
+                collapseAllColSearch(null);
+            }
+            // Close toolbar popouts when clicking outside
+            if (!e.target.closest('.toolbar-popout-wrapper')) {
+                closeAllPopouts();
+            }
+        });
+
+        // Unified search event wiring
+        (function setupUnifiedSearch() {
+            const input = document.getElementById('unifiedSearch');
+            const dropdown = document.getElementById('unifiedSearchDropdown');
+            const clearBtn = document.getElementById('unifiedSearchClear');
+            if (!input) return;
+
+            const debouncedSearch = debounce((q) => {
+                lastSearchResults = performUnifiedSearch(q);
+                renderSearchDropdown(lastSearchResults);
+            }, 150);
+
+            input.addEventListener('input', () => {
+                const q = input.value.trim();
+                if (q.length >= 2) {
+                    debouncedSearch(q);
+                } else {
+                    dropdown.classList.remove('visible');
+                    dropdown.innerHTML = '';
+                    unifiedSearchIndex = -1;
+                }
+                // Toggle clear button
+                if (clearBtn) clearBtn.style.display = q.length > 0 ? 'flex' : 'none';
+            });
+
+            input.addEventListener('focus', () => {
+                if (input.value.trim().length >= 2 && dropdown.innerHTML) {
+                    dropdown.classList.add('visible');
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                const items = dropdown.querySelectorAll('.search-result-item');
+                if (!items.length) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    unifiedSearchIndex = Math.min(unifiedSearchIndex + 1, items.length - 1);
+                    items.forEach((it, i) => it.classList.toggle('active', i === unifiedSearchIndex));
+                    items[unifiedSearchIndex].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    unifiedSearchIndex = Math.max(unifiedSearchIndex - 1, 0);
+                    items.forEach((it, i) => it.classList.toggle('active', i === unifiedSearchIndex));
+                    items[unifiedSearchIndex].scrollIntoView({ block: 'nearest' });
+                } else if (e.key === 'Enter' && unifiedSearchIndex >= 0) {
+                    e.preventDefault();
+                    const active = items[unifiedSearchIndex];
+                    if (active) {
+                        const type = active.dataset.type;
+                        const idx = parseInt(active.dataset.index, 10);
+                        selectSearchResult(type, idx);
+                    }
+                } else if (e.key === 'Escape') {
+                    dropdown.classList.remove('visible');
+                    input.blur();
+                }
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    closeUnifiedSearch();
+                    clearBtn.style.display = 'none';
+                });
+            }
+
+            // Escape key on column search inputs: clear filter + collapse
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && document.activeElement && document.activeElement.classList.contains('col-search-input')) {
+                    const input = document.activeElement;
+                    input.value = '';
+                    input.classList.remove('expanded');
+                    const th = input.closest('.header-searchable');
+                    if (th) th.classList.remove('has-filter');
+                    const table = input.dataset.table;
+                    const filterType = input.dataset.filter;
+                    if (table && filterType) {
+                        filters[table][filterType] = '';
+                        renderTable(table);
+                    }
+                    input.blur();
+                }
+            });
+        })();
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            const btn = document.getElementById('settingsBtn');
+            panel.classList.toggle('show');
+            btn.classList.toggle('active');
+            // Close help panel when closing settings
+            if (!panel.classList.contains('show')) {
+                document.getElementById('helpPanel').classList.remove('show');
+                document.getElementById('helpToggle').classList.remove('expanded');
+            }
+        }
+
+        function toggleHelp() {
+            const helpPanel = document.getElementById('helpPanel');
+            const helpToggle = document.getElementById('helpToggle');
+            helpPanel.classList.toggle('show');
+            helpToggle.classList.toggle('expanded');
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function applySettings() {
+            criteria.riskViewDecreaseThreshold = parseFloat(document.getElementById('riskViewDecreaseThreshold').value) || -30;
+            criteria.riskMinLoginsThreshold = parseInt(document.getElementById('riskMinLoginsThreshold').value) || 1;
+            criteria.riskLoginDropPercent = parseFloat(document.getElementById('riskLoginDropPercent').value) || 20;
+            criteria.riskGuideDecreaseThreshold = parseFloat(document.getElementById('riskGuideDecreaseThreshold').value) || -30;
+            criteria.riskMinPublications = parseInt(document.getElementById('riskMinPublications').value) || 10;
+            criteria.riskProcessDecreaseThreshold = parseFloat(document.getElementById('riskProcessDecreaseThreshold').value) || -30;
+            criteria.successViewIncreaseThreshold = parseFloat(document.getElementById('successViewIncreaseThreshold').value) || 30;
+            criteria.successMinLogins = parseInt(document.getElementById('successMinLogins').value) || 100;
+            criteria.successGuideIncreaseThreshold = parseFloat(document.getElementById('successGuideIncreaseThreshold').value) || 30;
+            criteria.successUniquePublishersIncrease = parseFloat(document.getElementById('successUniquePublishersIncrease').value) || 20;
+            criteria.successMinPublications = parseInt(document.getElementById('successMinPublications').value) || 100;
+            criteria.successProcessIncreaseThreshold = parseFloat(document.getElementById('successProcessIncreaseThreshold').value) || 30;
+            criteria.minProducers = parseInt(document.getElementById('minProducers').value) || 5;
+            criteria.excludeHolidays = document.getElementById('excludeHolidays').checked;
+            criteria.successMinScore = parseInt(document.getElementById('successMinScore').value) || 10;
+            criteria.riskMaxScoreForSuccess = parseInt(document.getElementById('riskMaxScoreForSuccess').value) || 3;
+
+            reanalyzeAndRender();
+            document.getElementById('settingsPanel').classList.remove('show');
+            document.getElementById('settingsBtn').classList.remove('active');
+            showToast();
+        }
+
+        function resetSettings() {
+            criteria = { ...defaultCriteria };
+
+            // Update input fields
+            document.getElementById('riskViewDecreaseThreshold').value = defaultCriteria.riskViewDecreaseThreshold;
+            document.getElementById('riskMinLoginsThreshold').value = defaultCriteria.riskMinLoginsThreshold;
+            document.getElementById('riskLoginDropPercent').value = defaultCriteria.riskLoginDropPercent;
+            document.getElementById('riskGuideDecreaseThreshold').value = defaultCriteria.riskGuideDecreaseThreshold;
+            document.getElementById('riskMinPublications').value = defaultCriteria.riskMinPublications;
+            document.getElementById('riskProcessDecreaseThreshold').value = defaultCriteria.riskProcessDecreaseThreshold;
+            document.getElementById('successViewIncreaseThreshold').value = defaultCriteria.successViewIncreaseThreshold;
+            document.getElementById('successMinLogins').value = defaultCriteria.successMinLogins;
+            document.getElementById('successGuideIncreaseThreshold').value = defaultCriteria.successGuideIncreaseThreshold;
+            document.getElementById('successUniquePublishersIncrease').value = defaultCriteria.successUniquePublishersIncrease;
+            document.getElementById('successMinPublications').value = defaultCriteria.successMinPublications;
+            document.getElementById('successProcessIncreaseThreshold').value = defaultCriteria.successProcessIncreaseThreshold;
+            document.getElementById('minProducers').value = defaultCriteria.minProducers;
+            document.getElementById('excludeHolidays').checked = defaultCriteria.excludeHolidays;
+            document.getElementById('successMinScore').value = defaultCriteria.successMinScore;
+            document.getElementById('riskMaxScoreForSuccess').value = defaultCriteria.riskMaxScoreForSuccess;
+
+            // Re-analyze and re-render
+            reanalyzeAndRender();
+        }
+
+        function reanalyzeAndRender() {
+            showLoading('Analyserar om ' + globalData.all.length + ' applikationer...');
+            requestAnimationFrame(() => {
+                const analysis = analyzeCustomers(globalData.all);
+
+                // Re-detect newly classified after criteria change
+                const shiftedData = globalData.all.map(buildShiftedSite);
+                const previousAnalysis = analyzeCustomers(shiftedData);
+                detectNewlyClassified(analysis, previousAnalysis);
+
+                globalData.success = analysis.success;
+                globalData.risk = analysis.risk;
+                globalData.other = analysis.other;
+                globalData.alla = [...analysis.success, ...analysis.risk, ...analysis.other];
+
+                displaySummary(globalData.all, analysis);
+                setupFilters();
+                // Invalidate all tabs and re-render only the active one
+                renderedTabs = { success: false, risk: false, other: false, alla: false };
+                renderTabContent(activeTab);
+                hideLoading();
+            });
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchTab(tab, clickedBtn) {
+            activeTab = tab;
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (clickedBtn) {
+                clickedBtn.classList.add('active');
+            } else {
+                const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+                if (btn) btn.classList.add('active');
+            }
+            // Show/hide panels
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            const sectionMap = { alla: 'allaSection', success: 'successSection', risk: 'riskSection', other: 'otherSection' };
+            const sectionId = sectionMap[tab] || 'successSection';
+            const panel = document.getElementById(sectionId);
+            if (panel) panel.classList.add('active');
+            // Lazy render: render tab content on first switch
+            renderTabContent(tab);
+            // Sync URL
+            syncUrlParams();
+        }
+
+        // Keep legacy scrollToSection as alias for tab switching
+        function scrollToSection(sectionId) {
+            const map = { allaSection: 'alla', successSection: 'success', riskSection: 'risk', otherSection: 'other' };
+            switchTab(map[sectionId] || 'success');
+        }
+
+        function exportToExcel() {
+            // Prepare data for each sheet
+            const dl = currentDayCount + 'd';
+            const headers = [
+                'URL',
+                'Företag',
+                'Company ID',
+                'Version',
+                'Spår',
+                'Flaggor',
+                'Publiceringar (' + dl + ')',
+                'Publiceringar (prev ' + dl + ')',
+                'Guider (' + dl + ')',
+                'Guider (prev ' + dl + ')',
+                'Visningar (' + dl + ')',
+                'Visningar (prev ' + dl + ')',
+                'Processvisningar (' + dl + ')',
+                'Processer skapade (' + dl + ')',
+                'Producenter',
+                'Aktiva (6 mån)',
+                'Administratörer',
+                'Användare',
+                'Inloggningar_Prod_Admin',
+                'Unika_Inloggade',
+                'Unika_Publicerande',
+                'Risk_Poäng',
+                'Succé_Poäng',
+                'Ny klassificering'
+            ];
+
+            function prepareSheetData(customers, type) {
+                const rows = customers.map(c => {
+                    const site = c.site;
+                    let flags;
+                    if (type === 'alla') {
+                        if (c.successScore >= criteria.successMinScore && c.riskScore <= criteria.riskMaxScoreForSuccess) flags = 'Succé';
+                        else if (c.riskFlags.length > 0 && (c.riskScore > criteria.riskMaxScoreForSuccess || c.successScore < criteria.successMinScore)) flags = 'Risk';
+                        else flags = 'Övrig';
+                    } else if (type === 'success') {
+                        flags = c.successFlags.map(f => `[${f.weight}] ${f.label}`).join('; ');
+                    } else if (type === 'risk') {
+                        flags = c.riskFlags.map(f => `[${f.weight}] ${f.label}`).join('; ');
+                    } else {
+                        flags = '';
+                    }
+                    const companyInfo = getCompanyInfo(site.url, site);
+                    let newClass = '';
+                    if (c.isNewlyClassified) {
+                        if (type === 'success' || (type === 'alla' && flags === 'Succé')) newClass = 'Ny succé';
+                        else if (type === 'risk' || (type === 'alla' && flags === 'Risk')) newClass = 'Ny risk';
+                    }
+
+                    return [
+                        c.name,
+                        companyInfo ? companyInfo.companyName : '',
+                        companyInfo ? companyInfo.companyId : '',
+                        site.Version || '',
+                        site.track || '',
+                        flags,
+                        site.Publiseringar_Sista_30_Dagar || 0,
+                        site.Publiseringar_30_60_Dagar || 0,
+                        site.Skapade_Guider_Sista_30_Dagar || 0,
+                        site.Skapade_Guider_30_60_Dagar || 0,
+                        site.Visningar_Sista_30_Dagar || 0,
+                        site.Visningar_30_60_Dagar || 0,
+                        site.Processvisningar_Sista_30_Dagar || 0,
+                        site.Processer_Skapade_Sista_30_Dagar || 0,
+                        site.Antal_Producenter || 0,
+                        site.Antal_Aktiva_Producenter_Sista_6_Manader || 0,
+                        site.Antal_Administratorer || 0,
+                        site.Totalt_Antal_Anvandare || 0,
+                        site.Antal_Inloggningar_Prod_Admin || 0,
+                        site.Antal_Unika_Inloggade_Prod_Admin || 0,
+                        site.Antal_Unika_Publicerande_Prod || 0,
+                        c.riskScore || 0,
+                        c.successScore || 0,
+                        newClass
+                    ];
+                });
+                return [headers, ...rows];
+            }
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+
+            // Add sheets
+            const allaData = prepareSheetData(getFilteredData('alla'), 'alla');
+            const allaSheet = XLSX.utils.aoa_to_sheet(allaData);
+            XLSX.utils.book_append_sheet(wb, allaSheet, 'Alla');
+
+            const successData = prepareSheetData(getFilteredData('success'), 'success');
+            const successSheet = XLSX.utils.aoa_to_sheet(successData);
+            XLSX.utils.book_append_sheet(wb, successSheet, 'Succékunder');
+
+            const riskData = prepareSheetData(getFilteredData('risk'), 'risk');
+            const riskSheet = XLSX.utils.aoa_to_sheet(riskData);
+            XLSX.utils.book_append_sheet(wb, riskSheet, 'Riskkunder');
+
+            const otherData = prepareSheetData(getFilteredData('other'), 'other');
+            const otherSheet = XLSX.utils.aoa_to_sheet(otherData);
+            XLSX.utils.book_append_sheet(wb, otherSheet, 'Övriga');
+
+            // Set column widths for better readability
+            const colWidths = [
+                { wch: 35 }, // URL
+                { wch: 25 }, // Företag
+                { wch: 12 }, // Company ID
+                { wch: 10 }, // Version
+                { wch: 18 }, // Spår
+                { wch: 40 }, // Flaggor (wider for weight badges)
+                { wch: 15 }, // Publ 30d
+                { wch: 15 }, // Publ 30-60d
+                { wch: 12 }, // Guider 30d
+                { wch: 12 }, // Guider 30-60d
+                { wch: 12 }, // Visningar 30d
+                { wch: 12 }, // Visningar 30-60d
+                { wch: 15 }, // Processvisningar
+                { wch: 15 }, // Processer skapade
+                { wch: 12 }, // Producenter
+                { wch: 12 }, // Aktiva
+                { wch: 12 }, // Admin
+                { wch: 12 }, // Användare
+                { wch: 18 }, // Inloggningar Prod/Admin
+                { wch: 15 }, // Unika Inloggade
+                { wch: 15 }, // Unika Publicerande
+                { wch: 12 }, // Risk Poäng
+                { wch: 12 }  // Succé Poäng
+            ];
+            successSheet['!cols'] = colWidths;
+            riskSheet['!cols'] = colWidths;
+            otherSheet['!cols'] = colWidths;
+
+            // Generate filename with date range
+            let filename;
+            if (currentDateRange.from && currentDateRange.to) {
+                filename = `kundanalys_${currentDateRange.from}_${currentDateRange.to}.xlsx`;
+            } else {
+                const today = new Date();
+                const dateStr = today.toISOString().split('T')[0];
+                filename = `kundanalys_${dateStr}.xlsx`;
+            }
+
+            // Download
+            XLSX.writeFile(wb, filename);
+
+            // Show toast
+            showExcelToast();
+        }
+
+        function showExcelToast() {
+            const toast = document.getElementById('toast');
+            toast.querySelector('.toast-icon').innerHTML = '<i class="icon-chart-bar1"></i>';
+            toast.querySelector('.toast-title').textContent = 'Excel-fil exporterad!';
+            toast.querySelector('.toast-subtitle').textContent = '3 blad: Succé, Risk, Övriga';
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                // Reset toast content
+                setTimeout(() => {
+                    toast.querySelector('.toast-icon').innerHTML = '<i class="icon-check-circle"></i>';
+                    toast.querySelector('.toast-title').textContent = 'Inställningar sparade!';
+                    toast.querySelector('.toast-subtitle').textContent = 'Dashboarden har uppdaterats';
+                }, 300);
+            }, 3000);
+        }
+
+        // setView removed — table view is now the only view
+
+        // ==============================
+        // UNIFIED SEARCH
+        // ==============================
+
+        function getCustomerCategory(customer) {
+            if (customer.successScore >= criteria.successMinScore && customer.riskScore <= criteria.riskMaxScoreForSuccess) {
+                return { tab: 'success', label: 'Succé', cssClass: 'success' };
+            } else if (customer.riskFlags.length > 0 && (customer.riskScore > criteria.riskMaxScoreForSuccess || customer.successScore < criteria.successMinScore)) {
+                return { tab: 'risk', label: 'Risk', cssClass: 'risk' };
+            }
+            return { tab: 'other', label: 'Övrig', cssClass: 'other' };
+        }
+
+        function performUnifiedSearch(query) {
+            if (!query || query.length < 2) return { companies: [], urls: [] };
+            const q = norm(query);
+            const all = globalData.alla || [];
+
+            // URL matches
+            const urlMatches = [];
+            const companyMap = new Map(); // companyName -> { count, firstCustomer }
+            all.forEach(c => {
+                const companyInfo = getCompanyInfo(c.site.url, c.site);
+                const companyName = companyInfo ? companyInfo.companyName : '';
+                // URL match
+                if (norm(c.name).includes(q)) {
+                    urlMatches.push({ customer: c, companyName });
+                }
+                // Company grouping
+                if (companyName && norm(companyName).includes(q)) {
+                    if (!companyMap.has(companyName)) {
+                        companyMap.set(companyName, { count: 0, customers: [] });
+                    }
+                    const entry = companyMap.get(companyName);
+                    entry.count++;
+                    entry.customers.push(c);
+                }
+            });
+
+            // Top 5 companies
+            const companies = [...companyMap.entries()]
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 5)
+                .map(([name, info]) => ({
+                    companyName: name,
+                    serverCount: info.count,
+                    category: getCustomerCategory(info.customers[0]),
+                    customers: info.customers
+                }));
+
+            // Top 5 URLs (skip if already covered by company match)
+            const urls = urlMatches.slice(0, 5).map(m => ({
+                customer: m.customer,
+                companyName: m.companyName,
+                category: getCustomerCategory(m.customer)
+            }));
+
+            return { companies, urls };
+        }
+
+        function renderSearchDropdown(results) {
+            const dropdown = document.getElementById('unifiedSearchDropdown');
+            if (results.companies.length === 0 && results.urls.length === 0) {
+                dropdown.innerHTML = '<div class="search-no-results">Inga träffar</div>';
+                dropdown.classList.add('visible');
+                return;
+            }
+
+            let html = '';
+            if (results.companies.length > 0) {
+                html += '<div class="search-section-label">FÖRETAG</div>';
+                results.companies.forEach((c, i) => {
+                    const countStr = c.serverCount > 1 ? ` <span class="search-result-count">(${c.serverCount} servrar)</span>` : '';
+                    html += `<div class="search-result-item" data-type="company" data-index="${i}" onclick="selectSearchResult('company', ${i})">
+                        <div class="search-result-text">${escHtml(c.companyName)}${countStr}</div>
+                        <span class="search-result-badge ${c.category.cssClass}">${c.category.label}</span>
+                    </div>`;
+                });
+            }
+
+            if (results.companies.length > 0 && results.urls.length > 0) {
+                html += '<div class="search-separator"></div>';
+            }
+
+            if (results.urls.length > 0) {
+                html += '<div class="search-section-label">URL:ER</div>';
+                results.urls.forEach((u, i) => {
+                    const sub = u.companyName ? `<span class="search-result-sub">${escHtml(u.companyName)}</span>` : '';
+                    html += `<div class="search-result-item" data-type="url" data-index="${i}" onclick="selectSearchResult('url', ${i})">
+                        <div class="search-result-text">${escHtml(u.customer.name)}${sub}</div>
+                        <span class="search-result-badge ${u.category.cssClass}">${u.category.label}</span>
+                    </div>`;
+                });
+            }
+
+            dropdown.innerHTML = html;
+            dropdown.classList.add('visible');
+            unifiedSearchIndex = -1;
+        }
+
+        function selectSearchResult(type, index) {
+            let targetTab, targetName;
+
+            if (type === 'company') {
+                const match = lastSearchResults.companies[index];
+                if (!match) return;
+                // Navigate to the first customer of that company
+                const firstCustomer = match.customers[0];
+                const cat = getCustomerCategory(firstCustomer);
+                targetTab = cat.tab;
+                targetName = firstCustomer.name;
+            } else {
+                const match = lastSearchResults.urls[index];
+                if (!match) return;
+                targetTab = match.category.tab;
+                targetName = match.customer.name;
+            }
+
+            closeUnifiedSearch();
+
+            // Clear any active column/version filters on the target tab so the row is visible
+            resetColFilters(targetTab);
+
+            // Switch to the correct tab
+            switchTab(targetTab);
+
+            // Force re-render so the row exists
+            renderedTabs[targetTab] = false;
+            renderTabContent(targetTab);
+
+            // Highlight after render (small delay to ensure chunked rendering completes)
+            setTimeout(() => {
+                highlightCustomerRow(targetTab, targetName);
+            }, 100);
+        }
+
+        function highlightCustomerRow(tab, customerName) {
+            const tbody = document.getElementById(`${tab}TableBody`);
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll('tr');
+            for (const row of rows) {
+                // The first link in the row typically shows the URL
+                const link = row.querySelector('td:nth-child(2) a');
+                if (link && link.textContent.trim() === customerName) {
+                    // Remove previous highlights
+                    document.querySelectorAll('tr.search-highlight').forEach(r => r.classList.remove('search-highlight'));
+                    row.classList.add('search-highlight');
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Remove highlight after animation
+                    setTimeout(() => row.classList.remove('search-highlight'), 3500);
+                    return;
+                }
+            }
+        }
+
+        function closeUnifiedSearch() {
+            const input = document.getElementById('unifiedSearch');
+            const dropdown = document.getElementById('unifiedSearchDropdown');
+            input.value = '';
+            dropdown.classList.remove('visible');
+            dropdown.innerHTML = '';
+            unifiedSearchIndex = -1;
+            lastSearchResults = { companies: [], urls: [] };
+        }
+
+        // ==============================
+        // COLUMN HEADER SEARCH (🔍)
+        // ==============================
+
+        function openColSearch(th) {
+            const input = th.querySelector('.col-search-input');
+            if (!input || input.classList.contains('expanded')) return;
+
+            // Collapse other open col-search inputs (keep their filter values)
+            collapseAllColSearch(input);
+
+            input.classList.add('expanded');
+            input.focus();
+            // Place cursor at end of existing text
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+
+        function collapseAllColSearch(except) {
+            document.querySelectorAll('.col-search-input.expanded').forEach(other => {
+                if (other !== except) {
+                    other.classList.remove('expanded');
+                    // Update has-filter state on the th
+                    syncColFilterState(other);
+                }
+            });
+        }
+
+        function syncColFilterState(input) {
+            const th = input.closest('.header-searchable');
+            if (!th) return;
+            if (input.value.trim()) {
+                th.classList.add('has-filter');
+            } else {
+                th.classList.remove('has-filter');
+            }
+        }
+
+        function resetColFilters(tab) {
+            // Clear all column search inputs + version filter for a given tab
+            document.querySelectorAll(`.col-search-input[data-table="${tab}"]`).forEach(input => {
+                input.value = '';
+                input.classList.remove('expanded');
+                const th = input.closest('.header-searchable');
+                if (th) th.classList.remove('has-filter');
+                const filterType = input.dataset.filter;
+                if (filterType) filters[tab][filterType] = '';
+            });
+            filters[tab].versions = [];
+            // Reset version dropdown button visual state
+            const tableEl = document.getElementById(`${tab}Table`);
+            if (tableEl) {
+                const vBtn = tableEl.querySelector('.version-filter-btn-inline');
+                if (vBtn) { vBtn.classList.remove('filter-active'); vBtn.title = 'Alla versioner'; }
+            }
+        }
+
+        function clearColSearch(btn, event) {
+            event.stopPropagation(); // Don't trigger th onclick
+            const th = btn.closest('.header-searchable');
+            const input = th.querySelector('.col-search-input');
+            if (!input) return;
+            input.value = '';
+            const table = input.dataset.table;
+            const filterType = input.dataset.filter;
+            if (table && filterType) {
+                filters[table][filterType] = '';
+                renderTable(table);
+            }
+            th.classList.remove('has-filter');
+            input.classList.remove('expanded');
+        }
+
+        function setupFilters() {
+            // Setup column header search inputs (debounced)
+            const debouncedRender = debounce((table) => renderTable(table), 200);
+            document.querySelectorAll('.col-search-input').forEach(input => {
+                // Stop click from bubbling to th.onclick (which would re-open)
+                input.addEventListener('click', (e) => e.stopPropagation());
+                input.addEventListener('input', (e) => {
+                    const table = e.target.dataset.table;
+                    const filterType = e.target.dataset.filter;
+                    if (filterType === 'company') {
+                        filters[table].company = e.target.value;
+                    } else {
+                        filters[table].name = e.target.value;
+                    }
+                    debouncedRender(table);
+                });
+            });
+
+            // Setup version dropdowns
+            ['alla', 'success', 'risk', 'other'].forEach(type => {
+                const versions = [...new Set(globalData[type].map(c => c.site.Version || '-'))].sort();
+                const dropdown = document.getElementById(`versionDropdown-${type}`);
+
+                dropdown.innerHTML = `
+                    <div class="version-option">
+                        <input type="checkbox" id="v-${type}-all" checked onchange="toggleAllVersions('${type}', this.checked)">
+                        <label for="v-${type}-all">Alla</label>
+                    </div>
+                    ${versions.map(v => `
+                        <div class="version-option">
+                            <input type="checkbox" id="v-${type}-${escHtml(v)}" checked data-version="${escHtml(v)}" onchange="updateVersionFilter('${type}')">
+                            <label for="v-${type}-${escHtml(v)}">${escHtml(v)}</label>
+                        </div>
+                    `).join('')}
+                `;
+
+                filters[type].versions = versions;
+            });
+        }
+
+        function toggleVersionDropdown(type, event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById(`versionDropdown-${type}`);
+            document.querySelectorAll('.version-dropdown').forEach(d => {
+                if (d !== dropdown) d.classList.remove('show');
+            });
+            dropdown.classList.toggle('show');
+        }
+
+        function toggleAllVersions(type, checked) {
+            const dropdown = document.getElementById(`versionDropdown-${type}`);
+            dropdown.querySelectorAll('input[data-version]').forEach(cb => {
+                cb.checked = checked;
+            });
+            updateVersionFilter(type);
+        }
+
+        function updateVersionFilter(type) {
+            const dropdown = document.getElementById(`versionDropdown-${type}`);
+            const checkedVersions = [...dropdown.querySelectorAll('input[data-version]:checked')].map(cb => cb.dataset.version);
+            filters[type].versions = checkedVersions;
+
+            const btn = dropdown.previousElementSibling;
+            const allVersions = [...dropdown.querySelectorAll('input[data-version]')];
+            if (btn.classList.contains('version-filter-btn-inline')) {
+                // Inline button: update title and visual state
+                if (checkedVersions.length === allVersions.length) {
+                    btn.title = 'Filtrera version';
+                    btn.classList.remove('filter-active');
+                } else {
+                    btn.title = checkedVersions.length === 0 ? 'Ingen version vald' : `${checkedVersions.length} versioner valda`;
+                    btn.classList.add('filter-active');
+                }
+            } else {
+                // Legacy full button
+                if (checkedVersions.length === allVersions.length) {
+                    btn.textContent = 'Alla versioner \u25BC';
+                } else if (checkedVersions.length === 0) {
+                    btn.textContent = 'Ingen vald \u25BC';
+                } else {
+                    btn.textContent = `${checkedVersions.length} valda \u25BC`;
+                }
+            }
+
+            renderTable(type);
+        }
+
+        function setupSorting() {
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const table = th.closest('table');
+                    const type = table.id.replace('Table', '');
+                    const field = th.dataset.sort;
+
+                    // Toggle sort direction
+                    if (sortState[type].field === field) {
+                        sortState[type].dir = sortState[type].dir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortState[type].field = field;
+                        sortState[type].dir = 'desc';
+                    }
+
+                    // Update UI
+                    table.querySelectorAll('th.sortable').forEach(t => {
+                        t.classList.remove('sort-asc', 'sort-desc');
+                    });
+                    th.classList.add(sortState[type].dir === 'asc' ? 'sort-asc' : 'sort-desc');
+                    th.querySelector('.sort-icon').textContent = sortState[type].dir === 'asc' ? '↑' : '↓';
+
+                    renderTable(type);
+                });
+            });
+        }
+
+        function getFilteredData(type) {
+            let data = [...globalData[type]];
+
+            // Apply name filter (diacritics-insensitive)
+            if (filters[type].name) {
+                const nf = norm(filters[type].name);
+                data = data.filter(c => norm(c.name).includes(nf));
+            }
+
+            // Apply company filter (diacritics-insensitive)
+            if (filters[type].company) {
+                const cf = norm(filters[type].company);
+                data = data.filter(c => {
+                    const companyInfo = getCompanyInfo(c.site.url, c.site);
+                    if (!companyInfo) return false;
+                    return norm(companyInfo.companyName).includes(cf);
+                });
+            }
+
+            // Apply version filter
+            if (filters[type].versions.length > 0) {
+                data = data.filter(c => filters[type].versions.includes(c.site.Version || '-'));
+            }
+
+            // Apply coach filter
+            if (coachFilter.length > 0) {
+                data = data.filter(c => coachFilter.includes(c.site.coachEmail));
+            }
+
+            // Apply track filter (OR-based: show customer if ANY of their tracks matches ANY selected filter)
+            if (trackFilter.length > 0) {
+                data = data.filter(c => {
+                    const tracks = (c.site.track || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+                    return tracks.some(t => trackFilter.includes(t));
+                });
+            }
+
+            // Apply "new only" filter
+            if (document.getElementById('filterNewOnly') && document.getElementById('filterNewOnly').checked) {
+                data = data.filter(c => c.isNewlyClassified);
+            }
+
+            // Apply sorting
+            if (sortState[type].field) {
+                const field = sortState[type].field;
+                const dir = sortState[type].dir === 'asc' ? 1 : -1;
+                data.sort((a, b) => {
+                    const aVal = a.site[field] || 0;
+                    const bVal = b.site[field] || 0;
+                    return (aVal - bVal) * dir;
+                });
+            }
+
+            return data;
+        }
+
+        function applyNewOnlyFilter() {
+            renderedTabs = {};
+            renderTabContent(activeTab);
+        }
+
+        function renderTable(type) {
+            const data = getFilteredData(type);
+            const tbody = document.getElementById(`${type}TableBody`);
+
+            if (data.length === 0) {
+                const colspan = (type === 'other') ? 5 : 6;
+                tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">Inga kunder matchar filtret</td></tr>`;
+                return;
+            }
+
+            // Use DocumentFragment + chunked insertion for large datasets
+            const CHUNK_SIZE = 50;
+            if (data.length <= CHUNK_SIZE) {
+                tbody.innerHTML = data.map(c => createTableRow(c, type)).join('');
+            } else {
+                // Render first chunk immediately for perceived speed
+                tbody.innerHTML = data.slice(0, CHUNK_SIZE).map(c => createTableRow(c, type)).join('');
+                // Append remaining chunks via rAF to avoid blocking UI
+                let offset = CHUNK_SIZE;
+                function appendChunk() {
+                    if (offset >= data.length) return;
+                    const chunk = data.slice(offset, offset + CHUNK_SIZE);
+                    const temp = document.createElement('tbody');
+                    temp.innerHTML = chunk.map(c => createTableRow(c, type)).join('');
+                    const frag = document.createDocumentFragment();
+                    while (temp.firstChild) frag.appendChild(temp.firstChild);
+                    tbody.appendChild(frag);
+                    offset += CHUNK_SIZE;
+                    if (offset < data.length) requestAnimationFrame(appendChunk);
+                }
+                requestAnimationFrame(appendChunk);
+            }
+        }
+
+        function analyzeCustomers(data) {
+            const success = [];
+            const risk = [];
+            const other = [];
+
+            data.forEach(site => {
+                const siteName = site.url ? site.url.replace('https://', '').replace(/\/$/, '') : 'Unknown';
+                const hasEnoughProducers = (site.Antal_Producenter || 0) >= criteria.minProducers;
+
+                // Percentage changes for trends
+                const viewChange = site.Visningar_30_60_Dagar > 0
+                    ? ((site.Visningar_Sista_30_Dagar - site.Visningar_30_60_Dagar) / site.Visningar_30_60_Dagar) * 100
+                    : (site.Visningar_Sista_30_Dagar > 0 ? 100 : 0);
+
+                const guideChange = site.Skapade_Guider_30_60_Dagar > 0
+                    ? ((site.Skapade_Guider_Sista_30_Dagar - site.Skapade_Guider_30_60_Dagar) / site.Skapade_Guider_30_60_Dagar) * 100
+                    : (site.Skapade_Guider_Sista_30_Dagar > 0 ? 100 : 0);
+
+                const processChange = site.Processer_Skapade_30_60_Dagar > 0
+                    ? ((site.Processer_Skapade_Sista_30_Dagar - site.Processer_Skapade_30_60_Dagar) / site.Processer_Skapade_30_60_Dagar) * 100
+                    : (site.Processer_Skapade_Sista_30_Dagar > 0 ? 100 : 0);
+
+                // Login change (prod/admin)
+                const logins = site.Antal_Inloggningar_Prod_Admin || 0;
+                const loginsPrev = site.Inloggningar_Prod_Admin_Prev || 0;
+                const loginChange = loginsPrev > 0
+                    ? ((logins - loginsPrev) / loginsPrev) * 100
+                    : (logins > 0 ? 100 : 0);
+
+                // Unique publishers change
+                const uniquePub = site.Antal_Unika_Publicerande_Prod || 0;
+                const uniquePubPrev = site.Unika_Publicerande_Prod_Prev || 0;
+                const uniquePubChange = uniquePubPrev > 0
+                    ? ((uniquePub - uniquePubPrev) / uniquePubPrev) * 100
+                    : (uniquePub > 0 ? 100 : 0);
+
+                const successFlags = [];
+                const riskFlags = [];
+
+                if (hasEnoughProducers) {
+                    // ---- RISK FLAGS (weighted) ----
+
+                    // Risk #1 (weight 6): Views decrease
+                    if (site.Visningar_30_60_Dagar > 0 && viewChange <= criteria.riskViewDecreaseThreshold) {
+                        riskFlags.push({ weight: 6, label: `Visningar ${Math.round(viewChange)}%`, detail: `${site.Visningar_30_60_Dagar} → ${site.Visningar_Sista_30_Dagar}` });
+                    }
+
+                    // Risk #2 (weight 5): Low logins (prod/admin) — only if login data is collected
+                    if ((logins > 0 || loginsPrev > 0) && logins < criteria.riskMinLoginsThreshold) {
+                        riskFlags.push({ weight: 5, label: `Inlogg < ${criteria.riskMinLoginsThreshold}`, detail: `${logins} inloggningar prod/admin` });
+                    }
+
+                    // Risk #3 (weight 4): Login drop % (only if prev > 0)
+                    if (loginsPrev > 0 && loginChange <= -criteria.riskLoginDropPercent) {
+                        riskFlags.push({ weight: 4, label: `Inlogg ${Math.round(loginChange)}%`, detail: `${loginsPrev} → ${logins}` });
+                    }
+
+                    // Risk #4 (weight 3): Guide decrease
+                    if (site.Skapade_Guider_30_60_Dagar > 0 && guideChange <= criteria.riskGuideDecreaseThreshold) {
+                        riskFlags.push({ weight: 3, label: `Guider ${Math.round(guideChange)}%`, detail: `${site.Skapade_Guider_30_60_Dagar} → ${site.Skapade_Guider_Sista_30_Dagar}` });
+                    }
+
+                    // Risk #5 (weight 2): Low publications (only if enough producers)
+                    if ((site.Publiseringar_Sista_30_Dagar || 0) < criteria.riskMinPublications) {
+                        riskFlags.push({ weight: 2, label: `Publ < ${criteria.riskMinPublications}`, detail: `${site.Publiseringar_Sista_30_Dagar || 0} publiceringar` });
+                    }
+
+                    // Risk #6 (weight 1): Process decrease — only if customer has Map license
+                    const hasMapLicense = (site.track || '').toLowerCase().includes('map');
+                    if (hasMapLicense && site.Processer_Skapade_30_60_Dagar > 0 && processChange <= criteria.riskProcessDecreaseThreshold) {
+                        riskFlags.push({ weight: 1, label: `Processer ${Math.round(processChange)}%`, detail: `${site.Processer_Skapade_30_60_Dagar} → ${site.Processer_Skapade_Sista_30_Dagar}` });
+                    }
+
+                    // ---- SUCCESS FLAGS (weighted) ----
+
+                    // Success #1 (weight 6): Views increase
+                    if (site.Visningar_30_60_Dagar > 0 && viewChange >= criteria.successViewIncreaseThreshold) {
+                        successFlags.push({ weight: 6, label: `Visningar +${Math.round(viewChange)}%`, detail: `${site.Visningar_30_60_Dagar} → ${site.Visningar_Sista_30_Dagar}` });
+                    }
+
+                    // Success #2 (weight 5): High logins
+                    if (logins > criteria.successMinLogins) {
+                        successFlags.push({ weight: 5, label: `${logins} inlogg`, detail: `Över ${criteria.successMinLogins} inloggningar` });
+                    }
+
+                    // Success #3 (weight 4): Guide increase
+                    if (site.Skapade_Guider_30_60_Dagar > 0 && guideChange >= criteria.successGuideIncreaseThreshold) {
+                        successFlags.push({ weight: 4, label: `Guider +${Math.round(guideChange)}%`, detail: `${site.Skapade_Guider_30_60_Dagar} → ${site.Skapade_Guider_Sista_30_Dagar}` });
+                    }
+
+                    // Success #4 (weight 3): Unique publishers increase
+                    if (uniquePubPrev > 0 && uniquePubChange >= criteria.successUniquePublishersIncrease) {
+                        successFlags.push({ weight: 3, label: `Unika publ +${Math.round(uniquePubChange)}%`, detail: `${uniquePubPrev} → ${uniquePub}` });
+                    }
+
+                    // Success #5 (weight 2): High publications
+                    if ((site.Publiseringar_Sista_30_Dagar || 0) > criteria.successMinPublications) {
+                        successFlags.push({ weight: 2, label: `${site.Publiseringar_Sista_30_Dagar} publ`, detail: `Över ${criteria.successMinPublications} publiceringar` });
+                    }
+
+                    // Success #6 (weight 1): Process increase — only if customer has Map license
+                    if (hasMapLicense && site.Processer_Skapade_30_60_Dagar > 0 && processChange >= criteria.successProcessIncreaseThreshold) {
+                        successFlags.push({ weight: 1, label: `Processer +${Math.round(processChange)}%`, detail: `${site.Processer_Skapade_30_60_Dagar} → ${site.Processer_Skapade_Sista_30_Dagar}` });
+                    }
+                }
+
+                // Compute weighted scores
+                const riskScore = riskFlags.reduce((sum, f) => sum + f.weight, 0);
+                const successScore = successFlags.reduce((sum, f) => sum + f.weight, 0);
+
+                const customerData = {
+                    site: site,
+                    name: siteName,
+                    successFlags: successFlags,
+                    riskFlags: riskFlags,
+                    riskScore: riskScore,
+                    successScore: successScore
+                };
+
+                if (successScore >= criteria.successMinScore && riskScore <= criteria.riskMaxScoreForSuccess) {
+                    success.push(customerData);
+                } else if (riskFlags.length > 0 && riskScore > criteria.riskMaxScoreForSuccess) {
+                    risk.push(customerData);
+                } else if (riskFlags.length > 0 && successScore < criteria.successMinScore) {
+                    risk.push(customerData);
+                } else {
+                    other.push(customerData);
+                }
+            });
+
+            success.sort((a, b) => b.successScore - a.successScore);
+            risk.sort((a, b) => b.riskScore - a.riskScore);
+
+            return { success, risk, other };
+        }
+
+        // Build a "shifted" version of the site data where previous period becomes current
+        function buildShiftedSite(site) {
+            return {
+                ...site,
+                // Shift previous → current (activity metrics)
+                Publiseringar_Sista_30_Dagar:     site.Publiseringar_30_60_Dagar || 0,
+                Skapade_Guider_Sista_30_Dagar:    site.Skapade_Guider_30_60_Dagar || 0,
+                Visningar_Sista_30_Dagar:         site.Visningar_30_60_Dagar || 0,
+                Processvisningar_Sista_30_Dagar:  site.Processvisningar_30_60_Dagar || 0,
+                Processer_Skapade_Sista_30_Dagar: site.Processer_Skapade_30_60_Dagar || 0,
+                // Shift login/publisher prev → current
+                Antal_Inloggningar_Prod_Admin:    site.Inloggningar_Prod_Admin_Prev || 0,
+                Antal_Unika_Publicerande_Prod:    site.Unika_Publicerande_Prod_Prev || 0,
+                Antal_Unika_Inloggade_Prod_Admin: site.Unika_Inloggade_Prod_Admin_Prev || 0,
+                // Zero out previous period (no 60-90d data available)
+                Publiseringar_30_60_Dagar:        0,
+                Skapade_Guider_30_60_Dagar:       0,
+                Visningar_30_60_Dagar:            0,
+                Processvisningar_30_60_Dagar:     0,
+                Processer_Skapade_30_60_Dagar:    0,
+                Inloggningar_Prod_Admin_Prev:     0,
+                Unika_Publicerande_Prod_Prev:     0,
+                Unika_Inloggade_Prod_Admin_Prev:  0
+                // Gauge metrics (Antal_Producenter, Totalt_Antal_Anvandare, etc.) preserved via spread
+            };
+        }
+
+        // Compare current vs previous-period classifications to detect newly classified customers
+        function detectNewlyClassified(currentAnalysis, previousAnalysis) {
+            const prevMap = new Map();
+            previousAnalysis.success.forEach(c => prevMap.set(c.site.url || c.name, 'success'));
+            previousAnalysis.risk.forEach(c => prevMap.set(c.site.url || c.name, 'risk'));
+            previousAnalysis.other.forEach(c => prevMap.set(c.site.url || c.name, 'other'));
+
+            const annotate = (customers, currentCategory) => {
+                customers.forEach(c => {
+                    const key = c.site.url || c.name;
+                    const prev = prevMap.get(key) || 'other';
+                    c.isNewlyClassified = (prev !== currentCategory);
+                    c.previousCategory = prev;
+                });
+            };
+
+            annotate(currentAnalysis.success, 'success');
+            annotate(currentAnalysis.risk, 'risk');
+            annotate(currentAnalysis.other, 'other');
+        }
+
+        function displaySummary(data, analysis) {
+            const totalSuccessScore = analysis.success.reduce((sum, c) => sum + c.successScore, 0);
+            const totalRiskScore = analysis.risk.reduce((sum, c) => sum + c.riskScore, 0);
+            const avgSuccessScore = analysis.success.length > 0 ? Math.round(totalSuccessScore / analysis.success.length) : 0;
+            const avgRiskScore = analysis.risk.length > 0 ? Math.round(totalRiskScore / analysis.risk.length) : 0;
+
+            // Update tab counts and scores
+            document.getElementById('allaCount').textContent = data.length;
+            document.getElementById('successCount').textContent = analysis.success.length;
+            document.getElementById('riskCount').textContent = analysis.risk.length;
+            document.getElementById('otherCount').textContent = analysis.other.length;
+            document.getElementById('successAvgScore').innerHTML = avgSuccessScore > 0 ? avgSuccessScore : '';
+            document.getElementById('riskAvgScore').innerHTML = avgRiskScore > 0 ? avgRiskScore : '';
+
+            // Update "newly classified" count badges in tab bar
+            const newSuccessCount = analysis.success.filter(c => c.isNewlyClassified).length;
+            const newRiskCount = analysis.risk.filter(c => c.isNewlyClassified).length;
+            const successNewEl = document.getElementById('successNewCount');
+            const riskNewEl = document.getElementById('riskNewCount');
+            if (newSuccessCount > 0) {
+                successNewEl.textContent = '+' + newSuccessCount;
+                successNewEl.style.display = '';
+            } else {
+                successNewEl.style.display = 'none';
+            }
+            if (newRiskCount > 0) {
+                riskNewEl.textContent = '+' + newRiskCount;
+                riskNewEl.style.display = '';
+            } else {
+                riskNewEl.style.display = 'none';
+            }
+
+            // Show "Visa bara nya" filter if there are any new classifications
+            const newFilterEl = document.getElementById('newOnlyFilter');
+            if (newSuccessCount > 0 || newRiskCount > 0) {
+                newFilterEl.style.display = '';
+            } else {
+                newFilterEl.style.display = 'none';
+            }
+
+            // Activate the correct tab (from URL param or default)
+            switchTab(activeTab);
+        }
+
+        function createTableRow(customer, type) {
+            const site = customer.site;
+
+            // Build "NY" badge for newly classified customers (shown next to company name)
+            const prevLabel = customer.previousCategory === 'success' ? 'Succé'
+                            : customer.previousCategory === 'risk' ? 'Risk' : 'Övrig';
+            let newBadgeHtml = '';
+            if (customer.isNewlyClassified) {
+                // Determine badge color based on current classification
+                let badgeClass = '';
+                if (type === 'success') badgeClass = 'success';
+                else if (type === 'risk') badgeClass = 'risk';
+                else if (type === 'alla') {
+                    const sc = customer.successScore >= criteria.successMinScore && customer.riskScore <= criteria.riskMaxScoreForSuccess;
+                    const rc = customer.riskFlags.length > 0 && (customer.riskScore > criteria.riskMaxScoreForSuccess || customer.successScore < criteria.successMinScore);
+                    if (sc) badgeClass = 'success';
+                    else if (rc) badgeClass = 'risk';
+                }
+                if (badgeClass) {
+                    newBadgeHtml = `<span class="new-badge ${badgeClass}" title="Ny klassificering (tidigare: ${prevLabel})"></span>`;
+                }
+            }
+
+            let flagsHtml = '';
+            if (type === 'success') {
+                flagsHtml = customer.successFlags.map(f =>
+                    `<span class="flag-badge flag-success" title="${escHtml(f.detail)}"><span class="weight-badge">${f.weight}</span>${escHtml(f.label)}</span>`
+                ).join('');
+                if (customer.successScore > 0) {
+                    flagsHtml += ` <span class="weighted-score success" title="Total viktad succépoäng">${customer.successScore}</span>`;
+                }
+            } else if (type === 'risk') {
+                flagsHtml = customer.riskFlags.map(f =>
+                    `<span class="flag-badge flag-risk" title="${escHtml(f.detail)}"><span class="weight-badge">${f.weight}</span>${escHtml(f.label)}</span>`
+                ).join('');
+                if (customer.riskScore > 0) {
+                    flagsHtml += ` <span class="weighted-score risk" title="Total viktad riskpoäng">${customer.riskScore}</span>`;
+                }
+            }
+
+            // Determine category for "Alla" tab + row highlight
+            let catLabel = 'Övrig', catClass = '';
+            if (customer.successScore >= criteria.successMinScore && customer.riskScore <= criteria.riskMaxScoreForSuccess) {
+                catLabel = 'Succé'; catClass = 'flag-success';
+            } else if (customer.riskFlags.length > 0 && (customer.riskScore > criteria.riskMaxScoreForSuccess || customer.successScore < criteria.successMinScore)) {
+                catLabel = 'Risk'; catClass = 'flag-risk';
+            }
+
+            let flagsCell;
+            if (type === 'alla') {
+                flagsCell = `<td class="flags-cell"><span class="flag-badge ${catClass}">${catLabel}</span></td>`;
+            } else if (type !== 'other') {
+                flagsCell = `<td class="flags-cell">${flagsHtml}</td>`;
+            } else {
+                flagsCell = '';
+            }
+
+            // Determine row highlight class for newly classified
+            let rowClass = '';
+            if (customer.isNewlyClassified) {
+                if (type === 'risk') {
+                    rowClass = 'newly-classified-risk';
+                } else if (type === 'success') {
+                    rowClass = 'newly-classified-success';
+                } else if (type === 'alla') {
+                    if (catClass === 'flag-risk') rowClass = 'newly-classified-risk';
+                    else if (catClass === 'flag-success') rowClass = 'newly-classified-success';
+                }
+            }
+            const configUrl = site.url ? `${escHtml(site.url)}LoginCoreManual?returnURL=/config` : '#';
+
+            // Get company info (from API response or SuperOffice lookup)
+            const companyInfo = getCompanyInfo(site.url, site);
+            let companyCell = '';
+            if (companyInfo) {
+                const crmUrl = `https://online2.superoffice.com/Cust16404/default.aspx?contact.main.detaljkortet.minimonth?contact_id=${encodeURIComponent(companyInfo.companyId)}`;
+                companyCell = `<td class="company-name" title="${escHtml(companyInfo.companyName)}">${newBadgeHtml}<a href="${escHtml(crmUrl)}" target="_blank">${escHtml(companyInfo.companyName)}</a></td>`;
+            } else {
+                companyCell = `<td class="company-name">${newBadgeHtml}<span class="no-match">-</span></td>`;
+            }
+
+            const escapedUrl = escHtml((site.url || '').replace(/'/g, "\\'"));
+            const escapedName = escHtml(customer.name.replace(/'/g, "\\'"));
+
+            // Store customer ref for detail panel lookup
+            const urlKey = (site.url || '').replace(/'/g, "\\'");
+            customerLookup[urlKey] = customer;
+
+            return `
+                <tr class="${rowClass}">
+                    <td><button class="chart-btn" onclick="openDetailPanel('${escapedUrl}', '${escapedName}', customerLookup['${urlKey}'])" title="Visa detaljer"><i class="icon-chart-bar1"></i></button></td>
+                    <td class="site-url" title="${escHtml(site.url || '')}"><a href="${configUrl}" target="_blank">${escHtml(customer.name)}</a></td>
+                    ${companyCell}
+                    <td><span class="version-badge">${escHtml(site.Version || '-')}</span></td>
+                    ${buildTrackCell(site)}
+                    ${flagsCell}
+                </tr>
+            `;
+        }
+
+        // ===== DETAIL PANEL FUNCTIONALITY =====
+
+        let detailChartInstance = null;
+        let detailHistoryData = [];
+        let detailChartMode = 'week';
+        let detailCurrentUrl = '';
+        let detailCurrentCustomer = null;
+        let detailSelectedMetrics = new Set(['publiseringar']); // Default selected metric for chart
+
+        // All metrics with display info
+        const detailMetrics = [
+            { key: 'publiseringar',           siteKey30: 'Publiseringar_Sista_30_Dagar',                  siteKey3060: 'Publiseringar_30_60_Dagar',                  label: 'Publiceringar',      type: 'sum',   color: '#5458F2' },
+            { key: 'guider',                  siteKey30: 'Skapade_Guider_Sista_30_Dagar',                 siteKey3060: 'Skapade_Guider_30_60_Dagar',                 label: 'Skapade guider',     type: 'sum',   color: '#10b981' },
+            { key: 'visningar',               siteKey30: 'Visningar_Sista_30_Dagar',                      siteKey3060: 'Visningar_30_60_Dagar',                      label: 'Visningar',          type: 'sum',   color: '#f59e0b' },
+            { key: 'processvisningar',        siteKey30: 'Processvisningar_Sista_30_Dagar',               siteKey3060: 'Processvisningar_30_60_Dagar',               label: 'Processvisningar',   type: 'sum',   color: '#8b5cf6' },
+            { key: 'processer',               siteKey30: 'Processer_Sista_30_Dagar',                      siteKey3060: 'Processer_30_60_Dagar',                      label: 'Processer',          type: 'sum',   color: '#ec4899' },
+            { key: 'producenter',             siteKey30: 'Antal_Producenter',                             siteKey3060: null,                                         label: 'Producenter',        type: 'gauge', color: '#06b6d4' },
+            { key: 'aktivaProducenter',       siteKey30: 'Antal_Aktiva_Producenter_Sista_6_Manader',      siteKey3060: null,                                         label: 'Aktiva prod. (6m)',  type: 'gauge', color: '#14b8a6' },
+            { key: 'anvandare',               siteKey30: 'Totalt_Antal_Anvandare',                        siteKey3060: null,                                         label: 'Användare',          type: 'gauge', color: '#6366f1' },
+            { key: 'inloggningarProdAdmin',   siteKey30: 'Inloggningar_ProdAdmin_Sista_30_Dagar',         siteKey3060: 'Inloggningar_ProdAdmin_30_60_Dagar',         label: 'Inloggningar',       type: 'sum',   color: '#f97316' },
+            { key: 'unikaInloggadeProdAdmin', siteKey30: 'Unika_Inloggade_ProdAdmin_Sista_30_Dagar',     siteKey3060: 'Unika_Inloggade_ProdAdmin_30_60_Dagar',      label: 'Unika inloggade',    type: 'sum',   color: '#84cc16' },
+            { key: 'unikaPublicerandeProd',   siteKey30: 'Unika_Publicerande_Prod_Sista_30_Dagar',       siteKey3060: 'Unika_Publicerande_Prod_30_60_Dagar',        label: 'Unika publicerande', type: 'sum',   color: '#a855f7' }
+        ];
+
+        function openDetailPanel(url, name, customer) {
+            detailCurrentUrl = url;
+            detailCurrentCustomer = customer;
+            const site = customer.site;
+
+            // Build header
+            const configUrl = site.url ? `${escHtml(site.url)}LoginCoreManual?returnURL=/config` : '#';
+            document.getElementById('detailTitle').innerHTML =
+                `<a href="${configUrl}" target="_blank" title="Öppna konfiguration">${escHtml(name)}</a>`;
+
+            // Build meta line: company, version, license, tracks
+            let metaParts = [];
+            const companyInfo = getCompanyInfo(site.url, site);
+            if (companyInfo) {
+                const crmUrl = `https://online2.superoffice.com/Cust16404/default.aspx?contact.main.detaljkortet.minimonth?contact_id=${encodeURIComponent(companyInfo.companyId)}`;
+                metaParts.push(`<a href="${escHtml(crmUrl)}" target="_blank" title="SuperOffice CRM"><i class="icon-office-building"></i> ${escHtml(companyInfo.companyName)}</a>`);
+            }
+            if (site.Version) {
+                metaParts.push(`<span class="version-badge">${escHtml(site.Version)}</span>`);
+            }
+            if (site.licenseHolder) {
+                let licHtml = `<i class="icon-lock"></i> ${escHtml(site.licenseHolder)}`;
+                if (site.licenseExpiry) {
+                    const d = new Date(site.licenseExpiry);
+                    if (!isNaN(d.getTime())) {
+                        const diff = Math.floor((d - new Date()) / 86400000);
+                        const cls = diff < 0 ? 'expired' : diff <= 30 ? 'expired' : diff <= 60 ? 'warn' : 'ok';
+                        licHtml += ` <span class="license-expiry ${cls}">${d.toLocaleDateString('sv-SE')}</span>`;
+                    }
+                }
+                metaParts.push(licHtml);
+            }
+            if (site.track) {
+                const tracks = site.track.split(',').map(t => t.trim()).filter(Boolean);
+                if (tracks.length) {
+                    metaParts.push(tracks.map(t => `<span class="flag-badge">${escHtml(t)}</span>`).join(' '));
+                }
+            }
+            document.getElementById('detailMeta').innerHTML = metaParts.join(' <span style="color:#cbd5e0">|</span> ');
+
+            // Build 30d metrics immediately from site data
+            buildMetricsGrid(site);
+
+            // Set chart dates: 365 days back
+            const today = new Date();
+            const yearAgo = new Date(today);
+            yearAgo.setDate(yearAgo.getDate() - 365);
+            document.getElementById('detailChartTo').value = today.toISOString().split('T')[0];
+            document.getElementById('detailChartFrom').value = yearAgo.toISOString().split('T')[0];
+
+            // Reset chart mode
+            detailChartMode = 'day';
+            document.querySelectorAll('.detail-mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.detail-mode-btn').classList.add('active');
+
+            // Build chart legend chips
+            buildDetailLegend();
+
+            // Show panel
+            document.getElementById('detailOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+
+            // Fetch history data for 90d/365d metrics + chart
+            fetchDetailHistory(url);
+        }
+
+        function closeDetailPanel() {
+            document.getElementById('detailOverlay').classList.remove('show');
+            document.body.style.overflow = '';
+            if (detailChartInstance) {
+                detailChartInstance.destroy();
+                detailChartInstance = null;
+            }
+            detailHistoryData = [];
+            detailCurrentCustomer = null;
+        }
+
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('detailOverlay').classList.contains('show')) {
+                closeDetailPanel();
+            }
+        });
+
+        function buildMetricsGrid(site) {
+            const grid = document.getElementById('detailMetricsGrid');
+            const periods = ['30 dagar', '90 dagar', '365 dagar'];
+
+            grid.innerHTML = detailMetrics.map(m => {
+                // 30d values from site data
+                const val30 = site[m.siteKey30] || 0;
+                let change30Html = '';
+                if (m.siteKey3060 && m.type === 'sum') {
+                    const prev30 = site[m.siteKey3060] || 0;
+                    change30Html = formatChange(val30, prev30);
+                }
+
+                const isSelected = detailSelectedMetrics.has(m.key);
+                const styleAttr = isSelected ? `style="--metric-color:${m.color}"` : '';
+
+                return `
+                    <div class="detail-metric-row">
+                        <div class="detail-metric-label">${escHtml(m.label)}</div>
+                        <div class="detail-metric-card ${isSelected ? 'selected' : ''}" data-metric="${m.key}" ${styleAttr} onclick="toggleDetailMetric('${m.key}', this)">
+                            <div class="detail-metric-period">${periods[0]}</div>
+                            <div class="detail-metric-value">${formatNumber(val30)}</div>
+                            ${change30Html}
+                        </div>
+                        <div class="detail-metric-card" data-metric="${m.key}" data-period="90" onclick="toggleDetailMetric('${m.key}', this)">
+                            <div class="detail-metric-period">${periods[1]}</div>
+                            <div class="detail-metric-value loading">...</div>
+                        </div>
+                        <div class="detail-metric-card" data-metric="${m.key}" data-period="365" onclick="toggleDetailMetric('${m.key}', this)">
+                            <div class="detail-metric-period">${periods[2]}</div>
+                            <div class="detail-metric-value loading">...</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatNumber(n) {
+            if (n == null) return '0';
+            return Number(n).toLocaleString('sv-SE');
+        }
+
+        function formatChange(current, previous) {
+            if (!previous || previous === 0) {
+                if (current > 0) return '<div class="detail-metric-change positive">Ny</div>';
+                return '<div class="detail-metric-change neutral">0%</div>';
+            }
+            const pct = Math.round(((current - previous) / previous) * 100);
+            if (pct > 0) return `<div class="detail-metric-change positive">+${pct}%</div>`;
+            if (pct < 0) return `<div class="detail-metric-change negative">${pct}%</div>`;
+            return '<div class="detail-metric-change neutral">0%</div>';
+        }
+
+        function toggleDetailMetric(key, cardEl) {
+            if (detailSelectedMetrics.has(key)) {
+                detailSelectedMetrics.delete(key);
+            } else {
+                detailSelectedMetrics.add(key);
+            }
+
+            // Update all cards and legend chips for this metric
+            const m = detailMetrics.find(dm => dm.key === key);
+            document.querySelectorAll(`.detail-metric-card[data-metric="${key}"]`).forEach(c => {
+                if (detailSelectedMetrics.has(key)) {
+                    c.classList.add('selected');
+                    c.style.setProperty('--metric-color', m.color);
+                } else {
+                    c.classList.remove('selected');
+                }
+            });
+
+            // Update legend chips
+            const chip = document.querySelector(`.detail-legend-chip[data-metric="${key}"]`);
+            if (chip) {
+                if (detailSelectedMetrics.has(key)) {
+                    chip.classList.add('active');
+                    chip.style.background = m.color;
+                    chip.style.borderColor = m.color;
+                } else {
+                    chip.classList.remove('active');
+                    chip.style.background = '';
+                    chip.style.borderColor = '';
+                }
+            }
+
+            renderDetailChart();
+        }
+
+        function buildDetailLegend() {
+            const container = document.getElementById('detailChartLegend');
+            container.innerHTML = detailMetrics.map(m => {
+                const isActive = detailSelectedMetrics.has(m.key);
+                return `<button class="detail-legend-chip ${isActive ? 'active' : ''}"
+                    data-metric="${m.key}"
+                    style="${isActive ? 'background:' + m.color + ';border-color:' + m.color : ''}"
+                    onclick="toggleDetailMetric('${m.key}', null)">
+                    <span class="detail-legend-dot" style="background:${m.color}"></span>${escHtml(m.label)}
+                </button>`;
+            }).join('');
+        }
+
+        function fetchDetailHistory(url) {
+            // Show loading in chart area
+            document.getElementById('detailChartLoading').style.display = 'flex';
+            document.getElementById('detailChartWrapper').style.display = 'none';
+
+            // Fetch 156 weeks of history (~3 years, covers 365d + 365d for comparison)
+            const apiUrl = `../../api/customer-stats/history?url=${encodeURIComponent(url)}&limit=156`;
+
+            fetch(apiUrl)
+                .then(r => {
+                    if (!r.ok) throw new Error('API returned ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    // API returns newest first, reverse for chronological order
+                    detailHistoryData = data.reverse();
+
+                    // Update 90d and 365d metric cards
+                    update90d365dMetrics();
+
+                    // Show chart
+                    document.getElementById('detailChartLoading').style.display = 'none';
+                    document.getElementById('detailChartWrapper').style.display = 'block';
+                    renderDetailChart();
+                })
+                .catch(err => {
+                    document.getElementById('detailChartLoading').textContent = 'Kunde inte ladda historik: ' + err.message;
+                    // Still update cards to show "N/A"
+                    document.querySelectorAll('.detail-metric-card[data-period]').forEach(c => {
+                        const valEl = c.querySelector('.detail-metric-value');
+                        if (valEl) { valEl.textContent = 'N/A'; valEl.classList.remove('loading'); }
+                    });
+                });
+        }
+
+        function aggregateWindow(data, days, metricDef) {
+            if (!data || data.length === 0) return { value: 0, prev: 0 };
+
+            const today = new Date();
+            const cutoff = new Date(today);
+            cutoff.setDate(cutoff.getDate() - days);
+            const prevCutoff = new Date(cutoff);
+            prevCutoff.setDate(prevCutoff.getDate() - days);
+
+            const currentEntries = data.filter(d => {
+                const dt = new Date(d.snapshotDate);
+                return dt >= cutoff && dt <= today;
+            });
+            const prevEntries = data.filter(d => {
+                const dt = new Date(d.snapshotDate);
+                return dt >= prevCutoff && dt < cutoff;
+            });
+
+            let currentVal, prevVal;
+            if (metricDef.type === 'sum') {
+                currentVal = currentEntries.reduce((s, d) => s + (d[metricDef.key] || 0), 0);
+                prevVal = prevEntries.reduce((s, d) => s + (d[metricDef.key] || 0), 0);
+            } else {
+                // gauge: use latest value in window
+                currentVal = currentEntries.length > 0 ? (currentEntries[currentEntries.length - 1][metricDef.key] || 0) : 0;
+                prevVal = prevEntries.length > 0 ? (prevEntries[prevEntries.length - 1][metricDef.key] || 0) : 0;
+            }
+
+            return { value: currentVal, prev: prevVal };
+        }
+
+        function update90d365dMetrics() {
+            detailMetrics.forEach(m => {
+                [90, 365].forEach(days => {
+                    const card = document.querySelector(`.detail-metric-card[data-metric="${m.key}"][data-period="${days}"]`);
+                    if (!card) return;
+
+                    const agg = aggregateWindow(detailHistoryData, days, m);
+                    const valEl = card.querySelector('.detail-metric-value');
+                    valEl.textContent = formatNumber(agg.value);
+                    valEl.classList.remove('loading');
+
+                    // Add or update change indicator
+                    let changeEl = card.querySelector('.detail-metric-change');
+                    const changeHtml = formatChange(agg.value, agg.prev);
+                    if (changeEl) {
+                        changeEl.outerHTML = changeHtml;
+                    } else {
+                        card.insertAdjacentHTML('beforeend', changeHtml);
+                    }
+
+                    // Update selected state
+                    if (detailSelectedMetrics.has(m.key)) {
+                        card.classList.add('selected');
+                        card.style.setProperty('--metric-color', m.color);
+                    }
+                });
+            });
+        }
+
+        function setDetailChartMode(mode, btn) {
+            detailChartMode = mode;
+            document.querySelectorAll('.detail-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderDetailChart();
+        }
+
+        function updateDetailChart() {
+            // Re-render chart with new date range (data already loaded)
+            renderDetailChart();
+        }
+
+        function aggregateByMonth(data) {
+            const months = {};
+            data.forEach(d => {
+                const ym = d.snapshotDate.substring(0, 7);
+                if (!months[ym]) {
+                    months[ym] = { entries: [], label: ym };
+                }
+                months[ym].entries.push(d);
+            });
+
+            const sumKeys = detailMetrics.filter(m => m.type === 'sum').map(m => m.key);
+            const gaugeKeys = detailMetrics.filter(m => m.type === 'gauge').map(m => m.key);
+
+            return Object.values(months).map(m => {
+                const result = { snapshotDate: m.label + '-15' };
+                const last = m.entries[m.entries.length - 1];
+
+                // Sum metrics: sum all weekly snapshots in the month
+                sumKeys.forEach(k => {
+                    result[k] = m.entries.reduce((s, e) => s + (e[k] || 0), 0);
+                });
+                // Gauge metrics: use latest snapshot value in the month
+                gaugeKeys.forEach(k => { result[k] = last[k] || 0; });
+
+                return result;
+            });
+        }
+
+        function renderDetailChart() {
+            if (detailChartInstance) {
+                detailChartInstance.destroy();
+                detailChartInstance = null;
+            }
+
+            if (detailHistoryData.length === 0) {
+                document.getElementById('detailChartLoading').textContent = 'Ingen historisk data tillgänglig';
+                document.getElementById('detailChartLoading').style.display = 'flex';
+                document.getElementById('detailChartWrapper').style.display = 'none';
+                return;
+            }
+
+            // Filter by date range
+            const fromVal = document.getElementById('detailChartFrom').value;
+            const toVal = document.getElementById('detailChartTo').value;
+            let filtered = detailHistoryData;
+            if (fromVal && toVal) {
+                filtered = detailHistoryData.filter(d => d.snapshotDate >= fromVal && d.snapshotDate <= toVal);
+            }
+
+            if (filtered.length === 0) {
+                document.getElementById('detailChartLoading').textContent = 'Ingen data för valt intervall';
+                document.getElementById('detailChartLoading').style.display = 'flex';
+                document.getElementById('detailChartWrapper').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('detailChartLoading').style.display = 'none';
+            document.getElementById('detailChartWrapper').style.display = 'block';
+
+            const displayData = detailChartMode === 'month' ? aggregateByMonth(filtered) : filtered;
+
+            const activeMetrics = detailMetrics.filter(m => detailSelectedMetrics.has(m.key));
+            const datasets = activeMetrics.map(m => ({
+                label: m.label,
+                data: displayData.map(d => d[m.key] || 0),
+                borderColor: m.color,
+                backgroundColor: m.color + '20',
+                borderWidth: 2,
+                pointRadius: detailChartMode === 'month' ? 4 : (displayData.length > 60 ? 0 : 3),
+                pointHoverRadius: 5,
+                tension: 0.3,
+                fill: true
+            }));
+
+            const labels = displayData.map(d => d.snapshotDate);
+
+            const ctx = document.getElementById('detailChart').getContext('2d');
+            detailChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false }, // Using custom legend chips instead
+                        tooltip: {
+                            backgroundColor: 'rgba(45, 55, 72, 0.95)',
+                            titleFont: { family: 'Inter', size: 13, weight: '600' },
+                            bodyFont: { family: 'Inter', size: 12 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                title: function(items) {
+                                    if (!items.length) return '';
+                                    const d = items[0].label;
+                                    if (detailChartMode === 'month') {
+                                        const parts = d.split('-');
+                                        const monthNames = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+                                        return monthNames[parseInt(parts[1]) - 1] + ' ' + parts[0];
+                                    }
+                                    // Week mode: show "Vecka DD/MM" with week number
+                                    const dt = new Date(d);
+                                    const startOfYear = new Date(dt.getFullYear(), 0, 1);
+                                    const weekNum = Math.ceil(((dt - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+                                    return 'v.' + weekNum + ' — ' + d;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Inter', size: 11 },
+                                maxTicksLimit: detailChartMode === 'month' ? 12 : 20,
+                                callback: function(value) {
+                                    const label = this.getLabelForValue(value);
+                                    if (detailChartMode === 'month') {
+                                        const parts = label.split('-');
+                                        const monthNames = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+                                        return monthNames[parseInt(parts[1]) - 1] + ' ' + parts[0].substring(2);
+                                    }
+                                    // Week mode: show DD/MM
+                                    const parts = label.split('-');
+                                    return parts[2] + '/' + parts[1];
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f0f0f0' },
+                            ticks: { font: { family: 'Inter', size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function exportCSV(type) {
+            let customers = getFilteredData(type);
+            const dateSuffix = (currentDateRange.from && currentDateRange.to)
+                ? `_${currentDateRange.from}_${currentDateRange.to}` : '';
+            let filename;
+
+            switch(type) {
+                case 'alla':
+                    filename = `alla_kunder${dateSuffix}.csv`;
+                    break;
+                case 'success':
+                    filename = `succekunder${dateSuffix}.csv`;
+                    break;
+                case 'risk':
+                    filename = `riskkunder${dateSuffix}.csv`;
+                    break;
+                case 'other':
+                    filename = `ovriga_kunder${dateSuffix}.csv`;
+                    break;
+            }
+
+            if (customers.length === 0) {
+                alert('Inga kunder att exportera');
+                return;
+            }
+
+            const dl2 = currentDayCount + 'd';
+            const headers = [
+                'URL',
+                'Företag',
+                'Company_ID',
+                'Version',
+                'Spar',
+                'Flaggor',
+                'Publiceringar_' + dl2,
+                'Guider_' + dl2,
+                'Visningar_' + dl2,
+                'Processvisningar_' + dl2,
+                'Producenter',
+                'Aktiva_6man',
+                'Anvandare',
+                'Publiceringar_prev_' + dl2,
+                'Guider_prev_' + dl2,
+                'Visningar_prev_' + dl2,
+                'Inloggningar_Prod_Admin',
+                'Unika_Inloggade',
+                'Unika_Publicerande',
+                'Risk_Poäng',
+                'Succé_Poäng',
+                'Ny_klassificering'
+            ];
+
+            const rows = customers.map(c => {
+                const site = c.site;
+                let flags;
+                if (type === 'alla') {
+                    if (c.successScore >= criteria.successMinScore && c.riskScore <= criteria.riskMaxScoreForSuccess) flags = 'Succé';
+                    else if (c.riskFlags.length > 0 && (c.riskScore > criteria.riskMaxScoreForSuccess || c.successScore < criteria.successMinScore)) flags = 'Risk';
+                    else flags = 'Övrig';
+                } else if (type === 'success') {
+                    flags = c.successFlags.map(f => `[${f.weight}] ${f.label}`).join('; ');
+                } else if (type === 'risk') {
+                    flags = c.riskFlags.map(f => `[${f.weight}] ${f.label}`).join('; ');
+                } else {
+                    flags = '';
+                }
+                const companyInfo = getCompanyInfo(site.url, site);
+                let newClass = '';
+                if (c.isNewlyClassified) {
+                    if (type === 'success' || (type === 'alla' && flags === 'Succé')) newClass = 'Ny succé';
+                    else if (type === 'risk' || (type === 'alla' && flags === 'Risk')) newClass = 'Ny risk';
+                }
+
+                return [
+                    `"${c.name}"`,
+                    `"${companyInfo ? companyInfo.companyName : ''}"`,
+                    companyInfo ? companyInfo.companyId : '',
+                    site.Version || '',
+                    `"${(site.track || '').replace(/"/g, '""')}"`,
+                    `"${flags}"`,
+                    site.Publiseringar_Sista_30_Dagar || 0,
+                    site.Skapade_Guider_Sista_30_Dagar || 0,
+                    site.Visningar_Sista_30_Dagar || 0,
+                    site.Processvisningar_Sista_30_Dagar || 0,
+                    site.Antal_Producenter || 0,
+                    site.Antal_Aktiva_Producenter_Sista_6_Manader || 0,
+                    site.Totalt_Antal_Anvandare || 0,
+                    site.Publiseringar_30_60_Dagar || 0,
+                    site.Skapade_Guider_30_60_Dagar || 0,
+                    site.Visningar_30_60_Dagar || 0,
+                    site.Antal_Inloggningar_Prod_Admin || 0,
+                    site.Antal_Unika_Inloggade_Prod_Admin || 0,
+                    site.Antal_Unika_Publicerande_Prod || 0,
+                    c.riskScore || 0,
+                    c.successScore || 0,
+                    `"${newClass}"`
+                ].join(',');
+            });
+
+            const csvContent = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certifikat</title>
+    <link rel="stylesheet" href="../../shared/ic-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ic-primary: #5458F2;
+            --ic-primary-hover: #4347d9;
+            --ic-secondary: #D4D5FC;
+            --ic-text-dark: #323232;
+            --ic-text-muted: #6c757d;
+            --ic-bg-white: #ffffff;
+            --ic-bg-light: #f8f9fc;
+            --ic-success: #10b981;
+            --ic-success-light: #d1fae5;
+            --ic-danger: #ef4444;
+            --ic-danger-light: #fee2e2;
+            --ic-warning: #f59e0b;
+            --ic-warning-light: #fef3c7;
+            --ic-info: #3b82f6;
+            --ic-info-light: #dbeafe;
+            --ic-radius-sm: 6px;
+            --ic-radius-md: 10px;
+            --ic-radius-lg: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ic-bg-light);
+            min-height: 100vh;
+            color: var(--ic-text-dark);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: var(--ic-bg-white);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--ic-bg-white);
+            padding: 25px 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        h1 {
+            font-size: 1.6em;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subtitle {
+            color: var(--ic-text-muted);
+            font-size: 0.95em;
+        }
+
+        /* Summary cards */
+        .summary {
+            display: flex;
+            gap: 15px;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            flex-wrap: wrap;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 18px 22px;
+            border-radius: var(--ic-radius-md);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            min-width: 140px;
+            border-left: 4px solid var(--ic-primary);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+        }
+
+        .summary-card.expired { border-left-color: var(--ic-danger); }
+        .summary-card.critical { border-left-color: var(--ic-warning); }
+        .summary-card.ok { border-left-color: var(--ic-success); }
+
+        .summary-card h3 {
+            font-size: 0.8em;
+            color: var(--ic-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .summary-card .value {
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .summary-card.expired .value { color: var(--ic-danger); }
+        .summary-card.critical .value { color: var(--ic-warning); }
+        .summary-card.ok .value { color: var(--ic-success); }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .search-input {
+            padding: 8px 14px;
+            border: 1px solid #dee2e6;
+            border-radius: var(--ic-radius-sm);
+            font-size: 0.9em;
+            font-family: inherit;
+            width: 300px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 2px rgba(84, 88, 242, 0.15);
+        }
+
+        .last-updated {
+            margin-left: auto;
+            font-size: 0.85em;
+            color: var(--ic-text-muted);
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 30px 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--ic-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover { color: var(--ic-primary); }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9em;
+        }
+
+        tr:hover { background: #f8f9fc; }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-expired {
+            background: var(--ic-danger-light);
+            color: #991b1b;
+        }
+
+        .status-critical {
+            background: var(--ic-warning-light);
+            color: #92400e;
+        }
+
+        .status-warning {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .status-ok {
+            background: var(--ic-success-light);
+            color: #065f46;
+        }
+
+        .days-badge {
+            font-weight: 700;
+            font-size: 0.95em;
+        }
+
+        .days-badge.expired { color: var(--ic-danger); }
+        .days-badge.critical { color: var(--ic-warning); }
+        .days-badge.warning { color: #ca8a04; }
+        .days-badge.ok { color: var(--ic-success); }
+
+        .server-ip {
+            font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+            font-size: 0.85em;
+            background: #f0f0f5;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .cert-subject {
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .hostname {
+            font-weight: 500;
+            color: var(--ic-primary);
+        }
+
+        .date-cell {
+            white-space: nowrap;
+            font-size: 0.85em;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ic-text-muted);
+        }
+
+        .empty-state .icon { font-size: 3em; margin-bottom: 15px; }
+        .empty-state h2 { font-size: 1.2em; margin-bottom: 8px; color: var(--ic-text-dark); }
+        .empty-state p { font-size: 0.95em; }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--ic-text-muted);
+        }
+
+        .loading .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: var(--ic-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="icon-lock-closed"></i> Certifikat</h1>
+            <p class="subtitle" id="subtitleText">SSL-certifikat per Tomcat-server</p>
+        </header>
+
+        <div class="summary" id="summary">
+            <div class="summary-card expired" onclick="filterByStatus('expired')">
+                <h3>Utgångna</h3>
+                <div class="value" id="expiredCount">-</div>
+            </div>
+            <div class="summary-card critical" onclick="filterByStatus('critical')">
+                <h3>Kritiska (&lt; 30d)</h3>
+                <div class="value" id="criticalCount">-</div>
+            </div>
+            <div class="summary-card ok" onclick="filterByStatus('ok')">
+                <h3>OK</h3>
+                <div class="value" id="okCount">-</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" class="search-input" id="searchInput" placeholder="Sök server, hostname, subject..." oninput="renderTable()">
+            <span class="last-updated" id="lastUpdated"></span>
+        </div>
+
+        <div class="table-wrapper">
+            <div class="loading" id="loadingState">
+                <div class="spinner"></div>
+                <p>Laddar certifikat...</p>
+            </div>
+            <table id="certTable" style="display:none;">
+                <thead>
+                    <tr>
+                        <th onclick="sortBy('serverIp')">Server</th>
+                        <th onclick="sortBy('hostnamePattern')">Hostname</th>
+                        <th onclick="sortBy('subject')">Subject</th>
+                        <th onclick="sortBy('issuer')">Utfärdare</th>
+                        <th onclick="sortBy('validFrom')">Utfärdat</th>
+                        <th onclick="sortBy('validTo')">Utgår</th>
+                        <th onclick="sortBy('daysUntilExpiry')">Dagar kvar</th>
+                        <th onclick="sortBy('status')">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="certTableBody"></tbody>
+            </table>
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <div class="icon"><i class="icon-lock-closed" style="font-size:inherit"></i></div>
+                <h2>Inga certifikat hittade</h2>
+                <p>Kör <code>getcerts.ps1</code> för att skanna Tomcat-servrar och importera certifikatdata.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allCerts = [];
+        let currentSort = { field: 'daysUntilExpiry', dir: 'asc' };
+        let statusFilter = null;
+
+        // Load data from API
+        (async function() {
+            try {
+                const resp = await fetch('../../api/certificates');
+                if (!resp.ok) throw new Error('API returned ' + resp.status);
+                allCerts = await resp.json();
+
+                document.getElementById('loadingState').style.display = 'none';
+
+                if (allCerts.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                } else {
+                    document.getElementById('certTable').style.display = 'table';
+                    updateSummary();
+                    renderTable();
+                    updateLastChecked();
+                }
+            } catch (err) {
+                document.getElementById('loadingState').innerHTML =
+                    '<div class="icon" style="font-size:2em;"><i class="icon-exclamation-circle" style="font-size:inherit"></i></div>' +
+                    '<p>Kunde inte ladda certifikatdata: ' + err.message + '</p>';
+            }
+
+            // Notify parent dashboard
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'moduleReady', moduleId: 'certificates' }, '*');
+            }
+        })();
+
+        function updateSummary() {
+            const expired = allCerts.filter(c => c.status === 'expired').length;
+            const critical = allCerts.filter(c => c.status === 'critical' || c.status === 'warning').length;
+            const ok = allCerts.filter(c => c.status === 'ok').length;
+
+            document.getElementById('expiredCount').textContent = expired;
+            document.getElementById('criticalCount').textContent = critical;
+            document.getElementById('okCount').textContent = ok;
+
+            document.getElementById('subtitleText').textContent =
+                `${allCerts.length} certifikat på ${new Set(allCerts.map(c => c.serverIp)).size} servrar`;
+        }
+
+        function updateLastChecked() {
+            if (allCerts.length > 0 && allCerts[0].lastChecked) {
+                const date = new Date(allCerts[0].lastChecked);
+                document.getElementById('lastUpdated').textContent =
+                    'Senast skannad: ' + date.toLocaleString('sv-SE');
+            }
+        }
+
+        function filterByStatus(status) {
+            if (statusFilter === status) {
+                statusFilter = null; // Toggle off
+            } else {
+                statusFilter = status;
+            }
+            renderTable();
+        }
+
+        function getFilteredCerts() {
+            let certs = [...allCerts];
+            const query = document.getElementById('searchInput').value.toLowerCase();
+
+            if (query) {
+                certs = certs.filter(c =>
+                    (c.serverIp || '').toLowerCase().includes(query) ||
+                    (c.hostnamePattern || '').toLowerCase().includes(query) ||
+                    (c.subject || '').toLowerCase().includes(query) ||
+                    (c.issuer || '').toLowerCase().includes(query) ||
+                    (c.keystorePath || '').toLowerCase().includes(query)
+                );
+            }
+
+            if (statusFilter) {
+                if (statusFilter === 'ok') {
+                    certs = certs.filter(c => c.status === 'ok');
+                } else if (statusFilter === 'critical') {
+                    certs = certs.filter(c => c.status === 'critical' || c.status === 'warning');
+                } else if (statusFilter === 'expired') {
+                    certs = certs.filter(c => c.status === 'expired');
+                }
+            }
+
+            // Sort
+            certs.sort((a, b) => {
+                let valA = a[currentSort.field];
+                let valB = b[currentSort.field];
+
+                if (typeof valA === 'string') valA = (valA || '').toLowerCase();
+                if (typeof valB === 'string') valB = (valB || '').toLowerCase();
+
+                if (valA < valB) return currentSort.dir === 'asc' ? -1 : 1;
+                if (valA > valB) return currentSort.dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            return certs;
+        }
+
+        function sortBy(field) {
+            if (currentSort.field === field) {
+                currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.dir = 'asc';
+            }
+            renderTable();
+        }
+
+        function renderTable() {
+            const certs = getFilteredCerts();
+            const tbody = document.getElementById('certTableBody');
+
+            if (certs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;padding:30px;">Inga certifikat matchar filtret</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = certs.map(c => {
+                const statusClass = 'status-' + c.status;
+                const daysClass = c.status;
+                const statusLabel = getStatusLabel(c.status);
+                const statusIcon = getStatusIcon(c.status);
+
+                return `<tr>
+                    <td><span class="server-ip">${esc(c.serverIp)}</span></td>
+                    <td><span class="hostname">${esc(c.hostnamePattern || '-')}</span></td>
+                    <td class="cert-subject" title="${esc(c.subject || '')}">${esc(c.subject || '-')}</td>
+                    <td class="cert-subject" title="${esc(c.issuer || '')}">${esc(shortenIssuer(c.issuer))}</td>
+                    <td class="date-cell">${c.validFrom || '-'}</td>
+                    <td class="date-cell">${c.validTo || '-'}</td>
+                    <td><span class="days-badge ${daysClass}">${c.daysUntilExpiry} d</span></td>
+                    <td><span class="status-badge ${statusClass}">${statusIcon} ${statusLabel}</span></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function getStatusLabel(status) {
+            switch (status) {
+                case 'expired': return 'Utgånget';
+                case 'critical': return 'Kritiskt';
+                case 'warning': return 'Snart';
+                case 'ok': return 'OK';
+                default: return status;
+            }
+        }
+
+        function getStatusIcon(status) {
+            switch (status) {
+                case 'expired': return '🔴';
+                case 'critical': return '🟠';
+                case 'warning': return '🟡';
+                case 'ok': return '🟢';
+                default: return '';
+            }
+        }
+
+        function shortenIssuer(issuer) {
+            if (!issuer) return '-';
+            // Extract CN= part if present
+            const cnMatch = issuer.match(/CN\s*=\s*([^,\/]+)/);
+            if (cnMatch) return cnMatch[1].trim();
+            // Truncate if too long
+            return issuer.length > 40 ? issuer.substring(0, 40) + '...' : issuer;
+        }
+
+        function esc(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+# ============================================================
+# icDashBoard — .gitignore
+# ============================================================
+
+# === Secrets — never commit credentials ===
+**/app-secrets.properties
+**/db.properties
+**/saml.properties
+.mcp.json
+
+# === Eclipse / IDE ===
+/.metadata/
+Servers/
+*.classpath
+*.project
+*.settings/
+
+# === Embedded Tomcat (download separately) ===
+apache-tomcat-9.0.100/
+
+# === Backups and dumps ===
+backup_*/
+*.zip
+*.sql
+!icDashBoard/sql/*.sql
+!install-package/install.sql
+
+# === PowerShell scripts ===
+*.ps1
+
+# === Ny mapp ===
+Ny mapp/
+
+# === Build artifacts ===
+icDashBoard/build/
+*.war
+
+# === Legacy templates ===
+Templates/
+
+# === Claude local config ===
+.claude/settings.local.json
+.claude/worktrees/
+
+# === Loose files in repo root ===
+guide-planner.html
+infodumta.txt
+BUGFIX.md
+nul

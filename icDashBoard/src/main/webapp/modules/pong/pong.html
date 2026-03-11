@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong - InfoCaption Dashboard</title>
+    <link rel="stylesheet" href="../../shared/ic-styles.css">
+    <style>
+        .pong-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--ic-bg-white) 0%, var(--ic-bg-light) 100%);
+        }
+
+        .pong-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .pong-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--ic-text-dark);
+            margin-bottom: 5px;
+        }
+
+        .pong-subtitle {
+            color: var(--ic-text-muted);
+            font-size: 0.95em;
+        }
+
+        .game-wrapper {
+            background: var(--ic-bg-white);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(84, 88, 242, 0.1);
+            border: 2px solid var(--ic-secondary);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .score {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .score-label {
+            font-size: 0.75em;
+            color: var(--ic-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-value {
+            font-size: 2em;
+            color: var(--ic-primary);
+        }
+
+        .score-value.ai {
+            color: var(--ic-danger);
+        }
+
+        #gameCanvas {
+            display: block;
+            background: #1e1e3f;
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .game-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .game-btn-primary {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .game-btn-primary:hover {
+            background: var(--ic-primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .game-btn-secondary {
+            background: var(--ic-secondary);
+            color: var(--ic-primary);
+        }
+
+        .game-btn-secondary:hover {
+            background: var(--ic-tertiary);
+        }
+
+        .game-info {
+            margin-top: 25px;
+            text-align: center;
+            color: var(--ic-text-muted);
+            font-size: 0.9em;
+        }
+
+        .game-info kbd {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #f1f3f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+            box-shadow: 0 1px 0 #ccc;
+            margin: 0 3px;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .difficulty-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--ic-secondary);
+            background: white;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .difficulty-btn:hover {
+            border-color: var(--ic-primary);
+            color: var(--ic-primary);
+        }
+
+        .difficulty-btn.active {
+            background: var(--ic-primary);
+            border-color: var(--ic-primary);
+            color: white;
+        }
+
+        .game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            font-weight: 700;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+        }
+
+        @media (max-width: 700px) {
+            #gameCanvas {
+                width: 100%;
+                height: auto;
+            }
+
+            .game-wrapper {
+                padding: 15px;
+                width: 100%;
+            }
+
+            .score-board {
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="pong-container">
+        <div class="pong-header">
+            <h1 class="pong-title">Pong</h1>
+            <p class="pong-subtitle">Klassiskt arkadspel - första till 10 vinner!</p>
+        </div>
+
+        <div class="game-wrapper">
+            <div class="score-board">
+                <div class="score">
+                    <span class="score-label">Spelare</span>
+                    <span class="score-value" id="playerScore">0</span>
+                </div>
+                <div class="score">
+                    <span class="score-label">Dator</span>
+                    <span class="score-value ai" id="aiScore">0</span>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <canvas id="gameCanvas" width="600" height="400"></canvas>
+            </div>
+
+            <div class="game-controls">
+                <button class="game-btn game-btn-primary" id="startBtn" onclick="startGame()">Starta spel</button>
+                <button class="game-btn game-btn-secondary" onclick="resetGame()">Återställ</button>
+            </div>
+
+            <div class="difficulty-selector">
+                <button class="difficulty-btn active" data-difficulty="easy" onclick="setDifficulty('easy')">Lätt</button>
+                <button class="difficulty-btn" data-difficulty="medium" onclick="setDifficulty('medium')">Medel</button>
+                <button class="difficulty-btn" data-difficulty="hard" onclick="setDifficulty('hard')">Svår</button>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <p>Använd <kbd>W</kbd> / <kbd>S</kbd> eller <kbd>↑</kbd> / <kbd>↓</kbd> för att styra paddeln</p>
+            <p>Tryck <kbd>Space</kbd> för att pausa</p>
+        </div>
+    </div>
+
+    <script src="../../shared/ic-utils.js"></script>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game state
+        let gameRunning = false;
+        let gamePaused = false;
+        let playerScore = 0;
+        let aiScore = 0;
+        let animationId = null;
+
+        // Difficulty settings
+        const difficulties = {
+            easy: { aiSpeed: 3, ballSpeed: 5 },
+            medium: { aiSpeed: 5, ballSpeed: 7 },
+            hard: { aiSpeed: 7, ballSpeed: 9 }
+        };
+        let currentDifficulty = 'easy';
+
+        // Game objects
+        const paddleWidth = 12;
+        const paddleHeight = 80;
+        const ballSize = 12;
+
+        let player = {
+            x: 20,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            dy: 0,
+            speed: 8
+        };
+
+        let ai = {
+            x: canvas.width - 20 - paddleWidth,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            speed: difficulties[currentDifficulty].aiSpeed
+        };
+
+        let ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: ballSize,
+            dx: difficulties[currentDifficulty].ballSpeed,
+            dy: difficulties[currentDifficulty].ballSpeed * 0.5,
+            speed: difficulties[currentDifficulty].ballSpeed
+        };
+
+        // Key states
+        const keys = {
+            w: false,
+            s: false,
+            ArrowUp: false,
+            ArrowDown: false
+        };
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = true;
+                e.preventDefault();
+            }
+            if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                if (gameRunning) {
+                    gamePaused = !gamePaused;
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = false;
+            }
+        });
+
+        function setDifficulty(level) {
+            currentDifficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.difficulty === level);
+            });
+
+            // Update speeds
+            ai.speed = difficulties[level].aiSpeed;
+            ball.speed = difficulties[level].ballSpeed;
+
+            if (!gameRunning) {
+                resetBall();
+            }
+        }
+
+        function startGame() {
+            if (!gameRunning) {
+                gameRunning = true;
+                gamePaused = false;
+                document.getElementById('startBtn').textContent = 'Spel pågår...';
+                resetBall();
+                gameLoop();
+            }
+        }
+
+        function resetGame() {
+            gameRunning = false;
+            gamePaused = false;
+            playerScore = 0;
+            aiScore = 0;
+            updateScore();
+            document.getElementById('startBtn').textContent = 'Starta spel';
+
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+
+            resetBall();
+            resetPaddles();
+            draw();
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
+            ball.dy = (Math.random() - 0.5) * ball.speed;
+        }
+
+        function resetPaddles() {
+            player.y = canvas.height / 2 - paddleHeight / 2;
+            ai.y = canvas.height / 2 - paddleHeight / 2;
+        }
+
+        function updateScore() {
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('aiScore').textContent = aiScore;
+        }
+
+        function update() {
+            if (gamePaused) return;
+
+            // Player movement
+            if (keys.w || keys.ArrowUp) {
+                player.y -= player.speed;
+            }
+            if (keys.s || keys.ArrowDown) {
+                player.y += player.speed;
+            }
+
+            // Keep player paddle in bounds
+            player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+
+            // AI movement
+            const aiCenter = ai.y + ai.height / 2;
+            const ballCenter = ball.y;
+
+            if (aiCenter < ballCenter - 20) {
+                ai.y += ai.speed;
+            } else if (aiCenter > ballCenter + 20) {
+                ai.y -= ai.speed;
+            }
+
+            // Keep AI paddle in bounds
+            ai.y = Math.max(0, Math.min(canvas.height - ai.height, ai.y));
+
+            // Ball movement
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Ball collision with top/bottom
+            if (ball.y - ball.size / 2 <= 0 || ball.y + ball.size / 2 >= canvas.height) {
+                ball.dy = -ball.dy;
+                ball.y = ball.y - ball.size / 2 <= 0 ? ball.size / 2 : canvas.height - ball.size / 2;
+            }
+
+            // Ball collision with player paddle
+            if (ball.x - ball.size / 2 <= player.x + player.width &&
+                ball.x + ball.size / 2 >= player.x &&
+                ball.y >= player.y &&
+                ball.y <= player.y + player.height) {
+
+                ball.dx = Math.abs(ball.dx);
+
+                // Add spin based on where ball hits paddle
+                const hitPos = (ball.y - player.y) / player.height;
+                ball.dy = (hitPos - 0.5) * ball.speed * 1.5;
+
+                // Speed up slightly
+                ball.dx *= 1.02;
+            }
+
+            // Ball collision with AI paddle
+            if (ball.x + ball.size / 2 >= ai.x &&
+                ball.x - ball.size / 2 <= ai.x + ai.width &&
+                ball.y >= ai.y &&
+                ball.y <= ai.y + ai.height) {
+
+                ball.dx = -Math.abs(ball.dx);
+
+                const hitPos = (ball.y - ai.y) / ai.height;
+                ball.dy = (hitPos - 0.5) * ball.speed * 1.5;
+
+                ball.dx *= 1.02;
+            }
+
+            // Scoring
+            if (ball.x < 0) {
+                aiScore++;
+                updateScore();
+                checkWin();
+                resetBall();
+            } else if (ball.x > canvas.width) {
+                playerScore++;
+                updateScore();
+                checkWin();
+                resetBall();
+            }
+        }
+
+        function checkWin() {
+            if (playerScore >= 10) {
+                gameRunning = false;
+                document.getElementById('startBtn').textContent = 'Du vann! Spela igen';
+                if (typeof ICUtils !== 'undefined') {
+                    ICUtils.showToast('Grattis! Du vann!', 'success');
+                }
+            } else if (aiScore >= 10) {
+                gameRunning = false;
+                document.getElementById('startBtn').textContent = 'Datorn vann! Försök igen';
+                if (typeof ICUtils !== 'undefined') {
+                    ICUtils.showToast('Datorn vann! Försök igen.', 'error');
+                }
+            }
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#1e1e3f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw center line
+            ctx.setLineDash([10, 10]);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw paddles
+            ctx.fillStyle = '#5458F2';
+            ctx.shadowColor = '#5458F2';
+            ctx.shadowBlur = 15;
+            roundRect(ctx, player.x, player.y, player.width, player.height, 4);
+
+            ctx.fillStyle = '#ef4444';
+            ctx.shadowColor = '#ef4444';
+            roundRect(ctx, ai.x, ai.y, ai.width, ai.height, 4);
+
+            ctx.shadowBlur = 0;
+
+            // Draw ball
+            ctx.fillStyle = '#FFE496';
+            ctx.shadowColor = '#FFE496';
+            ctx.shadowBlur = 20;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Draw pause message
+            if (gamePaused) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 32px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('PAUSAD', canvas.width / 2, canvas.height / 2);
+                ctx.font = '16px Inter, sans-serif';
+                ctx.fillText('Tryck SPACE för att fortsätta', canvas.width / 2, canvas.height / 2 + 35);
+            }
+
+            // Draw start message if not running
+            if (!gameRunning && playerScore === 0 && aiScore === 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.font = '18px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Klicka "Starta spel" för att börja', canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            update();
+            draw();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // Initial draw
+        draw();
+
+        // Notify dashboard
+        if (typeof ICUtils !== 'undefined') {
+            ICUtils.notifyReady('pong');
+        }
+    </script>
+</body>
+</html>

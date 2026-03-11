@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverlista</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/ic-styles.css">
+    <style>
+        :root {
+            --ic-primary: #5458F2;
+            --ic-primary-hover: #4347d9;
+            --ic-secondary: #D4D5FC;
+            --ic-text-dark: #323232;
+            --ic-text-muted: #6c757d;
+            --ic-bg-white: #ffffff;
+            --ic-bg-light: #f8f9fc;
+            --ic-success: #10b981;
+            --ic-success-light: #d1fae5;
+            --ic-danger: #ef4444;
+            --ic-danger-light: #fee2e2;
+            --ic-warning: #f59e0b;
+            --ic-warning-light: #fef3c7;
+            --ic-info: #3b82f6;
+            --ic-info-light: #dbeafe;
+            --ic-radius-sm: 6px;
+            --ic-radius-md: 10px;
+            --ic-radius-lg: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ic-bg-light);
+            min-height: 100vh;
+            color: var(--ic-text-dark);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: var(--ic-bg-white);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--ic-bg-white);
+            padding: 25px 30px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        h1 {
+            font-size: 1.6em;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subtitle {
+            color: var(--ic-text-muted);
+            font-size: 0.95em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--ic-radius-sm);
+            font-size: 0.85em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--ic-primary);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--ic-primary-hover); }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: var(--ic-text-dark);
+            border: 1px solid #d1d5db;
+        }
+        .btn-secondary:hover { background: #e5e7eb; }
+
+        /* Alerts */
+        .alerts-section {
+            padding: 0 20px;
+        }
+
+        .alert {
+            margin: 12px 0;
+            padding: 14px 18px;
+            border-radius: var(--ic-radius-md);
+            border-left: 4px solid;
+        }
+
+        .alert-severe {
+            background: var(--ic-danger-light);
+            border-left-color: var(--ic-danger);
+        }
+
+        .alert-medium {
+            background: var(--ic-warning-light);
+            border-left-color: var(--ic-warning);
+        }
+
+        .alert-low {
+            background: var(--ic-info-light);
+            border-left-color: var(--ic-info);
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+        }
+
+        .alert-severe .alert-title { color: var(--ic-danger); }
+        .alert-medium .alert-title { color: #b45309; }
+        .alert-low .alert-title { color: var(--ic-info); }
+
+        .alert-list {
+            list-style: none;
+            font-size: 0.85em;
+        }
+
+        .alert-list li {
+            padding: 2px 0;
+        }
+
+        .alert-list a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            padding: 14px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+            padding: 8px 12px 8px 34px;
+            border: 1px solid #d1d5db;
+            border-radius: var(--ic-radius-sm);
+            font-size: 0.85em;
+            font-family: inherit;
+            background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 10px center;
+        }
+        .search-box:focus { outline: none; border-color: var(--ic-primary); }
+
+        .toolbar-info {
+            color: var(--ic-text-muted);
+            font-size: 0.85em;
+        }
+
+        .sync-info {
+            color: var(--ic-text-muted);
+            font-size: 0.8em;
+            margin-left: auto;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+
+        thead th {
+            background: #f8f9fa;
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--ic-text-muted);
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+        thead th:hover { color: var(--ic-text-dark); }
+
+        tbody td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover { background: #f8f9fc; }
+
+        /* Status dot */
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            vertical-align: middle;
+        }
+        .status-ok      { background: var(--ic-success); }
+        .status-severe   { background: var(--ic-danger); animation: pulse-red 1.5s infinite; }
+        .status-medium   { background: var(--ic-warning); }
+        .status-low      { background: var(--ic-info); }
+        .status-unknown  { background: #d1d5db; }
+        .status-checking { background: #d1d5db; animation: pulse-grey 1s infinite; }
+
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes pulse-grey {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* Links */
+        a {
+            color: var(--ic-primary);
+            text-decoration: none;
+        }
+        a:hover { text-decoration: underline; }
+
+        .site-url {
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .company-name {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .no-match {
+            color: var(--ic-text-muted);
+        }
+
+        /* Version badge */
+        .version-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--ic-secondary);
+            color: var(--ic-primary);
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        /* Machine name */
+        .machine-name {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: var(--ic-text-dark);
+        }
+
+        /* Loading state */
+        .loading-overlay {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ic-text-muted);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--ic-secondary);
+            border-top-color: var(--ic-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Health check button spinner */
+        .btn .btn-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Severity legend */
+        .legend {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            font-size: 0.8em;
+            color: var(--ic-text-muted);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Scroll to top */
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--ic-primary);
+            color: white;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .scroll-top-btn.visible { opacity: 0.4; }
+        .scroll-top-btn:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1><i class="icon-server"></i> Serverlista</h1>
+                <div class="subtitle" id="subtitle">Laddar servrar...</div>
+            </div>
+            <div class="header-actions">
+                <div class="legend">
+                    <span class="legend-item"><span class="status-dot status-ok"></span> OK</span>
+                    <span class="legend-item"><span class="status-dot status-low"></span> 401/403</span>
+                    <span class="legend-item"><span class="status-dot status-medium"></span> 404</span>
+                    <span class="legend-item"><span class="status-dot status-severe"></span> Nere</span>
+                </div>
+                <button class="btn btn-primary" id="healthBtn" onclick="runHealthCheck()">
+                    <i class="icon-search"></i> Hälsokontroll
+                </button>
+            </div>
+        </header>
+
+        <div class="alerts-section" id="alertsSection"></div>
+
+        <div class="toolbar">
+            <input type="text" class="search-box" id="searchBox" placeholder="Sök server, maskinnamn, företag...">
+            <span class="toolbar-info" id="serverCount"></span>
+            <span class="sync-info" id="syncInfo"></span>
+        </div>
+
+        <div id="content">
+            <div class="loading-overlay">
+                <div class="spinner"></div>
+                <div>Hämtar serverlista...</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="scroll-top-btn" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="icon-arrow-up1"></i></button>
+
+    <script src="../../shared/ic-utils.js"></script>
+    <script>
+    (async function() {
+        let servers = [];
+        let healthResults = {};
+        let currentSort = { col: 'urlNormalized', asc: true };
+
+        // --- Load servers ---
+        async function loadServers() {
+            try {
+                const resp = await fetch('../../api/servers');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                servers = await resp.json();
+                renderTable();
+                document.getElementById('subtitle').textContent =
+                    `${servers.length} aktiva servrar`;
+                document.getElementById('serverCount').textContent =
+                    `Visar ${servers.length} av ${servers.length} servrar`;
+            } catch (e) {
+                document.getElementById('content').innerHTML =
+                    `<div class="loading-overlay" style="color:var(--ic-danger)">Kunde inte hämta serverlista: ${e.message}</div>`;
+            }
+        }
+
+        // --- Health check ---
+        window.runHealthCheck = async function() {
+            const btn = document.getElementById('healthBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="btn-spinner"></span> Kontrollerar...';
+
+            // Set all to "checking" state
+            healthResults = {};
+            servers.forEach(s => { healthResults[s.id] = { severity: 'checking' }; });
+            renderTable();
+
+            try {
+                const resp = await fetch('../../api/servers/health');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const results = await resp.json();
+
+                results.forEach(r => {
+                    healthResults[r.serverId] = r;
+                });
+
+                renderAlerts();
+                sortBySeverityFirst();
+                renderTable();
+                document.getElementById('syncInfo').textContent =
+                    'Senaste kontroll: ' + new Date().toLocaleTimeString('sv-SE') + ' (auto var 60s)';
+            } catch (e) {
+                console.error('Health check failed:', e);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="icon-search"></i> Hälsokontroll';
+        };
+
+        // --- Sort by severity (failed first) ---
+        function sortBySeverityFirst() {
+            const order = { severe: 0, medium: 1, low: 2, ok: 3, unknown: 3, checking: 4 };
+            currentSort = { col: '_severity', asc: true };
+            servers.sort((a, b) => {
+                const sa = healthResults[a.id]?.severity || 'unknown';
+                const sb = healthResults[b.id]?.severity || 'unknown';
+                const diff = (order[sa] ?? 99) - (order[sb] ?? 99);
+                if (diff !== 0) return diff;
+                return (a.urlNormalized || '').localeCompare(b.urlNormalized || '');
+            });
+        }
+
+        // --- Column sort ---
+        window.sortTable = function(col) {
+            if (currentSort.col === col) {
+                currentSort.asc = !currentSort.asc;
+            } else {
+                currentSort = { col, asc: true };
+            }
+
+            servers.sort((a, b) => {
+                let va, vb;
+                if (col === '_severity') {
+                    const order = { severe: 0, medium: 1, low: 2, ok: 3, unknown: 4 };
+                    va = order[healthResults[a.id]?.severity || 'unknown'] ?? 99;
+                    vb = order[healthResults[b.id]?.severity || 'unknown'] ?? 99;
+                } else {
+                    va = (a[col] || '').toString().toLowerCase();
+                    vb = (b[col] || '').toString().toLowerCase();
+                }
+                if (va < vb) return currentSort.asc ? -1 : 1;
+                if (va > vb) return currentSort.asc ? 1 : -1;
+                return 0;
+            });
+
+            renderTable();
+        };
+
+        // --- Render alerts ---
+        function renderAlerts() {
+            const section = document.getElementById('alertsSection');
+            const groups = { severe: [], medium: [], low: [] };
+
+            for (const [idStr, result] of Object.entries(healthResults)) {
+                if (result.severity === 'ok' || result.severity === 'checking') continue;
+                const server = servers.find(s => s.id === parseInt(idStr));
+                if (!server) continue;
+                const sev = groups[result.severity] ? result.severity : 'severe';
+                groups[sev].push({
+                    server,
+                    statusCode: result.statusCode,
+                    error: result.error
+                });
+            }
+
+            let html = '';
+
+            if (groups.severe.length > 0) {
+                html += `<div class="alert alert-severe">
+                    <div class="alert-title">🔴 Allvarligt — ${groups.severe.length} server${groups.severe.length > 1 ? 'ar' : ''} nere (timeout/500)</div>
+                    <ul class="alert-list">${groups.severe.map(g => {
+                        const configUrl = g.server.url ? `${g.server.url}LoginCoreManual?returnURL=/config` : '#';
+                        const detail = g.error || `HTTP ${g.statusCode}`;
+                        return `<li><a href="${configUrl}" target="_blank">${g.server.urlNormalized}</a> — ${escapeHtml(detail)}</li>`;
+                    }).join('')}</ul>
+                </div>`;
+            }
+
+            if (groups.medium.length > 0) {
+                html += `<div class="alert alert-medium">
+                    <div class="alert-title">🟡 Varning — ${groups.medium.length} server${groups.medium.length > 1 ? 'ar' : ''} (404)</div>
+                    <ul class="alert-list">${groups.medium.map(g => {
+                        const configUrl = g.server.url ? `${g.server.url}LoginCoreManual?returnURL=/config` : '#';
+                        return `<li><a href="${configUrl}" target="_blank">${g.server.urlNormalized}</a> — HTTP 404</li>`;
+                    }).join('')}</ul>
+                </div>`;
+            }
+
+            if (groups.low.length > 0) {
+                html += `<div class="alert alert-low">
+                    <div class="alert-title">🔵 Info — ${groups.low.length} server${groups.low.length > 1 ? 'ar' : ''} (401/403)</div>
+                    <ul class="alert-list">${groups.low.map(g => {
+                        const configUrl = g.server.url ? `${g.server.url}LoginCoreManual?returnURL=/config` : '#';
+                        return `<li><a href="${configUrl}" target="_blank">${g.server.urlNormalized}</a> — HTTP ${g.statusCode}</li>`;
+                    }).join('')}</ul>
+                </div>`;
+            }
+
+            section.innerHTML = html;
+        }
+
+        // --- Render table ---
+        function renderTable() {
+            const query = (document.getElementById('searchBox')?.value || '').toLowerCase();
+            const filtered = servers.filter(s => {
+                if (!query) return true;
+                return (s.urlNormalized || '').toLowerCase().includes(query)
+                    || (s.machineName || '').toLowerCase().includes(query)
+                    || (s.companyName || '').toLowerCase().includes(query)
+                    || (s.version || '').toLowerCase().includes(query);
+            });
+
+            document.getElementById('serverCount').textContent =
+                filtered.length === servers.length
+                    ? `${servers.length} servrar`
+                    : `Visar ${filtered.length} av ${servers.length} servrar`;
+
+            const sortArrow = (col) => {
+                if (currentSort.col !== col) return '';
+                return currentSort.asc ? ' ▲' : ' ▼';
+            };
+
+            let html = `
+                <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('_severity')" style="width:50px">Status${sortArrow('_severity')}</th>
+                            <th onclick="sortTable('urlNormalized')">URL${sortArrow('urlNormalized')}</th>
+                            <th onclick="sortTable('machineName')">Maskinnamn${sortArrow('machineName')}</th>
+                            <th onclick="sortTable('version')">Version${sortArrow('version')}</th>
+                            <th onclick="sortTable('companyName')">Företag${sortArrow('companyName')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            for (const s of filtered) {
+                const health = healthResults[s.id];
+                const severity = health?.severity || 'unknown';
+                const statusTitle = health
+                    ? (health.error || `HTTP ${health.statusCode}`)
+                    : 'Ej kontrollerad';
+
+                const configUrl = s.url ? `${s.url}LoginCoreManual?returnURL=/config` : '#';
+
+                let companyCell;
+                if (s.companyId && s.companyName) {
+                    const crmUrl = `https://online2.superoffice.com/Cust16404/default.aspx?contact.main.detaljkortet.minimonth?contact_id=${s.companyId}`;
+                    companyCell = `<td class="company-name" title="${escapeHtml(s.companyName)}"><a href="${crmUrl}" target="_blank">${escapeHtml(s.companyName)}</a></td>`;
+                } else {
+                    companyCell = `<td class="company-name"><span class="no-match">-</span></td>`;
+                }
+
+                html += `
+                    <tr>
+                        <td><span class="status-dot status-${severity}" title="${escapeHtml(statusTitle)}"></span></td>
+                        <td class="site-url" title="${escapeHtml(s.url || '')}"><a href="${configUrl}" target="_blank">${escapeHtml(s.urlNormalized || s.url || '-')}</a></td>
+                        <td class="machine-name">${escapeHtml(s.machineName || '-')}</td>
+                        <td>${s.version ? `<span class="version-badge">${escapeHtml(s.version)}</span>` : '<span class="no-match">-</span>'}</td>
+                        ${companyCell}
+                    </tr>`;
+            }
+
+            html += `</tbody></table></div>`;
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // --- Helpers ---
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // --- Search ---
+        let searchTimeout;
+        document.getElementById('searchBox').addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(renderTable, 200);
+        });
+
+        // --- Scroll to top ---
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('scrollTopBtn');
+            btn.classList.toggle('visible', window.scrollY > 300);
+        });
+
+        // --- Init ---
+        await loadServers();
+        // Auto-scan on entry
+        runHealthCheck();
+        // Re-scan every 60 seconds
+        setInterval(function() {
+            var btn = document.getElementById('healthBtn');
+            if (btn && !btn.disabled) runHealthCheck();
+        }, 60000);
+        if (typeof ICUtils !== 'undefined') {
+            ICUtils.notifyReady('server-list');
+        }
+    })();
+    </script>
+</body>
+</html>

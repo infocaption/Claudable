@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utskick</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/ic-styles.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--ic-bg-light, #F8F9FC);
+            color: var(--ic-text-dark, #323232);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        /* Header */
+        header {
+            background: var(--ic-bg-white, #fff);
+            padding: 25px 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        header h1 {
+            font-size: 1.6em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        header .subtitle {
+            color: var(--ic-text-muted, #6C757D);
+            font-size: 0.95em;
+            margin-top: 4px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--ic-bg-white, #fff);
+            border-bottom: 2px solid #e5e7eb;
+            padding: 0 30px;
+        }
+        .tab-btn {
+            padding: 14px 24px;
+            border: none;
+            background: none;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: var(--ic-text-muted, #6C757D);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .tab-btn:hover {
+            color: var(--ic-primary, #5458F2);
+        }
+        .tab-btn.active {
+            color: var(--ic-primary, #5458F2);
+            border-bottom-color: var(--ic-primary, #5458F2);
+        }
+
+        /* Tab content */
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+            color: var(--ic-text-dark, #323232);
+        }
+        .form-group .helper {
+            font-size: 0.82em;
+            color: var(--ic-text-muted, #6C757D);
+            margin-top: 4px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #dee2e6;
+            border-radius: var(--ic-radius-sm, 6px);
+            font-size: 0.95em;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--ic-primary, #5458F2);
+            box-shadow: 0 0 0 3px rgba(84, 88, 242, 0.1);
+        }
+        textarea.form-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+        textarea.form-input.recipients {
+            min-height: 100px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.88em;
+        }
+        textarea.form-input.html-editor {
+            min-height: 250px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.88em;
+        }
+        select.form-input {
+            cursor: pointer;
+        }
+
+        /* Recipient counter */
+        .recipient-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--ic-secondary, #D4D5FC);
+            border-radius: var(--ic-radius-full, 9999px);
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--ic-primary, #5458F2);
+            margin-top: 8px;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: var(--ic-radius-sm, 6px);
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: var(--ic-primary, #5458F2);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #4347d9;
+        }
+        .btn-primary:disabled {
+            background: #a0a3f7;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: white;
+            color: var(--ic-text-dark, #323232);
+            border: 1px solid #dee2e6;
+        }
+        .btn-secondary:hover {
+            background: #f0f0ff;
+            border-color: var(--ic-primary, #5458F2);
+            color: var(--ic-primary, #5458F2);
+        }
+        .btn-danger {
+            background: var(--ic-danger, #EF4444);
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.85em;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--ic-bg-white, #fff);
+            border-radius: var(--ic-radius-md, 10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #f0f0f0;
+        }
+
+        /* Template list */
+        .template-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--ic-bg-white, #fff);
+            border: 1px solid #e5e7eb;
+            border-radius: var(--ic-radius-sm, 6px);
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .template-card:hover {
+            border-color: var(--ic-primary, #5458F2);
+            box-shadow: 0 2px 8px rgba(84,88,242,0.08);
+        }
+        .template-info h3 {
+            font-size: 1em;
+            font-weight: 600;
+        }
+        .template-info .template-subject {
+            font-size: 0.88em;
+            color: var(--ic-text-muted, #6C757D);
+            margin-top: 2px;
+        }
+        .template-info .template-date {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 4px;
+        }
+        .template-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* History table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        .history-table th {
+            text-align: left;
+            padding: 12px 16px;
+            background: var(--ic-bg-light, #F8F9FC);
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--ic-text-muted, #6C757D);
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .history-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .history-table tr:hover td {
+            background: #fafbff;
+        }
+        .history-table tr {
+            cursor: pointer;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: var(--ic-radius-full, 9999px);
+            font-size: 0.82em;
+            font-weight: 600;
+        }
+        .badge-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-sending {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .badge-sent {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: white;
+            border-radius: var(--ic-radius-lg, 16px);
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .modal-header h2 {
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--ic-radius-sm, 6px);
+        }
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Preview */
+        .preview-frame {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--ic-radius-sm, 6px);
+            padding: 20px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ic-text-muted, #6C757D);
+        }
+        .empty-state .emoji {
+            font-size: 3em;
+            margin-bottom: 16px;
+        }
+        .empty-state h3 {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: var(--ic-text-dark, #323232);
+        }
+
+        /* Sending overlay */
+        .sending-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .sending-overlay.active {
+            display: flex;
+        }
+        .sending-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e5e7eb;
+            border-top-color: var(--ic-primary, #5458F2);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .sending-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--ic-text-dark, #323232);
+        }
+
+        /* Result card */
+        .result-card {
+            display: none;
+            padding: 24px;
+            border-radius: var(--ic-radius-md, 10px);
+            margin-top: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .result-card.success {
+            display: block;
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+        }
+        .result-card.error {
+            display: block;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+        }
+        .result-card h3 {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        .result-stats {
+            display: flex;
+            gap: 24px;
+            margin-top: 12px;
+        }
+        .result-stat {
+            text-align: center;
+        }
+        .result-stat .value {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+        .result-stat .label {
+            font-size: 0.82em;
+            color: #666;
+        }
+
+        /* Detail modal recipient list */
+        .recipient-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .recipient-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9em;
+        }
+        .recipient-row:last-child {
+            border-bottom: none;
+        }
+        .recipient-email {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        .recipient-error {
+            font-size: 0.8em;
+            color: var(--ic-danger, #EF4444);
+            margin-top: 2px;
+        }
+
+        /* Filter grid for Listor tab */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 24px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 700px) {
+            .filter-grid { grid-template-columns: 1fr; }
+        }
+        select[multiple].form-input {
+            padding: 6px 8px;
+            font-size: 0.88em;
+        }
+        select[multiple].form-input option {
+            padding: 3px 6px;
+        }
+        #listResultsTable tr { cursor: default; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="icon-mail1"></i> Utskick</h1>
+            <p class="subtitle">Skapa och skicka e-postutskick via Azure Communication Services</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('send', this)"><i class="icon-mail1"></i> Nytt utskick</button>
+            <button class="tab-btn" onclick="switchTab('lists', this)"><i class="icon-clipboard"></i> Listor</button>
+            <button class="tab-btn" onclick="switchTab('templates', this)"><i class="icon-document-text"></i> Mallar</button>
+            <button class="tab-btn" onclick="switchTab('history', this)"><i class="icon-chart-bar1"></i> Historik</button>
+        </div>
+
+        <!-- ===== TAB: Nytt utskick ===== -->
+        <div class="tab-content active" id="tab-send">
+            <div class="card">
+                <div class="form-group">
+                    <label>Välj mall (valfritt)</label>
+                    <select class="form-input" id="templateSelect" onchange="loadTemplate()">
+                        <option value="">— Ingen mall —</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Ämne *</label>
+                    <input type="text" class="form-input" id="sendSubject" placeholder="Ämnesrad för e-postutskicket">
+                </div>
+
+                <div style="background:#f0f0ff;border:1px solid #d0d0e8;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:0.85em;">
+                    <strong>Tillg&#228;ngliga variabler:</strong>
+                    <code style="background:#e8e8f8;padding:2px 6px;border-radius:3px;margin-left:6px;">{{serverUrl}}</code>
+                    <code style="background:#e8e8f8;padding:2px 6px;border-radius:3px;margin-left:4px;">{{email}}</code>
+                    <code style="background:#e8e8f8;padding:2px 6px;border-radius:3px;margin-left:4px;">{{companyName}}</code>
+                    <code style="background:#e8e8f8;padding:2px 6px;border-radius:3px;margin-left:4px;">{{updateDate}}</code>
+                    <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+                        <label style="font-weight:500;white-space:nowrap;">Uppdateringsdatum:</label>
+                        <input type="text" class="form-input" id="sendUpdateDate" placeholder="T.ex. 2025-03-15 kl 10:00" style="max-width:280px;font-size:0.95em;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Innehåll (HTML) *</label>
+                    <textarea class="form-input html-editor" id="sendBody" placeholder="<p>Hej!</p>&#10;<p>Ditt meddelande här...</p>"></textarea>
+                    <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="previewEmail()"><i class="icon-eye1"></i> Förhandsgranska</button>
+                        <button class="btn btn-secondary btn-sm" onclick="saveAsTemplate()"><i class="icon-save1"></i> Spara som mall</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Mottagare *</label>
+                    <textarea class="form-input recipients" id="sendRecipients"
+                        placeholder="Skriv eller klistra in e-postadresser, en per rad eller separerade med komma/semikolon"
+                        oninput="updateRecipientCount()"></textarea>
+                    <div class="helper">Separera med radbrytning, komma eller semikolon. Dubbletter tas bort automatiskt.</div>
+                    <div class="recipient-counter" id="recipientCounter"><i class="icon-mail1"></i> 0 giltiga e-postadresser</div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="sendBtn" onclick="sendEmails()"><i class="icon-upload"></i> Skicka utskick</button>
+                </div>
+
+                <div class="result-card" id="sendResult"></div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: Listor ===== -->
+        <div class="tab-content" id="tab-lists">
+            <div class="card">
+                <h2 style="font-size:1.2em;margin-bottom:4px;">Bygg mottagarlista</h2>
+                <p style="font-size:0.9em;color:var(--ic-text-muted,#6C757D);margin-bottom:20px;">
+                    Filtrera kontakter fr&#229;n kundernas databaser och anv&#228;nd resultatet som mottagarlista f&#246;r utskick.
+                </p>
+                <div class="filter-grid">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>ServerUrl</label>
+                        <select multiple class="form-input" id="filterServerUrl" size="4"></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>MachineName</label>
+                        <select multiple class="form-input" id="filterMachineName" size="4"></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Dom&#228;n</label>
+                        <input type="text" class="form-input" id="filterDomain" placeholder="T.ex. infocaption.com">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>F&#246;retag / CompanyName</label>
+                        <select multiple class="form-input" id="filterCompanyName" size="4"></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>CompanyCategory</label>
+                        <select multiple class="form-input" id="filterCompanyCategory" size="3"></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>PersonCategory</label>
+                        <select multiple class="form-input" id="filterPersonCategory" size="3"></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Spr&#229;k / Language</label>
+                        <select multiple class="form-input" id="filterLanguage" size="3"></select>
+                    </div>
+                </div>
+                <div class="btn-row" style="margin-top:16px;">
+                    <button class="btn btn-primary" id="queryBtn" onclick="queryContacts()"><i class="icon-search"></i> S&#246;k kontakter</button>
+                    <button class="btn btn-secondary" onclick="clearFilters()"><i class="icon-trash"></i> Rensa filter</button>
+                </div>
+            </div>
+
+            <div class="card" id="listResultsCard" style="display:none;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <h2 style="font-size:1.2em;">Resultat</h2>
+                        <span class="badge badge-completed" id="listResultCount"><i class="icon-mail1"></i> 0 e-postadresser</span>
+                        <span class="badge badge-pending" id="listLimitedWarning" style="display:none;"><i class="icon-exclamation-circle"></i> Resultatgr&#228;ns n&#229;dd</span>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="copyListEmails()"><i class="icon-clipboard-copy"></i> Kopiera</button>
+                        <button class="btn btn-primary btn-sm" onclick="useListInSend()"><i class="icon-mail-open"></i> Anv&#228;nd i utskick</button>
+                    </div>
+                </div>
+                <div id="langSummary" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                </div>
+                <div style="overflow-x:auto;max-height:400px;overflow-y:auto;">
+                    <table class="history-table" id="listResultsTable">
+                        <thead><tr>
+                            <th>E-post</th>
+                            <th>F&#246;retag</th>
+                            <th>Spr&#229;k</th>
+                            <th>Kategori</th>
+                            <th>ServerUrl</th>
+                        </tr></thead>
+                        <tbody id="listResultsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: Mallar ===== -->
+        <div class="tab-content" id="tab-templates">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="font-size:1.2em;">Dina mallar</h2>
+                <button class="btn btn-primary btn-sm" onclick="openTemplateModal()"><i class="icon-plus"></i> Ny mall</button>
+            </div>
+            <div id="templateList"></div>
+        </div>
+
+        <!-- ===== TAB: Historik ===== -->
+        <div class="tab-content" id="tab-history">
+            <h2 style="font-size:1.2em;margin-bottom:20px;">Utskickshistorik</h2>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <!-- ===== Template Modal ===== -->
+    <div class="modal-overlay" id="templateModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="templateModalTitle">Ny mall</h2>
+                <button class="modal-close" onclick="closeTemplateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Mallnamn *</label>
+                    <input type="text" class="form-input" id="tmplName" placeholder="T.ex. Välkomstmail">
+                </div>
+                <div class="form-group">
+                    <label>Ämne *</label>
+                    <input type="text" class="form-input" id="tmplSubject" placeholder="Ämnesrad">
+                </div>
+                <div class="form-group">
+                    <label>Innehåll (HTML) *</label>
+                    <textarea class="form-input html-editor" id="tmplBody" placeholder="<p>Hej!</p>"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTemplateModal()">Avbryt</button>
+                <button class="btn btn-primary" id="tmplSaveBtn" onclick="saveTemplate()">Spara</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Preview Modal ===== -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Förhandsgranskning</h2>
+                <button class="modal-close" onclick="closePreviewModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:0.85em;color:#999;margin-bottom:12px;">
+                    <strong>Från:</strong> messenger@infocaption.com
+                </p>
+                <p style="font-size:0.85em;color:#999;margin-bottom:16px;">
+                    <strong>Ämne:</strong> <span id="previewSubject"></span>
+                </p>
+                <div class="preview-frame" id="previewContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePreviewModal()">Stäng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Detail Modal ===== -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="detailModalTitle">Utskicksdetaljer</h2>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="detailInfo" style="margin-bottom:16px;"></div>
+                <h3 style="font-size:1em;margin-bottom:12px;">Mottagare</h3>
+                <div class="recipient-list" id="detailRecipients"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDetailModal()">Stäng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Sending Overlay ===== -->
+    <div class="sending-overlay" id="sendingOverlay">
+        <div class="sending-spinner"></div>
+        <div class="sending-text">Skickar e-post...</div>
+    </div>
+
+    <script src="../../shared/ic-utils.js"></script>
+    <script>
+        // ==================== State ====================
+        const API_BASE = '../../api/email';
+        let templates = [];
+        let editingTemplateId = null;
+        let sendRecipientData = {};  // email -> {serverUrl, serverUrls[], companyName}
+
+        // ==================== Init ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            ICUtils.notifyReady('utskick');
+            loadTemplates();
+            loadHistory();
+        });
+
+        // ==================== Tabs ====================
+        function switchTab(tabName, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            btn.classList.add('active');
+
+            if (tabName === 'lists') loadFilters();
+            if (tabName === 'templates') loadTemplates();
+            if (tabName === 'history') loadHistory();
+        }
+
+        // ==================== Email Parsing ====================
+        function parseEmails(text) {
+            if (!text || !text.trim()) return [];
+            // Split on comma, semicolon, newline, or whitespace
+            const parts = text.split(/[,;\n\r\s]+/);
+            const emailRegex = /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+            const unique = new Set();
+            const valid = [];
+            for (const part of parts) {
+                const trimmed = part.trim().toLowerCase();
+                if (trimmed && emailRegex.test(trimmed) && !unique.has(trimmed)) {
+                    unique.add(trimmed);
+                    valid.push(trimmed);
+                }
+            }
+            return valid;
+        }
+
+        function updateRecipientCount() {
+            const text = document.getElementById('sendRecipients').value;
+            const emails = parseEmails(text);
+            const counter = document.getElementById('recipientCounter');
+            counter.innerHTML = '<i class="icon-mail1"></i> ' + emails.length + ' giltig' + (emails.length !== 1 ? 'a' : '') + ' e-postadress' + (emails.length !== 1 ? 'er' : '');
+        }
+
+        // ==================== Templates API ====================
+        async function loadTemplates() {
+            try {
+                const resp = await fetch(API_BASE + '/templates');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                templates = await resp.json();
+                renderTemplateList();
+                renderTemplateSelect();
+            } catch (e) {
+                console.error('Failed to load templates:', e);
+            }
+        }
+
+        function renderTemplateList() {
+            const container = document.getElementById('templateList');
+            if (templates.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="emoji"><i class="icon-clipboard" style="font-size:inherit"></i></div>
+                        <h3>Inga mallar ännu</h3>
+                        <p>Skapa din första mall för att snabbt fylla i utskick.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = templates.map(t => `
+                <div class="template-card">
+                    <div class="template-info">
+                        <h3>${escapeHtml(t.name)}</h3>
+                        <div class="template-subject">${escapeHtml(t.subject)}</div>
+                        <div class="template-date">Skapad: ${formatDate(t.createdAt)}</div>
+                    </div>
+                    <div class="template-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="editTemplate(${t.id})"><i class="icon-pencil"></i> Redigera</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.id}, '${escapeHtml(t.name)}')"><i class="icon-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTemplateSelect() {
+            const select = document.getElementById('templateSelect');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">— Ingen mall —</option>';
+            templates.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.name + ' — ' + t.subject;
+                select.appendChild(opt);
+            });
+            select.value = currentValue;
+        }
+
+        function loadTemplate() {
+            const select = document.getElementById('templateSelect');
+            const id = parseInt(select.value);
+            if (!id) return;
+            const tmpl = templates.find(t => t.id === id);
+            if (tmpl) {
+                document.getElementById('sendSubject').value = tmpl.subject;
+                document.getElementById('sendBody').value = tmpl.bodyHtml;
+            }
+        }
+
+        function openTemplateModal(id) {
+            editingTemplateId = id || null;
+            const title = document.getElementById('templateModalTitle');
+            const saveBtn = document.getElementById('tmplSaveBtn');
+
+            if (editingTemplateId) {
+                const tmpl = templates.find(t => t.id === editingTemplateId);
+                title.textContent = 'Redigera mall';
+                saveBtn.textContent = 'Uppdatera';
+                document.getElementById('tmplName').value = tmpl ? tmpl.name : '';
+                document.getElementById('tmplSubject').value = tmpl ? tmpl.subject : '';
+                document.getElementById('tmplBody').value = tmpl ? tmpl.bodyHtml : '';
+            } else {
+                title.textContent = 'Ny mall';
+                saveBtn.textContent = 'Spara';
+                document.getElementById('tmplName').value = '';
+                document.getElementById('tmplSubject').value = '';
+                document.getElementById('tmplBody').value = '';
+            }
+
+            document.getElementById('templateModal').classList.add('active');
+        }
+
+        function closeTemplateModal() {
+            document.getElementById('templateModal').classList.remove('active');
+            editingTemplateId = null;
+        }
+
+        async function saveTemplate() {
+            const name = document.getElementById('tmplName').value.trim();
+            const subject = document.getElementById('tmplSubject').value.trim();
+            const bodyHtml = document.getElementById('tmplBody').value.trim();
+
+            if (!name || !subject || !bodyHtml) {
+                alert('Alla fält måste fyllas i.');
+                return;
+            }
+
+            const payload = JSON.stringify({ name, subject, bodyHtml });
+
+            try {
+                let resp;
+                if (editingTemplateId) {
+                    resp = await fetch(API_BASE + '/templates/' + editingTemplateId, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: payload
+                    });
+                } else {
+                    resp = await fetch(API_BASE + '/templates', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: payload
+                    });
+                }
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.error || 'Okänt fel');
+                }
+
+                closeTemplateModal();
+                await loadTemplates();
+                showToast(editingTemplateId ? 'Mall uppdaterad!' : 'Mall skapad!', 'success');
+            } catch (e) {
+                alert('Kunde inte spara mallen: ' + e.message);
+            }
+        }
+
+        function editTemplate(id) {
+            openTemplateModal(id);
+        }
+
+        async function deleteTemplate(id, name) {
+            if (!confirm('Är du säker på att du vill ta bort mallen "' + name + '"?')) return;
+
+            try {
+                const resp = await fetch(API_BASE + '/templates/' + id, { method: 'DELETE' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                await loadTemplates();
+                showToast('Mall borttagen', 'success');
+            } catch (e) {
+                alert('Kunde inte ta bort mallen: ' + e.message);
+            }
+        }
+
+        function saveAsTemplate() {
+            const subject = document.getElementById('sendSubject').value.trim();
+            const bodyHtml = document.getElementById('sendBody').value.trim();
+            if (!subject || !bodyHtml) {
+                alert('Fyll i ämne och innehåll först.');
+                return;
+            }
+            document.getElementById('tmplName').value = '';
+            document.getElementById('tmplSubject').value = subject;
+            document.getElementById('tmplBody').value = bodyHtml;
+            editingTemplateId = null;
+            document.getElementById('templateModalTitle').textContent = 'Spara som mall';
+            document.getElementById('tmplSaveBtn').textContent = 'Spara';
+            document.getElementById('templateModal').classList.add('active');
+        }
+
+        // ==================== Preview ====================
+        function previewEmail() {
+            const subject = document.getElementById('sendSubject').value || '(inget ämne)';
+            const body = document.getElementById('sendBody').value || '';
+            document.getElementById('previewSubject').textContent = subject;
+            document.getElementById('previewContent').innerHTML = body;
+            document.getElementById('previewModal').classList.add('active');
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.remove('active');
+        }
+
+        // ==================== Send ====================
+        async function sendEmails() {
+            const subject = document.getElementById('sendSubject').value.trim();
+            const bodyHtml = document.getElementById('sendBody').value.trim();
+            const recipientText = document.getElementById('sendRecipients').value;
+            const recipients = parseEmails(recipientText);
+
+            if (!subject) { alert('Ange ett ämne.'); return; }
+            if (!bodyHtml) { alert('Ange innehåll.'); return; }
+            if (recipients.length === 0) { alert('Ange minst en giltig e-postadress.'); return; }
+
+            if (!confirm('Skicka utskick till ' + recipients.length + ' mottagare?')) return;
+
+            // Show sending overlay
+            document.getElementById('sendingOverlay').classList.add('active');
+            document.getElementById('sendBtn').disabled = true;
+
+            // Get template ID if selected
+            const templateSelect = document.getElementById('templateSelect');
+            const templateId = templateSelect.value || null;
+
+            const updateDate = document.getElementById('sendUpdateDate').value.trim();
+
+            const payload = { subject, bodyHtml, recipients };
+            if (templateId) payload.templateId = templateId;
+            payload.recipientData = sendRecipientData;
+            if (updateDate) payload.updateDate = updateDate;
+
+            try {
+                const resp = await fetch(API_BASE + '/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await resp.json();
+
+                document.getElementById('sendingOverlay').classList.remove('active');
+                document.getElementById('sendBtn').disabled = false;
+
+                if (result.success) {
+                    const resultDiv = document.getElementById('sendResult');
+                    resultDiv.className = 'result-card success';
+                    resultDiv.innerHTML = `
+                        <h3><i class="icon-check-circle"></i> Utskick slutfört!</h3>
+                        <div class="result-stats">
+                            <div class="result-stat">
+                                <div class="value" style="color:#065f46;">${result.sentCount}</div>
+                                <div class="label">Skickade</div>
+                            </div>
+                            <div class="result-stat">
+                                <div class="value" style="color:#991b1b;">${result.failedCount}</div>
+                                <div class="label">Misslyckade</div>
+                            </div>
+                            <div class="result-stat">
+                                <div class="value">${result.recipientCount}</div>
+                                <div class="label">Totalt</div>
+                            </div>
+                        </div>
+                    `;
+                    showToast('Utskick skickat till ' + result.sentCount + ' mottagare!', 'success');
+                } else {
+                    const resultDiv = document.getElementById('sendResult');
+                    resultDiv.className = 'result-card error';
+                    resultDiv.innerHTML = '<h3><i class="icon-x-circle"></i> Fel</h3><p>' + escapeHtml(result.error || 'Okänt fel') + '</p>';
+                }
+
+            } catch (e) {
+                document.getElementById('sendingOverlay').classList.remove('active');
+                document.getElementById('sendBtn').disabled = false;
+                alert('Kunde inte skicka utskick: ' + e.message);
+            }
+        }
+
+        // ==================== History ====================
+        async function loadHistory() {
+            try {
+                const resp = await fetch(API_BASE + '/history');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const history = await resp.json();
+                renderHistory(history);
+            } catch (e) {
+                console.error('Failed to load history:', e);
+                document.getElementById('historyList').innerHTML =
+                    '<div class="empty-state"><div class="emoji"><i class="icon-exclamation-circle" style="font-size:inherit"></i></div><h3>Kunde inte ladda historik</h3></div>';
+            }
+        }
+
+        function renderHistory(history) {
+            const container = document.getElementById('historyList');
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="emoji"><i class="icon-chart-bar1" style="font-size:inherit"></i></div>
+                        <h3>Inga utskick ännu</h3>
+                        <p>Dina skickade utskick visas här.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '<div class="card" style="padding:0;overflow:hidden;">';
+            html += '<table class="history-table">';
+            html += '<thead><tr>';
+            html += '<th>Datum</th><th>Ämne</th><th>Mottagare</th><th>Skickade</th><th>Misslyckade</th><th>Status</th>';
+            html += '</tr></thead><tbody>';
+
+            history.forEach(h => {
+                const badgeClass = 'badge-' + h.status;
+                const statusLabel = {
+                    completed: '<i class="icon-check-circle"></i> Klart',
+                    sending: '<i class="icon-clock1"></i> Pågår',
+                    pending: '<i class="icon-clock1"></i> Väntar',
+                    failed: '<i class="icon-x-circle"></i> Misslyckat'
+                }[h.status] || h.status;
+
+                html += `<tr onclick="openDetailModal(${h.id})">`;
+                html += `<td>${formatDate(h.createdAt)}</td>`;
+                html += `<td>${escapeHtml(h.subject)}</td>`;
+                html += `<td>${h.recipientCount}</td>`;
+                html += `<td>${h.sentCount}</td>`;
+                html += `<td>${h.failedCount}</td>`;
+                html += `<td><span class="badge ${badgeClass}">${statusLabel}</span></td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        // ==================== Detail Modal ====================
+        async function openDetailModal(sendId) {
+            try {
+                const resp = await fetch(API_BASE + '/history/' + sendId);
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const detail = await resp.json();
+
+                document.getElementById('detailModalTitle').textContent = 'Utskick: ' + detail.subject;
+
+                const statusBadge = {
+                    completed: '<span class="badge badge-completed"><i class="icon-check-circle"></i> Klart</span>',
+                    sending: '<span class="badge badge-sending"><i class="icon-clock1"></i> Pågår</span>',
+                    pending: '<span class="badge badge-pending"><i class="icon-clock1"></i> Väntar</span>',
+                    failed: '<span class="badge badge-failed"><i class="icon-x-circle"></i> Misslyckat</span>'
+                }[detail.status] || detail.status;
+
+                document.getElementById('detailInfo').innerHTML = `
+                    <p><strong>Status:</strong> ${statusBadge}</p>
+                    <p><strong>Skickat:</strong> ${formatDate(detail.createdAt)}</p>
+                    <p><strong>Mottagare:</strong> ${detail.recipientCount} st (${detail.sentCount} skickade, ${detail.failedCount} misslyckade)</p>
+                `;
+
+                const recipientHtml = detail.recipients.map(r => {
+                    const badge = r.status === 'sent'
+                        ? '<span class="badge badge-sent"><i class="icon-check-circle"></i> Skickad</span>'
+                        : r.status === 'failed'
+                        ? '<span class="badge badge-failed"><i class="icon-x-circle"></i> Misslyckat</span>'
+                        : '<span class="badge badge-pending"><i class="icon-clock1"></i> Väntar</span>';
+
+                    let row = `<div class="recipient-row"><div><span class="recipient-email">${escapeHtml(r.email)}</span>`;
+                    if (r.error) {
+                        row += `<div class="recipient-error">${escapeHtml(r.error)}</div>`;
+                    }
+                    row += `</div>${badge}</div>`;
+                    return row;
+                }).join('');
+
+                document.getElementById('detailRecipients').innerHTML = recipientHtml;
+                document.getElementById('detailModal').classList.add('active');
+
+            } catch (e) {
+                alert('Kunde inte ladda detaljer: ' + e.message);
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        // ==================== Utils ====================
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const d = new Date(dateStr.replace(' ', 'T'));
+                return d.toLocaleString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function showToast(message, type) {
+            if (typeof ICUtils !== 'undefined' && ICUtils.showToast) {
+                ICUtils.showToast(message, type);
+            }
+        }
+
+        // Close modals on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeTemplateModal();
+                closePreviewModal();
+                closeDetailModal();
+            }
+        });
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== Listor (Contact Lists) ====================
+        const CONTACTS_API = '../../api/contacts';
+        let listResults = [];
+        let listEmails = [];
+        let listRecipientData = {};  // email -> {serverUrl, serverUrls[], companyName}
+        let filtersLoaded = false;
+
+        async function loadFilters() {
+            if (filtersLoaded) return;
+            try {
+                const resp = await fetch(CONTACTS_API + '/filters');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const filters = await resp.json();
+                populateSelect('filterServerUrl', filters.serverUrls);
+                populateSelect('filterMachineName', filters.machineNames);
+                populateSelect('filterCompanyName', filters.companyNames);
+                populateIntSelect('filterCompanyCategory', filters.companyCategories);
+                populateIntSelect('filterPersonCategory', filters.personCategories);
+                populateSelect('filterLanguage', filters.languages);
+                filtersLoaded = true;
+            } catch (e) {
+                console.error('Failed to load filters:', e);
+                alert('Kunde inte ladda filteralternativ: ' + e.message);
+            }
+        }
+
+        function populateSelect(selectId, values) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            if (!values || values.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = '(inga v\u00e4rden)';
+                opt.disabled = true;
+                select.appendChild(opt);
+                return;
+            }
+            values.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                select.appendChild(opt);
+            });
+        }
+
+        function populateIntSelect(selectId, values) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            if (!values || values.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = '(inga v\u00e4rden)';
+                opt.disabled = true;
+                select.appendChild(opt);
+                return;
+            }
+            values.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = String(v);
+                opt.textContent = String(v);
+                select.appendChild(opt);
+            });
+        }
+
+        function getSelectedValues(selectId) {
+            const select = document.getElementById(selectId);
+            const selected = [];
+            for (const opt of select.selectedOptions) {
+                if (opt.value) selected.push(opt.value);
+            }
+            return selected;
+        }
+
+        async function queryContacts() {
+            const payload = {
+                serverUrls: getSelectedValues('filterServerUrl'),
+                machineNames: getSelectedValues('filterMachineName'),
+                domain: document.getElementById('filterDomain').value.trim(),
+                companyNames: getSelectedValues('filterCompanyName'),
+                companyCategories: getSelectedValues('filterCompanyCategory'),
+                personCategories: getSelectedValues('filterPersonCategory'),
+                languages: getSelectedValues('filterLanguage')
+            };
+
+            const hasAnyFilter = payload.serverUrls.length > 0 ||
+                payload.machineNames.length > 0 ||
+                payload.domain !== '' ||
+                payload.companyNames.length > 0 ||
+                payload.companyCategories.length > 0 ||
+                payload.personCategories.length > 0 ||
+                payload.languages.length > 0;
+
+            if (!hasAnyFilter) {
+                alert('V\u00e4lj minst ett filter innan du s\u00f6ker.');
+                return;
+            }
+
+            const queryBtn = document.getElementById('queryBtn');
+            queryBtn.disabled = true;
+            queryBtn.innerHTML = '<i class="icon-clock1"></i> S\u00f6ker...';
+
+            try {
+                const resp = await fetch(CONTACTS_API + '/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.error || 'HTTP ' + resp.status);
+                }
+
+                const data = await resp.json();
+                listResults = data.contacts || [];
+                listEmails = listResults.map(c => c.email);
+                listRecipientData = {};
+                listResults.forEach(c => {
+                    listRecipientData[c.email] = {
+                        serverUrl: c.serverUrl || '',
+                        serverUrls: c.serverUrls || [],
+                        companyName: c.companyName || ''
+                    };
+                });
+                renderListResults(data);
+
+            } catch (e) {
+                console.error('Contact query failed:', e);
+                alert('S\u00f6kning misslyckades: ' + e.message);
+            } finally {
+                queryBtn.disabled = false;
+                queryBtn.innerHTML = '<i class="icon-search"></i> S\u00f6k kontakter';
+            }
+        }
+
+        function renderListResults(data) {
+            const card = document.getElementById('listResultsCard');
+            card.style.display = 'block';
+
+            // Multi-server info
+            const multiServerCount = listResults.filter(c => c.serverUrls && c.serverUrls.length > 1).length;
+            let countText = '<i class="icon-mail1"></i> ' + data.emailCount + ' e-postadress' + (data.emailCount !== 1 ? 'er' : '');
+            if (multiServerCount > 0) {
+                countText += ' (' + multiServerCount + ' med flera servrar)';
+            }
+            document.getElementById('listResultCount').innerHTML = countText;
+
+            const limitWarn = document.getElementById('listLimitedWarning');
+            if (data.limited) {
+                limitWarn.style.display = 'inline';
+                limitWarn.innerHTML = '<i class="icon-exclamation-circle"></i> Begr\u00e4nsat till ' + (data.maxResults || 5000) + ' rader';
+            } else {
+                limitWarn.style.display = 'none';
+            }
+
+            // Language breakdown
+            const langMap = {};
+            listResults.forEach(c => {
+                const lang = c.language || '(ok\u00e4nt)';
+                langMap[lang] = (langMap[lang] || 0) + 1;
+            });
+            const langSummary = document.getElementById('langSummary');
+            langSummary.innerHTML = '<span style="font-size:0.85em;color:var(--ic-text-muted);margin-right:4px;">Spr\u00e5k:</span>' +
+                Object.entries(langMap).map(([lang, count]) =>
+                    '<button class="btn btn-secondary btn-sm" style="font-size:0.8em;padding:3px 10px;" ' +
+                    'onclick="useListInSendByLang(\'' + lang.replace("'", "\\'") + '\')">' +
+                    lang + ': ' + count + ' \u2192 Utskick</button>'
+                ).join('');
+
+            const tbody = document.getElementById('listResultsBody');
+            if (listResults.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ic-text-muted);padding:30px;">' +
+                    'Inga kontakter matchade dina filter.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = listResults.map(c => {
+                const serverCount = c.serverUrls ? c.serverUrls.length : 0;
+                const serverDisplay = serverCount > 1
+                    ? c.serverUrls.map(s => '<div style="margin:1px 0;">' + escapeHtml(s) + '</div>').join('')
+                    : escapeHtml(c.serverUrl || '');
+                const serverBadge = serverCount > 1
+                    ? ' <span style="background:#ede9fe;color:#7c3aed;font-size:0.75em;padding:1px 6px;border-radius:8px;font-weight:600;">' + serverCount + ' servrar</span>'
+                    : '';
+                return '<tr>' +
+                '<td><span style="font-family:monospace;font-size:0.9em;">' + escapeHtml(c.email) + '</span></td>' +
+                '<td>' + escapeHtml(c.companyName || '') + '</td>' +
+                '<td>' + escapeHtml(c.language || '') + '</td>' +
+                '<td>' + escapeHtml(c.companyCategory != null ? String(c.companyCategory) : '') +
+                    (c.personCategory != null ? '/' + escapeHtml(String(c.personCategory)) : '') + '</td>' +
+                '<td style="font-size:0.85em;">' + serverDisplay + serverBadge + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function clearFilters() {
+            ['filterServerUrl', 'filterMachineName', 'filterCompanyName',
+             'filterCompanyCategory', 'filterPersonCategory', 'filterLanguage'].forEach(id => {
+                const select = document.getElementById(id);
+                for (const opt of select.options) { opt.selected = false; }
+            });
+            document.getElementById('filterDomain').value = '';
+            document.getElementById('listResultsCard').style.display = 'none';
+            listResults = [];
+            listEmails = [];
+            listRecipientData = {};
+        }
+
+        function useListInSend() {
+            if (listEmails.length === 0) {
+                alert('Ingen lista att anv\u00e4nda.');
+                return;
+            }
+            const sendBtn = document.querySelector('.tab-btn');
+            switchTab('send', sendBtn);
+
+            const textarea = document.getElementById('sendRecipients');
+            const existing = parseEmails(textarea.value);
+            const merged = [...new Set([...existing, ...listEmails])];
+            textarea.value = merged.join('\n');
+            updateRecipientCount();
+
+            // Merge recipient data
+            Object.assign(sendRecipientData, listRecipientData);
+
+            alert(listEmails.length + ' e-postadresser tillagda i mottagarlistan.');
+        }
+
+        function useListInSendByLang(lang) {
+            const filtered = listResults.filter(c => (c.language || '(ok\u00e4nt)') === lang);
+            const emails = filtered.map(c => c.email);
+            if (emails.length === 0) return;
+
+            const sendBtn = document.querySelector('.tab-btn');
+            switchTab('send', sendBtn);
+
+            const textarea = document.getElementById('sendRecipients');
+            const existing = parseEmails(textarea.value);
+            const merged = [...new Set([...existing, ...emails])];
+            textarea.value = merged.join('\n');
+            updateRecipientCount();
+
+            // Merge recipient data for these contacts
+            filtered.forEach(c => {
+                sendRecipientData[c.email] = {
+                    serverUrl: c.serverUrl || '',
+                    serverUrls: c.serverUrls || [],
+                    companyName: c.companyName || ''
+                };
+            });
+
+            alert(emails.length + ' e-postadresser (' + lang + ') tillagda i mottagarlistan.');
+        }
+
+        async function copyListEmails() {
+            if (listEmails.length === 0) return;
+            const text = listEmails.join('\n');
+            try {
+                await navigator.clipboard.writeText(text);
+                alert(listEmails.length + ' e-postadresser kopierade till urklipp.');
+            } catch (e) {
+                // Fallback: select a temporary textarea
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                alert(listEmails.length + ' e-postadresser kopierade till urklipp.');
+            }
+        }
+    </script>
+</body>
+</html>

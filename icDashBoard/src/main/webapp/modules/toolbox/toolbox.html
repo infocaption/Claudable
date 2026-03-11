@@ -1,0 +1,3326 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verktygslåda - InfoCaption</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/ic-icons.css">
+    <style>
+        :root {
+            --ic-primary: #5458F2;
+            --ic-primary-hover: #4347d9;
+            --ic-secondary: #d4d5fc;
+            --ic-tertiary: #BEC0F9;
+            --ic-accent: #FFE496;
+            --ic-text-dark: #323232;
+            --ic-text-muted: #6c757d;
+            --ic-bg-white: #ffffff;
+            --ic-bg-light: #f8f9fc;
+            --ic-success: #10b981;
+            --ic-success-light: #d1fae5;
+            --ic-danger: #ef4444;
+            --ic-danger-light: #fee2e2;
+            --ic-warning: #f59e0b;
+            --ic-warning-light: #fef3c7;
+            --ic-info: #3b82f6;
+            --ic-info-light: #dbeafe;
+            --ic-radius-sm: 6px;
+            --ic-radius-md: 10px;
+            --ic-radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ic-bg-light);
+            color: var(--ic-text-dark);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 25px;
+        }
+
+        /* Header */
+        .page-header {
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--ic-text-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-subtitle {
+            color: var(--ic-text-muted);
+            font-size: 0.95em;
+        }
+
+        /* Tool tabs */
+        .tool-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: var(--ic-bg-white);
+            padding: 8px;
+            border-radius: var(--ic-radius-lg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .tool-tab {
+            padding: 10px 18px;
+            background: transparent;
+            border: none;
+            border-radius: var(--ic-radius-md);
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 500;
+            color: var(--ic-text-muted);
+            transition: all 0.2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-tab:hover {
+            background: var(--ic-bg-light);
+            color: var(--ic-primary);
+        }
+
+        .tool-tab.active {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .tool-tab-icon {
+            font-size: 1.1em;
+        }
+
+        /* Tool panels */
+        .tool-panel {
+            display: none;
+            background: var(--ic-bg-white);
+            border-radius: var(--ic-radius-lg);
+            padding: 25px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .tool-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tool-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tool-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--ic-text-dark);
+            margin-bottom: 5px;
+        }
+
+        .tool-description {
+            color: var(--ic-text-muted);
+            font-size: 0.9em;
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--ic-text-dark);
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            font-size: 0.9em;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: var(--ic-bg-white);
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 3px rgba(84, 88, 242, 0.15);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .form-textarea.large {
+            min-height: 200px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ic-radius-md);
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--ic-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(84, 88, 242, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--ic-bg-white);
+            color: var(--ic-primary);
+            border: 2px solid var(--ic-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--ic-secondary);
+        }
+
+        .btn-success {
+            background: var(--ic-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8em;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Result box */
+        .result-box {
+            background: #1e1e3f;
+            border-radius: var(--ic-radius-md);
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .result-box pre {
+            margin: 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .result-label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--ic-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 5px 12px;
+            border-radius: var(--ic-radius-sm);
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .copy-btn.copied {
+            background: var(--ic-success);
+        }
+
+        /* Info cards */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .info-card {
+            background: var(--ic-bg-light);
+            border-radius: var(--ic-radius-md);
+            padding: 12px 15px;
+            border-left: 3px solid var(--ic-primary);
+        }
+
+        .info-card-label {
+            font-size: 0.75em;
+            color: var(--ic-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-card-value {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: var(--ic-text-dark);
+            word-break: break-all;
+        }
+
+        .info-card.success {
+            border-left-color: var(--ic-success);
+            background: var(--ic-success-light);
+        }
+
+        .info-card.warning {
+            border-left-color: var(--ic-warning);
+            background: var(--ic-warning-light);
+        }
+
+        .info-card.danger {
+            border-left-color: var(--ic-danger);
+            background: var(--ic-danger-light);
+        }
+
+        /* Character table */
+        .char-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.85em;
+        }
+
+        .char-table th, .char-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .char-table th {
+            background: var(--ic-bg-light);
+            font-weight: 600;
+            color: var(--ic-text-dark);
+        }
+
+        .char-table td {
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .char-table tr:hover {
+            background: var(--ic-bg-light);
+        }
+
+        /* Certificate info */
+        .cert-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--ic-bg-light);
+            border-radius: var(--ic-radius-md);
+        }
+
+        .cert-section-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--ic-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cert-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .cert-row:last-child {
+            border-bottom: none;
+        }
+
+        .cert-label {
+            width: 150px;
+            flex-shrink: 0;
+            font-weight: 500;
+            color: var(--ic-text-muted);
+            font-size: 0.85em;
+        }
+
+        .cert-value {
+            flex: 1;
+            font-size: 0.85em;
+            word-break: break-all;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .status-valid {
+            background: var(--ic-success-light);
+            color: #065f46;
+        }
+
+        .status-expired {
+            background: var(--ic-danger-light);
+            color: #991b1b;
+        }
+
+        .status-warning {
+            background: var(--ic-warning-light);
+            color: #92400e;
+        }
+
+        /* Tabs inside panels */
+        .sub-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .sub-tab {
+            padding: 8px 15px;
+            background: var(--ic-bg-light);
+            border: none;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 500;
+            color: var(--ic-text-muted);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .sub-tab:hover {
+            color: var(--ic-primary);
+        }
+
+        .sub-tab.active {
+            background: var(--ic-secondary);
+            color: var(--ic-primary);
+        }
+
+        /* File drop zone */
+        .drop-zone {
+            border: 2px dashed var(--ic-secondary);
+            border-radius: var(--ic-radius-md);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--ic-primary);
+            background: rgba(84, 88, 242, 0.05);
+        }
+
+        .drop-zone-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .drop-zone-text {
+            color: var(--ic-text-muted);
+            font-size: 0.9em;
+        }
+
+        .drop-zone-text strong {
+            color: var(--ic-primary);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--ic-primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--ic-radius-md);
+            box-shadow: 0 4px 15px rgba(84, 88, 242, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--ic-success);
+        }
+
+        /* Two column layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 800px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Hash display */
+        .hash-result {
+            background: var(--ic-bg-light);
+            border-radius: var(--ic-radius-md);
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hash-type {
+            font-weight: 600;
+            color: var(--ic-primary);
+            font-size: 0.8em;
+            text-transform: uppercase;
+        }
+
+        .hash-value {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            color: var(--ic-text-dark);
+            word-break: break-all;
+            flex: 1;
+            margin: 0 15px;
+        }
+
+        /* Color preview */
+        .color-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--ic-radius-md);
+            border: 2px solid #e2e8f0;
+            margin-right: 15px;
+        }
+
+        .color-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        /* JSON Drop Zone */
+        .json-drop-zone {
+            position: relative;
+        }
+
+        .json-drop-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(84, 88, 242, 0.08);
+            border: 2px dashed var(--ic-primary);
+            border-radius: var(--ic-radius-md);
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--ic-primary);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .json-drop-zone.dragover .json-drop-overlay {
+            display: flex;
+        }
+
+        /* JSON Tree */
+        .json-tree-container {
+            background: var(--ic-bg-light);
+            border: 2px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            padding: 15px;
+            max-height: 600px;
+            overflow: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            line-height: 1.7;
+        }
+
+        .json-tree-empty {
+            color: var(--ic-text-muted);
+            text-align: center;
+            padding: 40px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+        }
+
+        .json-tree-stats {
+            font-size: 0.8em;
+            color: var(--ic-text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .json-tree-stats span {
+            background: var(--ic-bg-light);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .json-node {
+            padding-left: 20px;
+        }
+
+        .json-node-root {
+            padding-left: 0;
+        }
+
+        .json-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border: none;
+            background: var(--ic-secondary);
+            color: var(--ic-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-right: 4px;
+            transition: all 0.15s;
+            vertical-align: middle;
+            font-family: monospace;
+            line-height: 1;
+        }
+
+        .json-toggle:hover {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .json-key {
+            color: #9333ea;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .json-key:hover {
+            text-decoration: underline;
+        }
+
+        .json-string { color: #16a34a; }
+        .json-number { color: #2563eb; }
+        .json-boolean { color: #dc2626; font-weight: 600; }
+        .json-null { color: #9ca3af; font-style: italic; }
+
+        .json-type-badge {
+            display: inline-block;
+            font-size: 0.7em;
+            padding: 1px 6px;
+            border-radius: 8px;
+            margin-left: 6px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        .json-type-object { background: #ede9fe; color: #7c3aed; }
+        .json-type-array { background: #dbeafe; color: #2563eb; }
+        .json-type-string { background: #dcfce7; color: #16a34a; }
+        .json-type-number { background: #dbeafe; color: #2563eb; }
+        .json-type-boolean { background: #fee2e2; color: #dc2626; }
+        .json-type-null { background: #f3f4f6; color: #9ca3af; }
+
+        .json-count {
+            color: var(--ic-text-muted);
+            font-size: 0.85em;
+            font-style: italic;
+            margin-left: 4px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .json-line {
+            border-radius: 3px;
+            padding: 1px 4px;
+            margin: 0 -4px;
+            transition: background 0.15s;
+        }
+
+        .json-line:hover {
+            background: rgba(84, 88, 242, 0.06);
+        }
+
+        .json-line.highlight {
+            background: rgba(255, 228, 150, 0.5);
+        }
+
+        .json-children { overflow: hidden; }
+        .json-children.collapsed { display: none; }
+
+        .json-preview {
+            color: #9ca3af;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+
+        /* JSON path bar */
+        .json-path-bar {
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #1e1e3f;
+            border-radius: var(--ic-radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .json-path-label {
+            font-size: 0.8em;
+            color: var(--ic-tertiary);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .json-path-value {
+            font-size: 0.85em;
+            color: #e2e8f0;
+            word-break: break-all;
+            cursor: pointer;
+        }
+
+        .json-path-value:hover { text-decoration: underline; }
+
+        /* PII Scanner */
+        .pii-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        @media (max-width: 900px) {
+            .pii-layout { grid-template-columns: 1fr; }
+        }
+
+        .pii-panel {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .pii-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .pii-panel-label {
+            font-weight: 700;
+            font-size: 0.85em;
+            color: var(--ic-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pii-drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--ic-radius-md);
+            padding: 32px 16px;
+            text-align: center;
+            color: var(--ic-text-muted);
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+        .pii-drop-zone:hover, .pii-drop-zone.dragover {
+            border-color: var(--ic-primary);
+            background: rgba(99,102,241,0.04);
+            color: var(--ic-primary);
+        }
+        .pii-drop-zone-icon { font-size: 2em; display: block; margin-bottom: 6px; }
+
+        .pii-file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .pii-file-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 14px;
+            font-size: 0.78em;
+            font-weight: 600;
+            background: var(--ic-bg-light);
+            border: 1px solid #e2e8f0;
+            color: var(--ic-text);
+        }
+        .pii-file-chip .remove-file {
+            cursor: pointer;
+            color: var(--ic-danger);
+            font-weight: 700;
+            margin-left: 2px;
+            font-size: 1.1em;
+            line-height: 1;
+        }
+        .pii-file-chip .remove-file:hover { color: #991b1b; }
+        .pii-file-chip.active {
+            background: var(--ic-primary);
+            color: white;
+            border-color: var(--ic-primary);
+        }
+        .pii-file-chip.active .remove-file { color: rgba(255,255,255,0.7); }
+
+        .pii-textarea {
+            flex: 1;
+            min-height: 280px;
+            resize: vertical;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.88em;
+            line-height: 1.6;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            background: white;
+            color: var(--ic-text);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .pii-textarea:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+        }
+
+        .pii-result-box {
+            flex: 1;
+            min-height: 280px;
+            background: #fafbfc;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.88em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+            position: relative;
+        }
+        .pii-result-box:empty::before {
+            content: 'Rensad text visas här...';
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .pii-mark {
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s;
+        }
+        .pii-mark:hover {
+            filter: brightness(0.9);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .pii-mark::after {
+            content: attr(data-pii-type);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e1e3f;
+            color: white;
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 10;
+        }
+        .pii-mark:hover::after { opacity: 1; }
+
+        .pii-mark[data-cat="email"] { background: #dbeafe; color: #1e40af; }
+        .pii-mark[data-cat="phone"] { background: #ede9fe; color: #5b21b6; }
+        .pii-mark[data-cat="personnummer"] { background: #fee2e2; color: #991b1b; }
+        .pii-mark[data-cat="name"] { background: #d1fae5; color: #065f46; }
+        .pii-mark[data-cat="address"] { background: #fef3c7; color: #92400e; }
+        .pii-mark[data-cat="iban"] { background: #cffafe; color: #155e75; }
+        .pii-mark[data-cat="ip"] { background: #e0e7ff; color: #3730a3; }
+        .pii-mark[data-cat="creditcard"] { background: #fce7f3; color: #9d174d; }
+        .pii-mark[data-cat="url"] { background: #f1f5f9; color: #334155; }
+        /* date category removed — regular dates should not be redacted */
+        .pii-mark[data-cat="custom"] { background: #f5f3ff; color: #6d28d9; }
+        .pii-mark[data-cat="signature"] { background: #fff7ed; color: #9a3412; border: 1.5px dashed #fb923c; }
+
+        .pii-sig-block {
+            display: inline;
+            background: rgba(251, 146, 60, 0.08);
+            border-left: 3px solid #fb923c;
+            padding-left: 6px;
+        }
+
+        .pii-mark.removed {
+            background: #f1f5f9 !important;
+            color: #64748b !important;
+            border: 1.5px dashed #94a3b8;
+            font-style: italic;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .pii-stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px 0;
+        }
+        .pii-stat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 14px;
+            font-size: 0.75em;
+            font-weight: 700;
+        }
+        .pii-stat-chip.total { background: #fee2e2; color: #991b1b; }
+        .pii-stat-chip.sig { background: #fff7ed; color: #9a3412; }
+        .pii-stat-chip.cat { background: #f1f5f9; color: #475569; }
+
+        .pii-toolbar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .pii-toolbar .btn { font-size: 0.8em; padding: 5px 12px; }
+
+        .pii-mark.removed::after { content: 'Klicka för att återställa'; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="icon-tools-list"></i>
+                Verktygslåda
+            </h1>
+            <p class="page-subtitle">Samling av praktiska verktyg för utvecklare och IT-personal</p>
+        </div>
+
+        <!-- Tool tabs -->
+        <div class="tool-tabs">
+            <button class="tool-tab active" data-tool="base64" onclick="showTool('base64')">
+                <span class="tool-tab-icon"><i class="icon-lock-closed"></i></span>
+                Base64
+            </button>
+            <button class="tool-tab" data-tool="unicode" onclick="showTool('unicode')">
+                <span class="tool-tab-icon"><i class="icon-hashtag"></i></span>
+                Unicode/UTF-8
+            </button>
+            <button class="tool-tab" data-tool="certificate" onclick="showTool('certificate')">
+                <span class="tool-tab-icon"><i class="icon-document-text"></i></span>
+                Certifikat
+            </button>
+            <button class="tool-tab" data-tool="hash" onclick="showTool('hash')">
+                <span class="tool-tab-icon"><i class="icon-hashtag"></i></span>
+                Hash
+            </button>
+            <button class="tool-tab" data-tool="json" onclick="showTool('json')">
+                <span class="tool-tab-icon"><i class="icon-clipboard"></i></span>
+                JSON
+            </button>
+            <button class="tool-tab" data-tool="url" onclick="showTool('url')">
+                <span class="tool-tab-icon"><i class="icon-link9"></i></span>
+                URL
+            </button>
+            <button class="tool-tab" data-tool="color" onclick="showTool('color')">
+                <span class="tool-tab-icon"><i class="icon-color-swatch"></i></span>
+                Färger
+            </button>
+            <button class="tool-tab" data-tool="timestamp" onclick="showTool('timestamp')">
+                <span class="tool-tab-icon"><i class="icon-clock1"></i></span>
+                Timestamp
+            </button>
+            <button class="tool-tab" data-tool="regex" onclick="showTool('regex')">
+                <span class="tool-tab-icon"><i class="icon-search"></i></span>
+                Regex
+            </button>
+            <button class="tool-tab" data-tool="diff" onclick="showTool('diff')">
+                <span class="tool-tab-icon"><i class="icon-pencil-alt"></i></span>
+                Text Diff
+            </button>
+            <button class="tool-tab" data-tool="pii" onclick="showTool('pii')">
+                <span class="tool-tab-icon"><i class="icon-shield-check"></i></span>
+                PII Granskning
+            </button>
+        </div>
+
+        <!-- Base64 Panel -->
+        <div class="tool-panel active" id="panel-base64">
+            <div class="tool-header">
+                <h2 class="tool-title">Base64 Encoder/Decoder</h2>
+                <p class="tool-description">Koda eller avkoda text och filer med Base64</p>
+            </div>
+
+            <div class="sub-tabs">
+                <button class="sub-tab active" onclick="setBase64Mode('text')">Text</button>
+                <button class="sub-tab" onclick="setBase64Mode('file')">Fil</button>
+            </div>
+
+            <div id="base64-text-mode">
+                <div class="two-col">
+                    <div class="form-group">
+                        <label class="form-label">Klartext</label>
+                        <textarea class="form-textarea" id="base64-input" placeholder="Skriv text här för att koda till Base64..."></textarea>
+                        <div class="btn-group" style="margin-top: 10px;">
+                            <button class="btn btn-primary" onclick="encodeBase64()">Koda → Base64</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Base64</label>
+                        <textarea class="form-textarea" id="base64-output" placeholder="Base64-kodat resultat..."></textarea>
+                        <div class="btn-group" style="margin-top: 10px;">
+                            <button class="btn btn-secondary" onclick="decodeBase64()">← Avkoda</button>
+                            <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('base64-output')"><i class="icon-clipboard"></i> Kopiera</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="base64-file-mode" style="display: none;">
+                <div class="drop-zone" id="base64-drop" onclick="document.getElementById('base64-file').click()">
+                    <div class="drop-zone-icon"><i class="icon-folder"></i></div>
+                    <p class="drop-zone-text">Dra och släpp en fil här, eller <strong>klicka för att välja</strong></p>
+                </div>
+                <input type="file" id="base64-file" style="display: none;" onchange="handleBase64File(event)">
+                <div class="result-box" id="base64-file-result" style="display: none;">
+                    <div class="result-header">
+                        <span class="result-label">Base64-kodad fil</span>
+                        <button class="copy-btn" onclick="copyToClipboard('base64-file-output')">Kopiera</button>
+                    </div>
+                    <pre id="base64-file-output"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unicode/UTF-8 Panel -->
+        <div class="tool-panel" id="panel-unicode">
+            <div class="tool-header">
+                <h2 class="tool-title">Unicode/UTF-8 Analysator</h2>
+                <p class="tool-description">Analysera tecken, visa kodpunkter och bytes</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Text att analysera</label>
+                <textarea class="form-textarea" id="unicode-input" placeholder="Skriv eller klistra in text här..." oninput="analyzeUnicode()"></textarea>
+            </div>
+
+            <div class="info-grid" id="unicode-stats">
+                <div class="info-card">
+                    <div class="info-card-label">Tecken</div>
+                    <div class="info-card-value" id="unicode-chars">0</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Bytes (UTF-8)</div>
+                    <div class="info-card-value" id="unicode-bytes">0</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Kodpunkter</div>
+                    <div class="info-card-value" id="unicode-codepoints">0</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Grafem-kluster</div>
+                    <div class="info-card-value" id="unicode-graphemes">0</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <label class="form-label">Teckendetaljer</label>
+                <table class="char-table" id="unicode-table">
+                    <thead>
+                        <tr>
+                            <th>Tecken</th>
+                            <th>Kodpunkt</th>
+                            <th>UTF-8 Hex</th>
+                            <th>UTF-16 Hex</th>
+                            <th>Namn</th>
+                        </tr>
+                    </thead>
+                    <tbody id="unicode-tbody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--ic-text-muted);">Skriv text ovan för att analysera</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Certificate Panel -->
+        <div class="tool-panel" id="panel-certificate">
+            <div class="tool-header">
+                <h2 class="tool-title">Certifikat-analysator</h2>
+                <p class="tool-description">Analysera X.509-certifikat i PEM- eller Base64-format</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Certifikat (PEM-format eller Base64)</label>
+                <textarea class="form-textarea large" id="cert-input" placeholder="-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJAJC1HiIAZAiUMA0Gcz...
+-----END CERTIFICATE-----
+
+Eller klistra in ren Base64..."></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="analyzeCertificate()"><i class="icon-search"></i> Analysera certifikat</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('cert-file').click()"><i class="icon-folder"></i> Ladda fr&aring;n fil</button>
+                <input type="file" id="cert-file" accept=".pem,.crt,.cer,.der" style="display: none;" onchange="loadCertFile(event)">
+            </div>
+
+            <div id="cert-result" style="display: none; margin-top: 20px;">
+                <!-- Certificate results will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Hash Panel -->
+        <div class="tool-panel" id="panel-hash">
+            <div class="tool-header">
+                <h2 class="tool-title">Hash-generator</h2>
+                <p class="tool-description">Beräkna MD5, SHA-1, SHA-256 och SHA-512 hash</p>
+            </div>
+
+            <div class="sub-tabs">
+                <button class="sub-tab active" onclick="setHashMode('text')">Text</button>
+                <button class="sub-tab" onclick="setHashMode('file')">Fil</button>
+            </div>
+
+            <div id="hash-text-mode">
+                <div class="form-group">
+                    <label class="form-label">Text att hasha</label>
+                    <textarea class="form-textarea" id="hash-input" placeholder="Skriv text här..." oninput="calculateHashes()"></textarea>
+                </div>
+            </div>
+
+            <div id="hash-file-mode" style="display: none;">
+                <div class="drop-zone" onclick="document.getElementById('hash-file').click()">
+                    <div class="drop-zone-icon"><i class="icon-folder"></i></div>
+                    <p class="drop-zone-text">Dra och släpp en fil här, eller <strong>klicka för att välja</strong></p>
+                </div>
+                <input type="file" id="hash-file" style="display: none;" onchange="hashFile(event)">
+            </div>
+
+            <div id="hash-results" style="margin-top: 20px;">
+                <div class="hash-result">
+                    <span class="hash-type">MD5</span>
+                    <span class="hash-value" id="hash-md5">-</span>
+                    <button class="btn btn-sm btn-secondary" onclick="copyHash('md5')"><i class="icon-clipboard"></i></button>
+                </div>
+                <div class="hash-result">
+                    <span class="hash-type">SHA-1</span>
+                    <span class="hash-value" id="hash-sha1">-</span>
+                    <button class="btn btn-sm btn-secondary" onclick="copyHash('sha1')"><i class="icon-clipboard"></i></button>
+                </div>
+                <div class="hash-result">
+                    <span class="hash-type">SHA-256</span>
+                    <span class="hash-value" id="hash-sha256">-</span>
+                    <button class="btn btn-sm btn-secondary" onclick="copyHash('sha256')"><i class="icon-clipboard"></i></button>
+                </div>
+                <div class="hash-result">
+                    <span class="hash-type">SHA-512</span>
+                    <span class="hash-value" id="hash-sha512">-</span>
+                    <button class="btn btn-sm btn-secondary" onclick="copyHash('sha512')"><i class="icon-clipboard"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSON Panel -->
+        <div class="tool-panel" id="panel-json">
+            <div class="tool-header">
+                <h2 class="tool-title">JSON Formatter & Validator</h2>
+                <p class="tool-description">Formatera, validera och visa JSON i trädvy — dra en fil hit eller klistra in</p>
+            </div>
+
+            <!-- Vy-växlare -->
+            <div class="sub-tabs" id="json-view-tabs">
+                <button class="sub-tab active" onclick="setJsonView('text')"><i class="icon-pencil-alt"></i> Text</button>
+                <button class="sub-tab" onclick="setJsonView('tree')"><i class="icon-hierarchy"></i> Tr&auml;dvy</button>
+            </div>
+
+            <!-- Text-vy -->
+            <div id="json-text-view">
+                <div class="form-group">
+                    <label class="form-label">JSON-data</label>
+                    <div id="json-drop-zone" class="json-drop-zone">
+                        <textarea class="form-textarea large" id="json-input" placeholder='{"name": "value", "array": [1, 2, 3]}' oninput="onJsonInput()"></textarea>
+                        <div class="json-drop-overlay" id="json-drop-overlay">
+                            <span><i class="icon-folder"></i> Sl&auml;pp JSON-fil h&auml;r</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="formatJSON()"><i class="icon-sparkles"></i> Formatera</button>
+                    <button class="btn btn-secondary" onclick="minifyJSON()"><i class="icon-cube"></i> Minifiera</button>
+                    <button class="btn btn-secondary" onclick="validateJSON()"><i class="icon-check-circle"></i> Validera</button>
+                    <button class="btn btn-secondary" onclick="copyToClipboard('json-input')"><i class="icon-clipboard"></i> Kopiera</button>
+                    <label class="btn btn-secondary" style="margin:0;">
+                        <i class="icon-folder-open1"></i> Ladda fil
+                        <input type="file" accept=".json,.txt" style="display:none;" onchange="loadJsonFile(this)">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Träd-vy -->
+            <div id="json-tree-view" style="display:none;">
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+                    <input type="text" class="form-input" id="json-tree-search" placeholder="S&ouml;k nyckel eller v&auml;rde..." style="flex:1; min-width:200px;" oninput="searchJsonTree()">
+                    <button class="btn btn-sm btn-secondary" onclick="expandAllJson()"><i class="icon-plus"></i> Expandera alla</button>
+                    <button class="btn btn-sm btn-secondary" onclick="collapseAllJson()"><i class="icon-minus"></i> Minimera alla</button>
+                    <button class="btn btn-sm btn-secondary" onclick="copyJsonPath()"><i class="icon-clipboard"></i> Kopiera s&ouml;kv&auml;g</button>
+                </div>
+                <div class="json-tree-stats" id="json-tree-stats"></div>
+                <div class="json-tree-container" id="json-tree-container">
+                    <div class="json-tree-empty">Klistra in JSON i text-vyn eller ladda en fil för att se trädvy</div>
+                </div>
+                <div class="json-path-bar" id="json-path-bar" style="display:none;">
+                    <span class="json-path-label">Sökväg:</span>
+                    <code class="json-path-value" id="json-path-value"></code>
+                </div>
+            </div>
+
+            <div id="json-result" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- URL Panel -->
+        <div class="tool-panel" id="panel-url">
+            <div class="tool-header">
+                <h2 class="tool-title">URL Encoder/Decoder</h2>
+                <p class="tool-description">Koda och avkoda URL-strängar, analysera query-parametrar</p>
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label class="form-label">Klartext / Avkodad URL</label>
+                    <textarea class="form-textarea" id="url-decoded" placeholder="Text eller URL att koda..."></textarea>
+                    <button class="btn btn-primary" style="margin-top: 10px;" onclick="encodeURL()">Koda →</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">URL-kodad</label>
+                    <textarea class="form-textarea" id="url-encoded" placeholder="URL-kodad text..."></textarea>
+                    <button class="btn btn-secondary" style="margin-top: 10px;" onclick="decodeURL()">← Avkoda</button>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label class="form-label">Analysera URL</label>
+                <input type="text" class="form-input" id="url-analyze" placeholder="https://example.com/path?param=value" oninput="analyzeURL()">
+            </div>
+
+            <div id="url-parts" style="display: none;">
+                <div class="info-grid" style="margin-top: 15px;">
+                    <div class="info-card">
+                        <div class="info-card-label">Protokoll</div>
+                        <div class="info-card-value" id="url-protocol">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-label">Hostname</div>
+                        <div class="info-card-value" id="url-hostname">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-label">Port</div>
+                        <div class="info-card-value" id="url-port">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-label">Path</div>
+                        <div class="info-card-value" id="url-path">-</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <label class="form-label">Query-parametrar</label>
+                    <table class="char-table" id="url-params-table">
+                        <thead>
+                            <tr><th>Parameter</th><th>Värde</th></tr>
+                        </thead>
+                        <tbody id="url-params-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Panel -->
+        <div class="tool-panel" id="panel-color">
+            <div class="tool-header">
+                <h2 class="tool-title">Färgkonverterare</h2>
+                <p class="tool-description">Konvertera mellan HEX, RGB, HSL och andra färgformat</p>
+            </div>
+
+            <div class="color-row">
+                <input type="color" id="color-picker" class="color-preview" value="#5458F2" onchange="colorFromPicker()">
+                <div style="flex: 1;">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label class="form-label">HEX</label>
+                        <input type="text" class="form-input" id="color-hex" value="#5458F2" oninput="colorFromHex()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-card-label">RGB</div>
+                    <div class="info-card-value" id="color-rgb">rgb(84, 88, 242)</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">RGBA</div>
+                    <div class="info-card-value" id="color-rgba">rgba(84, 88, 242, 1)</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">HSL</div>
+                    <div class="info-card-value" id="color-hsl">hsl(238, 87%, 64%)</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">CMYK</div>
+                    <div class="info-card-value" id="color-cmyk">cmyk(65%, 64%, 0%, 5%)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timestamp Panel -->
+        <div class="tool-panel" id="panel-timestamp">
+            <div class="tool-header">
+                <h2 class="tool-title">Timestamp-konverterare</h2>
+                <p class="tool-description">Konvertera mellan Unix timestamp och datum</p>
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label class="form-label">Unix Timestamp (sekunder)</label>
+                    <input type="number" class="form-input" id="ts-unix" placeholder="1704067200" oninput="timestampToDate()">
+                    <button class="btn btn-sm btn-secondary" style="margin-top: 10px;" onclick="setCurrentTimestamp()">Nu</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Datum & tid</label>
+                    <input type="datetime-local" class="form-input" id="ts-date" oninput="dateToTimestamp()">
+                </div>
+            </div>
+
+            <div class="info-grid" style="margin-top: 15px;">
+                <div class="info-card">
+                    <div class="info-card-label">ISO 8601</div>
+                    <div class="info-card-value" id="ts-iso">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">UTC</div>
+                    <div class="info-card-value" id="ts-utc">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Lokal tid</div>
+                    <div class="info-card-value" id="ts-local">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Millisekunder</div>
+                    <div class="info-card-value" id="ts-ms">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Regex Panel -->
+        <div class="tool-panel" id="panel-regex">
+            <div class="tool-header">
+                <h2 class="tool-title">Regex-testare</h2>
+                <p class="tool-description">Testa regulj&auml;ra uttryck mot text &mdash; v&auml;lj ett vanligt m&ouml;nster eller skriv eget</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Vanliga m&ouml;nster</label>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+                    <button class="btn btn-sm" onclick="setRegexPreset('[\\\\w.+-]+@[\\\\w-]+\\\\.[\\\\w.]+','gi','E-post')" style="font-size:0.8em;padding:4px 10px;border-radius:14px;background:#f3f4f6;border:1px solid #d1d5db;cursor:pointer;">&#128231; E-post</button>
+                    <button class="btn btn-sm" onclick="setRegexPreset('https?://[^\\\\s]+','gi','URL')" style="font-size:0.8em;padding:4px 10px;border-radius:14px;background:#f3f4f6;border:1px solid #d1d5db;cursor:pointer;">&#128279; URL</button>
+                    <button class="btn btn-sm" onclick="setRegexPreset('\\\\b\\\\d{1,3}\\\\.\\\\d{1,3}\\\\.\\\\d{1,3}\\\\.\\\\d{1,3}\\\\b','g','IP-adress')" style="font-size:0.8em;padding:4px 10px;border-radius:14px;background:#f3f4f6;border:1px solid #d1d5db;cursor:pointer;">&#127760; IP-adress</button>
+                    <button class="btn btn-sm" onclick="setRegexPreset('\\\\b\\\\d{4}-\\\\d{2}-\\\\d{2}\\\\b','g','Datum')" style="font-size:0.8em;padding:4px 10px;border-radius:14px;background:#f3f4f6;border:1px solid #d1d5db;cursor:pointer;">&#128197; Datum (YYYY-MM-DD)</button>
+                    <button class="btn btn-sm" onclick="setRegexPreset('\\\\b\\\\d+\\\\b','g','Nummer')" style="font-size:0.8em;padding:4px 10px;border-radius:14px;background:#f3f4f6;border:1px solid #d1d5db;cursor:pointer;">&#128290; Nummer</button>
+                    <button class="btn btn-sm" onclick="setRegexPreset('\\\\b[A-Z][a-z]+(?:\\\\s[A-Z][a-z]+)+\\\\b','g','Namn')" style="font-size:0.8em;padding:4px 10px;border-radius:14px;background:#f3f4f6;border:1px solid #d1d5db;cursor:pointer;">&#128100; Namn (Fler Ord)</button>
+                    <button class="btn btn-sm" onclick="setRegexPreset('\\\\{\\\\{\\\\w+\\\\}\\\\}','g','Template-var')" style="font-size:0.8em;padding:4px 10px;border-radius:14px;background:#f3f4f6;border:1px solid #d1d5db;cursor:pointer;">&#128196; {{variabler}}</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Regex-m&ouml;nster <span style="color:var(--ic-text-muted);font-weight:400;font-size:0.85em;margin-left:8px;">Flaggor:</span></label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" class="form-input" id="regex-pattern" placeholder="Skriv m&ouml;nster eller v&auml;lj ovan..." oninput="testRegex()" style="flex:1;">
+                    <input type="text" class="form-input" id="regex-flags" value="gi" style="width: 60px; text-align:center;" oninput="testRegex()">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Text att testa</label>
+                <textarea class="form-textarea" id="regex-text" placeholder="Klistra in text h&auml;r..." oninput="testRegex()"></textarea>
+            </div>
+
+            <div id="regex-result" style="margin-top: 15px;">
+                <div class="info-card">
+                    <div class="info-card-label">Matchningar</div>
+                    <div class="info-card-value" id="regex-matches">0</div>
+                </div>
+            </div>
+
+            <div class="result-box" style="margin-top: 15px;">
+                <div class="result-header">
+                    <span class="result-label">Markerad text</span>
+                </div>
+                <div id="regex-highlighted" style="padding:12px 16px;white-space:pre-wrap;word-break:break-word;font-family:Consolas,Monaco,monospace;font-size:0.85em;line-height:1.6;min-height:40px;color:#c9d1d9;">Inga matchningar</div>
+            </div>
+
+            <div class="result-box" style="margin-top: 10px;">
+                <div class="result-header">
+                    <span class="result-label">Matchlista</span>
+                </div>
+                <pre id="regex-output" style="font-size:0.85em;">Inga matchningar</pre>
+            </div>
+        </div>
+
+        <!-- Diff Panel -->
+        <div class="tool-panel" id="panel-diff">
+            <div class="tool-header">
+                <h2 class="tool-title">Text Diff</h2>
+                <p class="tool-description">Jämför två texter och se skillnader</p>
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label class="form-label">Original</label>
+                    <textarea class="form-textarea large" id="diff-original" placeholder="Originaltext..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ändrad</label>
+                    <textarea class="form-textarea large" id="diff-modified" placeholder="Ändrad text..."></textarea>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="calculateDiff()"><i class="icon-search"></i> J&auml;mf&ouml;r</button>
+
+            <div id="diff-result" style="margin-top: 20px; display: none;">
+                <div class="info-grid">
+                    <div class="info-card success">
+                        <div class="info-card-label">Tillagda</div>
+                        <div class="info-card-value" id="diff-added">0</div>
+                    </div>
+                    <div class="info-card danger">
+                        <div class="info-card-label">Borttagna</div>
+                        <div class="info-card-value" id="diff-removed">0</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-label">Oförändrade</div>
+                        <div class="info-card-value" id="diff-unchanged">0</div>
+                    </div>
+                </div>
+                <div class="result-box" style="margin-top: 15px;">
+                    <div class="result-header">
+                        <span class="result-label">Diff-resultat</span>
+                    </div>
+                    <pre id="diff-output" style="white-space: pre-wrap;"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- PII Panel -->
+        <div class="tool-panel" id="panel-pii">
+            <div class="tool-header">
+                <h2 class="tool-title">PII Granskning</h2>
+                <p class="tool-description">Hitta och ersätt personuppgifter med platshållare — helt lokalt, ingen data skickas</p>
+            </div>
+
+            <!-- File drop zone -->
+            <div class="pii-drop-zone" id="piiDropZone" onclick="document.getElementById('piiFileInput').click()">
+                <span class="pii-drop-zone-icon"><i class="icon-folder-open1"></i></span>
+                Dra och sl&auml;pp textfiler h&auml;r, eller klicka f&ouml;r att v&auml;lja<br>
+                <small style="color:#94a3b8;">St&ouml;djer .txt, .csv, .log, .json, .xml, .html, .md — en eller flera filer</small>
+            </div>
+            <input type="file" id="piiFileInput" multiple accept=".txt,.csv,.log,.json,.xml,.html,.htm,.md,.yaml,.yml,.cfg,.ini,.conf,.properties,.env,.sql" style="display:none;" onchange="piiHandleFiles(this.files)">
+            <div class="pii-file-list" id="piiFileList"></div>
+
+            <!-- Side-by-side panels -->
+            <div class="pii-layout">
+                <!-- Left: Original text -->
+                <div class="pii-panel">
+                    <div class="pii-panel-header">
+                        <span class="pii-panel-label">Original</span>
+                        <div class="pii-toolbar">
+                            <button class="btn btn-primary" onclick="scanPii()"><i class="icon-search"></i> Granska</button>
+                            <button class="btn btn-secondary" onclick="clearPii()"><i class="icon-trash"></i></button>
+                        </div>
+                    </div>
+                    <textarea class="pii-textarea" id="pii-input" placeholder="Klistra in text eller ladda upp filer..."></textarea>
+                </div>
+
+                <!-- Right: Cleaned result -->
+                <div class="pii-panel">
+                    <div class="pii-panel-header">
+                        <span class="pii-panel-label">Rensad</span>
+                        <div class="pii-toolbar">
+                            <button class="btn btn-secondary" onclick="piiRemoveAll()"><i class="icon-shield-check"></i> Ers&auml;tt alla</button>
+                            <button class="btn btn-secondary" onclick="piiRestoreAll()"><i class="icon-reply"></i> &Aring;terst&auml;ll</button>
+                            <button class="btn btn-secondary" onclick="copyPiiResult()"><i class="icon-clipboard"></i></button>
+                            <button class="btn btn-secondary" onclick="savePiiResult()"><i class="icon-save1"></i> Spara</button>
+                        </div>
+                    </div>
+                    <div class="pii-result-box" id="piiResultBox"></div>
+                </div>
+            </div>
+
+            <!-- Stats bar (below panels) -->
+            <div class="pii-stats-bar" id="piiStatsBar"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toast-message">Kopierat!</span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        // ========================
+        // Utility functions
+        // ========================
+
+        function showTool(toolId) {
+            document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('panel-' + toolId).classList.add('active');
+            document.querySelector(`[data-tool="${toolId}"]`).classList.add('active');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).value || document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => showToast('Kopierat till urklipp!'));
+        }
+
+        // ========================
+        // Base64
+        // ========================
+
+        function setBase64Mode(mode) {
+            document.querySelectorAll('#panel-base64 .sub-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('base64-text-mode').style.display = mode === 'text' ? 'block' : 'none';
+            document.getElementById('base64-file-mode').style.display = mode === 'file' ? 'block' : 'none';
+        }
+
+        function encodeBase64() {
+            const input = document.getElementById('base64-input').value;
+            try {
+                const encoded = btoa(unescape(encodeURIComponent(input)));
+                document.getElementById('base64-output').value = encoded;
+            } catch (e) {
+                showToast('Kodningsfel: ' + e.message);
+            }
+        }
+
+        function decodeBase64() {
+            const input = document.getElementById('base64-output').value;
+            try {
+                const decoded = decodeURIComponent(escape(atob(input)));
+                document.getElementById('base64-input').value = decoded;
+            } catch (e) {
+                showToast('Avkodningsfel: Ogiltig Base64');
+            }
+        }
+
+        function handleBase64File(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result.split(',')[1];
+                document.getElementById('base64-file-output').textContent = base64;
+                document.getElementById('base64-file-result').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ========================
+        // Unicode
+        // ========================
+
+        function analyzeUnicode() {
+            const text = document.getElementById('unicode-input').value;
+
+            // Stats
+            document.getElementById('unicode-chars').textContent = text.length;
+            document.getElementById('unicode-bytes').textContent = new Blob([text]).size;
+            document.getElementById('unicode-codepoints').textContent = [...text].length;
+
+            // Grapheme clusters (basic approximation)
+            const graphemes = text.match(/[\s\S]/gu) || [];
+            document.getElementById('unicode-graphemes').textContent = graphemes.length;
+
+            // Character table
+            const tbody = document.getElementById('unicode-tbody');
+            if (text.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--ic-text-muted);">Skriv text ovan för att analysera</td></tr>';
+                return;
+            }
+
+            const chars = [...text].slice(0, 50); // Limit to 50 chars
+            tbody.innerHTML = chars.map(char => {
+                const codePoint = char.codePointAt(0);
+                const utf8Hex = Array.from(new TextEncoder().encode(char))
+                    .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+                    .join(' ');
+                const utf16Hex = char.split('').map(c => c.charCodeAt(0).toString(16).padStart(4, '0').toUpperCase()).join(' ');
+                const name = getCharName(codePoint);
+
+                return `<tr>
+                    <td style="font-size: 1.2em;">${char === ' ' ? '␣' : char}</td>
+                    <td>U+${codePoint.toString(16).toUpperCase().padStart(4, '0')}</td>
+                    <td>${utf8Hex}</td>
+                    <td>${utf16Hex}</td>
+                    <td style="font-family: inherit; font-size: 0.8em; color: var(--ic-text-muted);">${name}</td>
+                </tr>`;
+            }).join('');
+
+            if (text.length > 50) {
+                tbody.innerHTML += '<tr><td colspan="5" style="text-align: center; color: var(--ic-text-muted);">... och ' + (text.length - 50) + ' fler tecken</td></tr>';
+            }
+        }
+
+        function getCharName(codePoint) {
+            // Basic character names
+            if (codePoint >= 65 && codePoint <= 90) return 'LATIN CAPITAL LETTER';
+            if (codePoint >= 97 && codePoint <= 122) return 'LATIN SMALL LETTER';
+            if (codePoint >= 48 && codePoint <= 57) return 'DIGIT';
+            if (codePoint === 32) return 'SPACE';
+            if (codePoint === 10) return 'LINE FEED';
+            if (codePoint === 13) return 'CARRIAGE RETURN';
+            if (codePoint === 9) return 'TAB';
+            if (codePoint >= 0x0080 && codePoint <= 0x00FF) return 'LATIN-1 SUPPLEMENT';
+            if (codePoint >= 0x0100 && codePoint <= 0x017F) return 'LATIN EXTENDED-A';
+            if (codePoint >= 0x1F600 && codePoint <= 0x1F64F) return 'EMOTICON';
+            return '-';
+        }
+
+        // ========================
+        // Certificate
+        // ========================
+
+        function analyzeCertificate() {
+            let certInput = document.getElementById('cert-input').value.trim();
+
+            // Extract base64 from PEM if present
+            if (certInput.includes('-----BEGIN')) {
+                certInput = certInput
+                    .replace(/-----BEGIN CERTIFICATE-----/g, '')
+                    .replace(/-----END CERTIFICATE-----/g, '')
+                    .replace(/\s/g, '');
+            }
+
+            try {
+                const binaryStr = atob(certInput);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+
+                // Parse ASN.1 DER structure (basic parsing)
+                const certInfo = parseX509(bytes);
+                displayCertificate(certInfo);
+            } catch (e) {
+                document.getElementById('cert-result').innerHTML = `
+                    <div class="info-card danger">
+                        <div class="info-card-label">Fel</div>
+                        <div class="info-card-value">${e.message}</div>
+                    </div>
+                `;
+                document.getElementById('cert-result').style.display = 'block';
+            }
+        }
+
+        function parseX509(bytes) {
+            // Basic X.509 parser - extracts common fields
+            // This is a simplified parser for demonstration
+            const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            // Try to find common OIDs and strings
+            const info = {
+                version: 'v3 (troligen)',
+                serialNumber: extractSerialNumber(hex),
+                issuer: extractDN(hex, 'issuer'),
+                subject: extractDN(hex, 'subject'),
+                notBefore: findDate(hex, 0),
+                notAfter: findDate(hex, 1),
+                algorithm: findAlgorithm(hex),
+                keySize: estimateKeySize(bytes.length),
+                fingerprints: {
+                    sha256: CryptoJS.SHA256(CryptoJS.lib.WordArray.create(bytes)).toString(),
+                    sha1: CryptoJS.SHA1(CryptoJS.lib.WordArray.create(bytes)).toString()
+                }
+            };
+
+            return info;
+        }
+
+        function extractSerialNumber(hex) {
+            // Look for serial number pattern after version
+            const match = hex.match(/0202([0-9a-f]{4,40})/i);
+            if (match) return match[1].toUpperCase();
+            return 'Kunde inte extrahera';
+        }
+
+        function extractDN(hex, type) {
+            // Simple extraction - looks for common name patterns
+            return 'Se fingerprint för verifiering';
+        }
+
+        function findDate(hex, index) {
+            // Look for UTCTime or GeneralizedTime
+            const utcTimes = hex.match(/170d([0-9a-f]{26})/gi) || [];
+            if (utcTimes[index]) {
+                try {
+                    const dateHex = utcTimes[index].substring(4);
+                    const dateStr = hexToAscii(dateHex);
+                    // Parse YYMMDDHHmmssZ format
+                    const year = parseInt(dateStr.substr(0, 2));
+                    const fullYear = year < 50 ? 2000 + year : 1900 + year;
+                    return `${fullYear}-${dateStr.substr(2, 2)}-${dateStr.substr(4, 2)} ${dateStr.substr(6, 2)}:${dateStr.substr(8, 2)}:${dateStr.substr(10, 2)} UTC`;
+                } catch (e) {}
+            }
+            return 'Kunde inte extrahera';
+        }
+
+        function findAlgorithm(hex) {
+            if (hex.includes('2a864886f70d010105')) return 'SHA-1 with RSA';
+            if (hex.includes('2a864886f70d01010b')) return 'SHA-256 with RSA';
+            if (hex.includes('2a864886f70d01010c')) return 'SHA-384 with RSA';
+            if (hex.includes('2a864886f70d01010d')) return 'SHA-512 with RSA';
+            if (hex.includes('2a8648ce3d040302')) return 'ECDSA with SHA-256';
+            if (hex.includes('2a8648ce3d040303')) return 'ECDSA with SHA-384';
+            return 'Okänd';
+        }
+
+        function estimateKeySize(byteLength) {
+            if (byteLength < 500) return '1024-bit (troligen)';
+            if (byteLength < 900) return '2048-bit (troligen)';
+            if (byteLength < 1500) return '4096-bit (troligen)';
+            return 'Okänd';
+        }
+
+        function hexToAscii(hex) {
+            let str = '';
+            for (let i = 0; i < hex.length; i += 2) {
+                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            }
+            return str;
+        }
+
+        function displayCertificate(info) {
+            const now = new Date();
+            let notAfterDate;
+            try {
+                const parts = info.notAfter.split(' ');
+                notAfterDate = new Date(parts[0] + 'T' + parts[1] + 'Z');
+            } catch (e) {
+                notAfterDate = null;
+            }
+
+            const isExpired = notAfterDate && notAfterDate < now;
+            const isExpiringSoon = notAfterDate && !isExpired && (notAfterDate - now) < 30 * 24 * 60 * 60 * 1000;
+
+            let statusBadge = '<span class="status-badge status-valid">✓ Giltigt</span>';
+            if (isExpired) {
+                statusBadge = '<span class="status-badge status-expired">✗ Utgånget</span>';
+            } else if (isExpiringSoon) {
+                statusBadge = '<span class="status-badge status-warning"><i class="icon-exclamation-circle"></i> Går snart ut</span>';
+            }
+
+            document.getElementById('cert-result').innerHTML = `
+                <div style="margin-bottom: 15px;">${statusBadge}</div>
+
+                <div class="cert-section">
+                    <div class="cert-section-title"><i class="icon-clipboard"></i> Grundläggande information</div>
+                    <div class="cert-row">
+                        <span class="cert-label">Version</span>
+                        <span class="cert-value">${info.version}</span>
+                    </div>
+                    <div class="cert-row">
+                        <span class="cert-label">Serienummer</span>
+                        <span class="cert-value">${info.serialNumber}</span>
+                    </div>
+                    <div class="cert-row">
+                        <span class="cert-label">Algoritm</span>
+                        <span class="cert-value">${info.algorithm}</span>
+                    </div>
+                    <div class="cert-row">
+                        <span class="cert-label">Nyckelstorlek</span>
+                        <span class="cert-value">${info.keySize}</span>
+                    </div>
+                </div>
+
+                <div class="cert-section">
+                    <div class="cert-section-title"><i class="icon-calendar"></i> Giltighetstid</div>
+                    <div class="cert-row">
+                        <span class="cert-label">Giltig från</span>
+                        <span class="cert-value">${info.notBefore}</span>
+                    </div>
+                    <div class="cert-row">
+                        <span class="cert-label">Giltig till</span>
+                        <span class="cert-value">${info.notAfter}</span>
+                    </div>
+                </div>
+
+                <div class="cert-section">
+                    <div class="cert-section-title"><i class="icon-lock-closed"></i> Fingerprints</div>
+                    <div class="cert-row">
+                        <span class="cert-label">SHA-256</span>
+                        <span class="cert-value" style="font-family: monospace; font-size: 0.75em;">${info.fingerprints.sha256}</span>
+                    </div>
+                    <div class="cert-row">
+                        <span class="cert-label">SHA-1</span>
+                        <span class="cert-value" style="font-family: monospace;">${info.fingerprints.sha1}</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('cert-result').style.display = 'block';
+        }
+
+        function loadCertFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('cert-input').value = e.target.result;
+                analyzeCertificate();
+            };
+            reader.readAsText(file);
+        }
+
+        // ========================
+        // Hash
+        // ========================
+
+        function setHashMode(mode) {
+            document.querySelectorAll('#panel-hash .sub-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('hash-text-mode').style.display = mode === 'text' ? 'block' : 'none';
+            document.getElementById('hash-file-mode').style.display = mode === 'file' ? 'block' : 'none';
+        }
+
+        function calculateHashes() {
+            const text = document.getElementById('hash-input').value;
+            if (!text) {
+                ['md5', 'sha1', 'sha256', 'sha512'].forEach(t => {
+                    document.getElementById('hash-' + t).textContent = '-';
+                });
+                return;
+            }
+
+            document.getElementById('hash-md5').textContent = CryptoJS.MD5(text).toString();
+            document.getElementById('hash-sha1').textContent = CryptoJS.SHA1(text).toString();
+            document.getElementById('hash-sha256').textContent = CryptoJS.SHA256(text).toString();
+            document.getElementById('hash-sha512').textContent = CryptoJS.SHA512(text).toString();
+        }
+
+        function hashFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
+                document.getElementById('hash-md5').textContent = CryptoJS.MD5(wordArray).toString();
+                document.getElementById('hash-sha1').textContent = CryptoJS.SHA1(wordArray).toString();
+                document.getElementById('hash-sha256').textContent = CryptoJS.SHA256(wordArray).toString();
+                document.getElementById('hash-sha512').textContent = CryptoJS.SHA512(wordArray).toString();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function copyHash(type) {
+            const hash = document.getElementById('hash-' + type).textContent;
+            navigator.clipboard.writeText(hash).then(() => showToast('Hash kopierad!'));
+        }
+
+        // ========================
+        // JSON
+        // ========================
+
+        let _jsonParsed = null;
+        let _jsonSelectedPath = '';
+
+        function formatJSON() {
+            try {
+                const input = document.getElementById('json-input').value;
+                const parsed = JSON.parse(input);
+                document.getElementById('json-input').value = JSON.stringify(parsed, null, 2);
+                document.getElementById('json-result').innerHTML = '<div class="info-card success"><div class="info-card-value">✓ JSON formaterad</div></div>';
+                _jsonParsed = parsed;
+                if (document.getElementById('json-tree-view').style.display !== 'none') renderJsonTree();
+            } catch (e) {
+                document.getElementById('json-result').innerHTML = '<div class="info-card danger"><div class="info-card-value">✗ ' + escJsonHtml(e.message) + '</div></div>';
+            }
+        }
+
+        function minifyJSON() {
+            try {
+                const input = document.getElementById('json-input').value;
+                const parsed = JSON.parse(input);
+                document.getElementById('json-input').value = JSON.stringify(parsed);
+                document.getElementById('json-result').innerHTML = '<div class="info-card success"><div class="info-card-value">✓ JSON minifierad</div></div>';
+                _jsonParsed = parsed;
+            } catch (e) {
+                document.getElementById('json-result').innerHTML = '<div class="info-card danger"><div class="info-card-value">✗ ' + escJsonHtml(e.message) + '</div></div>';
+            }
+        }
+
+        function validateJSON() {
+            try {
+                JSON.parse(document.getElementById('json-input').value);
+                document.getElementById('json-result').innerHTML = '<div class="info-card success"><div class="info-card-value">✓ Giltig JSON</div></div>';
+            } catch (e) {
+                document.getElementById('json-result').innerHTML = '<div class="info-card danger"><div class="info-card-value">✗ ' + escJsonHtml(e.message) + '</div></div>';
+            }
+        }
+
+        function escJsonHtml(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function onJsonInput() {
+            // Auto-parse for tree view
+            const val = document.getElementById('json-input').value.trim();
+            if (!val) { _jsonParsed = null; return; }
+            try {
+                _jsonParsed = JSON.parse(val);
+                document.getElementById('json-result').innerHTML = '';
+            } catch(e) {
+                _jsonParsed = null;
+            }
+        }
+
+        // View switcher
+        function setJsonView(view) {
+            document.querySelectorAll('#json-view-tabs .sub-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('json-text-view').style.display = view === 'text' ? '' : 'none';
+            document.getElementById('json-tree-view').style.display = view === 'tree' ? '' : 'none';
+            if (view === 'tree') {
+                // Parse from textarea if needed
+                if (!_jsonParsed) {
+                    const val = document.getElementById('json-input').value.trim();
+                    if (val) {
+                        try { _jsonParsed = JSON.parse(val); } catch(e) {
+                            document.getElementById('json-tree-container').innerHTML =
+                                '<div class="json-tree-empty"><i class="icon-exclamation-circle"></i> Ogiltig JSON: ' + escJsonHtml(e.message) + '</div>';
+                            document.getElementById('json-tree-stats').innerHTML = '';
+                            return;
+                        }
+                    }
+                }
+                renderJsonTree();
+            }
+        }
+
+        // File upload
+        function loadJsonFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('json-input').value = e.target.result;
+                onJsonInput();
+                if (_jsonParsed) {
+                    formatJSON();
+                    showToast('Fil laddad: ' + file.name);
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        // Drag & drop
+        (function() {
+            const zone = document.getElementById('json-drop-zone');
+            if (!zone) return;
+            zone.addEventListener('dragover', function(e) {
+                e.preventDefault(); zone.classList.add('dragover');
+            });
+            zone.addEventListener('dragleave', function(e) {
+                e.preventDefault(); zone.classList.remove('dragover');
+            });
+            zone.addEventListener('drop', function(e) {
+                e.preventDefault(); zone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        document.getElementById('json-input').value = ev.target.result;
+                        onJsonInput();
+                        if (_jsonParsed) formatJSON();
+                        showToast('Fil laddad: ' + file.name);
+                    };
+                    reader.readAsText(file);
+                }
+            });
+        })();
+
+        // Tree rendering
+        function renderJsonTree() {
+            const container = document.getElementById('json-tree-container');
+            const statsEl = document.getElementById('json-tree-stats');
+            if (!_jsonParsed) {
+                container.innerHTML = '<div class="json-tree-empty">Klistra in JSON i text-vyn eller ladda en fil för att se trädvy</div>';
+                statsEl.innerHTML = '';
+                document.getElementById('json-path-bar').style.display = 'none';
+                return;
+            }
+            // Collect stats
+            const stats = { objects: 0, arrays: 0, strings: 0, numbers: 0, booleans: 0, nulls: 0 };
+            countJsonStats(_jsonParsed, stats);
+            const totalKeys = stats.objects + stats.arrays + stats.strings + stats.numbers + stats.booleans + stats.nulls;
+            statsEl.innerHTML =
+                '<span><i class="icon-chart-bar1"></i> ' + totalKeys + ' värden</span>' +
+                (stats.objects > 0 ? '<span>🔵 ' + stats.objects + ' objekt</span>' : '') +
+                (stats.arrays > 0 ? '<span>🟣 ' + stats.arrays + ' arrayer</span>' : '') +
+                (stats.strings > 0 ? '<span>🟢 ' + stats.strings + ' strängar</span>' : '') +
+                (stats.numbers > 0 ? '<span>🔷 ' + stats.numbers + ' tal</span>' : '') +
+                (stats.booleans > 0 ? '<span>🔴 ' + stats.booleans + ' booleans</span>' : '') +
+                (stats.nulls > 0 ? '<span>⚪ ' + stats.nulls + ' null</span>' : '');
+
+            container.innerHTML = buildJsonNode(_jsonParsed, '', true);
+            document.getElementById('json-path-bar').style.display = 'none';
+        }
+
+        function countJsonStats(val, stats) {
+            if (val === null) { stats.nulls++; return; }
+            if (Array.isArray(val)) {
+                stats.arrays++;
+                val.forEach(function(v) { countJsonStats(v, stats); });
+            } else if (typeof val === 'object') {
+                stats.objects++;
+                Object.values(val).forEach(function(v) { countJsonStats(v, stats); });
+            } else if (typeof val === 'string') { stats.strings++; }
+            else if (typeof val === 'number') { stats.numbers++; }
+            else if (typeof val === 'boolean') { stats.booleans++; }
+        }
+
+        function buildJsonNode(val, path, isRoot) {
+            if (val === null) return '<span class="json-null">null</span>';
+            if (typeof val === 'string') {
+                const display = val.length > 120 ? escJsonHtml(val.substring(0, 120)) + '…' : escJsonHtml(val);
+                return '<span class="json-string">"' + display + '"</span>';
+            }
+            if (typeof val === 'number') return '<span class="json-number">' + val + '</span>';
+            if (typeof val === 'boolean') return '<span class="json-boolean">' + val + '</span>';
+
+            const isArray = Array.isArray(val);
+            const entries = isArray ? val.map(function(v, i) { return [i, v]; }) : Object.entries(val);
+            const count = entries.length;
+            const typeBadge = isArray
+                ? '<span class="json-type-badge json-type-array">Array[' + count + ']</span>'
+                : '<span class="json-type-badge json-type-object">Object{' + count + '}</span>';
+            const bracket = isArray ? ['[', ']'] : ['{', '}'];
+
+            if (count === 0) {
+                return bracket[0] + bracket[1] + ' ' + typeBadge;
+            }
+
+            // Auto-collapse deep/large nodes
+            const depth = path ? path.split('.').length : 0;
+            const collapsed = depth >= 2 && count > 3 ? ' collapsed' : '';
+            const toggleChar = collapsed ? '▶' : '▼';
+            const nodeId = 'jn_' + path.replace(/[^a-zA-Z0-9]/g, '_') + '_' + Math.random().toString(36).substr(2,4);
+
+            let html = '<button class="json-toggle" onclick="toggleJsonNode(\'' + nodeId + '\', this)">' + toggleChar + '</button>';
+            html += typeBadge;
+            if (collapsed) {
+                html += ' <span class="json-preview">' + bracket[0] + ' … ' + count + ' element ' + bracket[1] + '</span>';
+            }
+            html += '<div class="json-children' + collapsed + '" id="' + nodeId + '">';
+
+            for (let i = 0; i < entries.length; i++) {
+                const key = entries[i][0];
+                const v = entries[i][1];
+                const childPath = path ? path + '.' + key : String(key);
+                const comma = i < entries.length - 1 ? ',' : '';
+                html += '<div class="json-line" data-path="' + escJsonHtml(childPath) + '" onclick="selectJsonPath(\'' + escJsonHtml(childPath) + '\', event)">';
+                if (!isArray) {
+                    html += '<span class="json-key" title="' + escJsonHtml(childPath) + '">"' + escJsonHtml(String(key)) + '"</span>: ';
+                } else {
+                    html += '<span class="json-count" title="Index ' + key + '">[' + key + ']</span> ';
+                }
+                html += buildJsonNode(v, childPath, false);
+                html += comma;
+                html += '</div>';
+            }
+            html += '</div>';
+
+            return html;
+        }
+
+        function toggleJsonNode(id, btn) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const collapsed = el.classList.toggle('collapsed');
+            btn.textContent = collapsed ? '▶' : '▼';
+            // Toggle preview
+            const preview = btn.parentElement ? btn.parentElement.querySelector('.json-preview') : null;
+            // Actually let's find the preview sibling
+            let next = btn.nextElementSibling;
+            while (next && !next.classList.contains('json-preview') && !next.classList.contains('json-children')) {
+                next = next.nextElementSibling;
+            }
+            if (next && next.classList.contains('json-preview')) {
+                next.style.display = collapsed ? '' : 'none';
+            }
+        }
+
+        function selectJsonPath(path, event) {
+            event.stopPropagation();
+            _jsonSelectedPath = path;
+            document.getElementById('json-path-bar').style.display = 'flex';
+            document.getElementById('json-path-value').textContent = path;
+            // Highlight
+            document.querySelectorAll('.json-line.highlight').forEach(function(el) { el.classList.remove('highlight'); });
+            const target = event.currentTarget || event.target.closest('.json-line');
+            if (target) target.classList.add('highlight');
+        }
+
+        function copyJsonPath() {
+            if (!_jsonSelectedPath) { showToast('Välj en nod först'); return; }
+            navigator.clipboard.writeText(_jsonSelectedPath).then(function() {
+                showToast('Sökväg kopierad: ' + _jsonSelectedPath);
+            });
+        }
+
+        function expandAllJson() {
+            document.querySelectorAll('#json-tree-container .json-children.collapsed').forEach(function(el) {
+                el.classList.remove('collapsed');
+            });
+            document.querySelectorAll('#json-tree-container .json-toggle').forEach(function(btn) {
+                btn.textContent = '▼';
+            });
+            document.querySelectorAll('#json-tree-container .json-preview').forEach(function(el) {
+                el.style.display = 'none';
+            });
+        }
+
+        function collapseAllJson() {
+            document.querySelectorAll('#json-tree-container .json-children').forEach(function(el) {
+                el.classList.add('collapsed');
+            });
+            document.querySelectorAll('#json-tree-container .json-toggle').forEach(function(btn) {
+                btn.textContent = '▶';
+            });
+            document.querySelectorAll('#json-tree-container .json-preview').forEach(function(el) {
+                el.style.display = '';
+            });
+        }
+
+        let _jsonSearchTimeout;
+        function searchJsonTree() {
+            clearTimeout(_jsonSearchTimeout);
+            _jsonSearchTimeout = setTimeout(function() {
+                const query = document.getElementById('json-tree-search').value.trim().toLowerCase();
+                // Remove old highlights
+                document.querySelectorAll('#json-tree-container .json-line.highlight').forEach(function(el) {
+                    el.classList.remove('highlight');
+                });
+                if (!query) return;
+
+                let found = 0;
+                document.querySelectorAll('#json-tree-container .json-line').forEach(function(line) {
+                    const text = line.textContent.toLowerCase();
+                    if (text.includes(query)) {
+                        line.classList.add('highlight');
+                        found++;
+                        // Expand parent collapsed nodes
+                        let parent = line.parentElement;
+                        while (parent && parent.id !== 'json-tree-container') {
+                            if (parent.classList.contains('collapsed')) {
+                                parent.classList.remove('collapsed');
+                                const toggle = parent.previousElementSibling;
+                                if (toggle) {
+                                    // Find the toggle button
+                                    const btn = parent.parentElement.querySelector('.json-toggle');
+                                    if (btn) btn.textContent = '▼';
+                                }
+                                const preview = parent.parentElement ? parent.parentElement.querySelector('.json-preview') : null;
+                                if (preview) preview.style.display = 'none';
+                            }
+                            parent = parent.parentElement;
+                        }
+                    }
+                });
+                if (found > 0) {
+                    // Scroll to first match
+                    const first = document.querySelector('#json-tree-container .json-line.highlight');
+                    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    showToast(found + ' träffar');
+                } else {
+                    showToast('Inga träffar');
+                }
+            }, 250);
+        }
+
+        // ========================
+        // URL
+        // ========================
+
+        function encodeURL() {
+            const input = document.getElementById('url-decoded').value;
+            document.getElementById('url-encoded').value = encodeURIComponent(input);
+        }
+
+        function decodeURL() {
+            try {
+                const input = document.getElementById('url-encoded').value;
+                document.getElementById('url-decoded').value = decodeURIComponent(input);
+            } catch (e) {
+                showToast('Ogiltig URL-kodning');
+            }
+        }
+
+        function analyzeURL() {
+            const input = document.getElementById('url-analyze').value;
+            if (!input) {
+                document.getElementById('url-parts').style.display = 'none';
+                return;
+            }
+
+            try {
+                const url = new URL(input);
+                document.getElementById('url-protocol').textContent = url.protocol;
+                document.getElementById('url-hostname').textContent = url.hostname;
+                document.getElementById('url-port').textContent = url.port || '(default)';
+                document.getElementById('url-path').textContent = url.pathname || '/';
+
+                const params = [...url.searchParams.entries()];
+                const tbody = document.getElementById('url-params-tbody');
+                if (params.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--ic-text-muted);">Inga query-parametrar</td></tr>';
+                } else {
+                    tbody.innerHTML = params.map(([key, value]) =>
+                        `<tr><td>${key}</td><td>${value}</td></tr>`
+                    ).join('');
+                }
+
+                document.getElementById('url-parts').style.display = 'block';
+            } catch (e) {
+                document.getElementById('url-parts').style.display = 'none';
+            }
+        }
+
+        // ========================
+        // Color
+        // ========================
+
+        function colorFromPicker() {
+            const hex = document.getElementById('color-picker').value;
+            document.getElementById('color-hex').value = hex;
+            updateColorValues(hex);
+        }
+
+        function colorFromHex() {
+            let hex = document.getElementById('color-hex').value;
+            if (!hex.startsWith('#')) hex = '#' + hex;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                document.getElementById('color-picker').value = hex;
+                updateColorValues(hex);
+            }
+        }
+
+        function updateColorValues(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+
+            document.getElementById('color-rgb').textContent = `rgb(${r}, ${g}, ${b})`;
+            document.getElementById('color-rgba').textContent = `rgba(${r}, ${g}, ${b}, 1)`;
+
+            // HSL
+            const rNorm = r / 255, gNorm = g / 255, bNorm = b / 255;
+            const max = Math.max(rNorm, gNorm, bNorm), min = Math.min(rNorm, gNorm, bNorm);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case rNorm: h = ((gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0)) / 6; break;
+                    case gNorm: h = ((bNorm - rNorm) / d + 2) / 6; break;
+                    case bNorm: h = ((rNorm - gNorm) / d + 4) / 6; break;
+                }
+            }
+            document.getElementById('color-hsl').textContent = `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
+
+            // CMYK
+            const k = 1 - Math.max(rNorm, gNorm, bNorm);
+            const c = k === 1 ? 0 : (1 - rNorm - k) / (1 - k);
+            const m = k === 1 ? 0 : (1 - gNorm - k) / (1 - k);
+            const y = k === 1 ? 0 : (1 - bNorm - k) / (1 - k);
+            document.getElementById('color-cmyk').textContent = `cmyk(${Math.round(c * 100)}%, ${Math.round(m * 100)}%, ${Math.round(y * 100)}%, ${Math.round(k * 100)}%)`;
+        }
+
+        // Initialize color
+        updateColorValues('#5458F2');
+
+        // ========================
+        // Timestamp
+        // ========================
+
+        function setCurrentTimestamp() {
+            document.getElementById('ts-unix').value = Math.floor(Date.now() / 1000);
+            timestampToDate();
+        }
+
+        function timestampToDate() {
+            const ts = parseInt(document.getElementById('ts-unix').value);
+            if (isNaN(ts)) return;
+
+            const date = new Date(ts * 1000);
+            document.getElementById('ts-date').value = date.toISOString().slice(0, 16);
+            updateTimestampDisplay(date, ts);
+        }
+
+        function dateToTimestamp() {
+            const dateStr = document.getElementById('ts-date').value;
+            if (!dateStr) return;
+
+            const date = new Date(dateStr);
+            const ts = Math.floor(date.getTime() / 1000);
+            document.getElementById('ts-unix').value = ts;
+            updateTimestampDisplay(date, ts);
+        }
+
+        function updateTimestampDisplay(date, ts) {
+            document.getElementById('ts-iso').textContent = date.toISOString();
+            document.getElementById('ts-utc').textContent = date.toUTCString();
+            document.getElementById('ts-local').textContent = date.toLocaleString('sv-SE');
+            document.getElementById('ts-ms').textContent = ts * 1000;
+        }
+
+        // ========================
+        // Regex
+        // ========================
+
+        function setRegexPreset(pattern, flags, label) {
+            document.getElementById('regex-pattern').value = pattern;
+            document.getElementById('regex-flags').value = flags;
+            testRegex();
+        }
+
+        function testRegex() {
+            var pattern = document.getElementById('regex-pattern').value;
+            var flags = document.getElementById('regex-flags').value;
+            var text = document.getElementById('regex-text').value;
+            var highlightEl = document.getElementById('regex-highlighted');
+
+            if (!pattern || !text) {
+                document.getElementById('regex-matches').textContent = '0';
+                document.getElementById('regex-output').textContent = 'Inga matchningar';
+                highlightEl.innerHTML = text ? escHtml(text) : '<span style="opacity:0.4">Inga matchningar</span>';
+                return;
+            }
+
+            try {
+                var regex = new RegExp(pattern, flags);
+                var matches = text.match(regex);
+
+                if (matches && matches.length > 0) {
+                    document.getElementById('regex-matches').textContent = matches.length;
+                    document.getElementById('regex-output').innerHTML = matches.map(function(m, i) {
+                        return '<span style="color:#79c0ff;">[' + i + ']</span> "' + escHtml(m) + '"';
+                    }).join('\n');
+
+                    // Highlight matches in text
+                    var highlighted = text.replace(new RegExp(pattern, flags), function(match) {
+                        return '\x00HL_START\x00' + match + '\x00HL_END\x00';
+                    });
+                    highlighted = escHtml(highlighted);
+                    highlighted = highlighted.replace(/\x00HL_START\x00/g, '<mark style="background:#f59e0b;color:#000;border-radius:2px;padding:0 2px;">');
+                    highlighted = highlighted.replace(/\x00HL_END\x00/g, '</mark>');
+                    highlightEl.innerHTML = highlighted;
+                } else {
+                    document.getElementById('regex-matches').textContent = '0';
+                    document.getElementById('regex-output').textContent = 'Inga matchningar';
+                    highlightEl.innerHTML = escHtml(text);
+                }
+            } catch (e) {
+                document.getElementById('regex-matches').textContent = '-';
+                document.getElementById('regex-output').innerHTML = '<span style="color:#f85149;">Fel: ' + escHtml(e.message) + '</span>';
+                highlightEl.innerHTML = escHtml(text);
+            }
+        }
+
+        function escHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ========================
+        // Diff
+        // ========================
+
+        function calculateDiff() {
+            const original = document.getElementById('diff-original').value;
+            const modified = document.getElementById('diff-modified').value;
+
+            const origLines = original.split('\n');
+            const modLines = modified.split('\n');
+
+            let added = 0, removed = 0, unchanged = 0;
+            const output = [];
+
+            // Simple line-by-line diff
+            const maxLen = Math.max(origLines.length, modLines.length);
+            for (let i = 0; i < maxLen; i++) {
+                const origLine = origLines[i];
+                const modLine = modLines[i];
+
+                if (origLine === modLine) {
+                    output.push(`  ${origLine || ''}`);
+                    unchanged++;
+                } else {
+                    if (origLine !== undefined) {
+                        output.push(`<span style="color: #ef4444;">- ${origLine}</span>`);
+                        removed++;
+                    }
+                    if (modLine !== undefined) {
+                        output.push(`<span style="color: #10b981;">+ ${modLine}</span>`);
+                        added++;
+                    }
+                }
+            }
+
+            document.getElementById('diff-added').textContent = added;
+            document.getElementById('diff-removed').textContent = removed;
+            document.getElementById('diff-unchanged').textContent = unchanged;
+            document.getElementById('diff-output').innerHTML = output.join('\n');
+            document.getElementById('diff-result').style.display = 'block';
+        }
+
+        // ========================
+        // PII Scanner
+        // ========================
+
+        let _piiFindings = []; // [{type, label, value, start, end, removed, isBlock?}]
+        let _piiBlockFindings = []; // Block-level findings (signatures)
+        let _piiOriginalText = '';
+        let _piiFiles = []; // [{name, content}] — loaded files
+        let _piiActiveFileIdx = -1; // -1 = manual text, 0+ = file index
+
+        // Pattern definitions — all regex, purely client-side
+        const PII_PATTERNS = {
+            personnummer: {
+                label: 'Personnummer',
+                patterns: [
+                    /\b(\d{6,8})[-\s]?(\d{4})\b/g,  // YYYYMMDD-XXXX or YYMMDD-XXXX
+                ],
+                validate: function(match) {
+                    // Basic validation: check if it looks like a real personnummer
+                    var digits = match.replace(/[-\s]/g, '');
+                    if (digits.length === 12) digits = digits.substring(2); // strip century
+                    if (digits.length !== 10) return false;
+                    var month = parseInt(digits.substring(2, 4));
+                    var day = parseInt(digits.substring(4, 6));
+                    return month >= 1 && month <= 12 && day >= 1 && day <= 31;
+                }
+            },
+            email: {
+                label: 'E-post',
+                patterns: [/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g]
+            },
+            phone: {
+                label: 'Telefon',
+                patterns: [
+                    /(?:\+46|0)[\s\-]?(?:\d[\s\-]?){7,11}/g,          // Swedish +46 / 07X
+                    /\b0\d{1,3}[\s\-]?\d{2,3}[\s\-]?\d{2}[\s\-]?\d{2}\b/g, // 08-123 45 67
+                ]
+            },
+            name: {
+                label: 'Namn',
+                patterns: [
+                    // Title Case full names: "Firstname Lastname"
+                    /\b([A-ZÅÄÖ][a-zåäöé]{1,20})\s+([A-ZÅÄÖ][a-zåäöé]{1,20}(?:sson|dotter|berg|ström|lund|qvist|kvist|gren|man|stad|stedt)?)\b/g,
+                    // ALL CAPS full names: "FIRSTNAME LASTNAME" (2+ letters each)
+                    /\b([A-ZÅÄÖ]{2,20})\s+([A-ZÅÄÖ]{2,20})\b/g,
+                    // Single known names (short/unique) — matched against common Swedish name list
+                    /\b([A-ZÅÄÖ][a-zåäöé]{1,20})\b/g,
+                    // Single ALL CAPS name: "ZID", "BJÖRN" (3+ letters to reduce noise)
+                    /\b([A-ZÅÄÖ]{3,20})\b/g
+                ],
+                validate: function(match) {
+                    var normalized = match.trim();
+                    var skipWords = ['Den','Det','Denna','Dessa','Eller','Efter','Under','Över','Från',
+                        'Med','Vid','Till','The','For','And','But','Not','All','This','That',
+                        'Hej','Tack','Mvh','Var','Kan','Ska','Har','Bästa','Vänliga','Skulle',
+                        'Enligt','Mellan','Genom','Utan','Inom','Sedan','Redan','Också',
+                        'Första','Andra','Tredje','Varje','Många','Några','Stora','Lilla',
+                        'Hela','Alla','Samma','Inga','Svenska','Svensk','Stockholm',
+                        'Göteborg','Malmö','Uppsala','Umeå','Tel','Fax','Mob','Ref',
+                        'OBS','VIP','PDF','URL','API','SQL','CSS','DNS','USB','SMS','MMS',
+                        'POST','GET','PUT','NEW','OLD','YES','NOT','THE','FOR','AND','BUT',
+                        'HEJ','MVH','HAR','KAN','SKA','VAR','ATT','SOM','ETT','VID',
+                        'FRÅN','TILL','ALLA','INTE','DETTA','DENNA','DESSA','UNDER','EFTER',
+                        'ELLER','MELLAN','GENOM','UTAN','INOM','SEDAN','REDAN','OCKSÅ',
+                        'FÖRSTA','ANDRA','TREDJE','VARJE','MÅNGA','NÅGRA','STORA',
+                        'SVENSKA','SVENSK','Dag','Tid','Plats','Namn','Epost'];
+                    var parts = normalized.split(/\s+/);
+                    // Two-word match (full name) — just check skip words
+                    if (parts.length >= 2) {
+                        for (var i = 0; i < parts.length; i++) {
+                            // Case-insensitive skip check
+                            var titlePart = parts[i].charAt(0).toUpperCase() + parts[i].slice(1).toLowerCase();
+                            if (skipWords.indexOf(titlePart) !== -1 || skipWords.indexOf(parts[i]) !== -1) return false;
+                            if (parts[i].length < 2) return false;
+                        }
+                        return true;
+                    }
+                    // Single-word match — only accept if it's a known name
+                    var knownNames = [
+                        // Common Swedish first names (mix of male/female)
+                        'Anna','Erik','Maria','Karl','Eva','Lars','Karin','Anders','Sara','Johan',
+                        'Emma','Per','Lena','Olof','Elin','Nils','Hanna','Sven','Ida','Magnus',
+                        'Lisa','Fredrik','Malin','Gustaf','Sofia','Axel','Klara','Oscar','Maja',
+                        'Viktor','Julia','Henrik','Linnéa','Martin','Alice','Daniel','Elsa',
+                        'Mattias','Astrid','Andreas','Freja','Mikael','Ebba','Jonas','Wilma',
+                        'Tobias','Saga','Stefan','Agnes','Robert','Olivia','Thomas','Ella',
+                        'Jan','Peter','Bo','Ulf','Bengt','Göran','Leif','Mats','Rolf','Björn',
+                        'Gunnar','Ingvar','Arne','Lennart','Christer','Håkan','Tommy','Roger',
+                        'Kenneth','Kjell','Birgitta','Margareta','Ingrid','Kristina','Elisabet',
+                        'Marianne','Annika','Monica','Helena','Carina','Susanne','Katarina',
+                        'Camilla','Marie','Johanna','Linda','Jenny','Sandra','Jessica','Louise',
+                        'Alexander','William','Lucas','Liam','Hugo','Leo','Theo','Noah',
+                        'Zid','Björk','Alva','Tove','Greta','Britt','Inga','Ove','Åke','Alf',
+                        // Common Swedish last names
+                        'Andersson','Johansson','Karlsson','Nilsson','Eriksson','Larsson',
+                        'Olsson','Persson','Svensson','Gustafsson','Pettersson','Jonsson',
+                        'Jansson','Hansson','Bengtsson','Jönsson','Lindberg','Lindström',
+                        'Lindgren','Lindqvist','Axelsson','Berg','Bergström','Lundberg',
+                        'Fredriksson','Sandberg','Henriksson','Forsberg','Sjöberg','Wallin',
+                        'Engström','Danielsson','Håkansson','Lundin','Gunnarsson','Holm',
+                        'Fransson','Samuelsson','Nyström','Nordin','Eklund','Holmberg'
+                    ];
+                    // Check case-insensitive against known names
+                    var titleCase = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+                    return knownNames.indexOf(titleCase) !== -1;
+                }
+            },
+            address: {
+                label: 'Adress',
+                patterns: [
+                    // Swedish street address: "Gatan 123" or "Vägen 45A"
+                    /\b[A-ZÅÄÖ][a-zåäö]+(?:gatan|vägen|stigen|allén|torget|platsen|gränd|backen|plan)\s+\d{1,5}\s*[A-Za-z]?\b/gi,
+                    // Postal code + city: "123 45 Stockholm"
+                    /\b\d{3}\s?\d{2}\s+[A-ZÅÄÖ][a-zåäö]+\b/g
+                ]
+            },
+            iban: {
+                label: 'IBAN/Bankkonto',
+                patterns: [
+                    /\b[A-Z]{2}\d{2}[\s]?\d{4}[\s]?\d{4}[\s]?\d{4}[\s]?\d{0,4}[\s]?\d{0,4}\b/g, // IBAN
+                    /\b\d{4}[\s\-]?\d{2}[\s\-]?\d{5}[\s\-]?\d{1}\b/g // Swedish clearing + account
+                ]
+            },
+            ip: {
+                label: 'IP-adress',
+                patterns: [
+                    /\b(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\b/g, // IPv4
+                    /\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b/g // IPv6 (simple)
+                ]
+            },
+            creditcard: {
+                label: 'Kortnummer',
+                patterns: [
+                    /\b(?:\d{4}[\s\-]?){3}\d{4}\b/g
+                ],
+                validate: function(match) {
+                    // Luhn check
+                    var digits = match.replace(/[\s\-]/g, '');
+                    if (digits.length < 13 || digits.length > 19) return false;
+                    var sum = 0;
+                    var alt = false;
+                    for (var i = digits.length - 1; i >= 0; i--) {
+                        var n = parseInt(digits[i]);
+                        if (alt) { n *= 2; if (n > 9) n -= 9; }
+                        sum += n;
+                        alt = !alt;
+                    }
+                    return sum % 10 === 0;
+                }
+            },
+            url: {
+                label: 'URL',
+                patterns: [
+                    /https?:\/\/[^\s<>"']+/gi
+                ]
+            },
+            // date removed — regular dates (2025-01-06) should not be redacted
+            signature: {
+                label: 'Signatur',
+                patterns: [
+                    // Detect email signatures: a block starting with common signature markers
+                    // followed by name, title, contact info across multiple lines
+                    // Uses multiline mode to match across lines
+                ],
+                // Signature uses a custom scan function instead of simple regex
+                customScan: function(text) {
+                    var findings = [];
+
+                    // Strategy: Look for signature-like blocks by finding clusters of PII
+                    // A signature typically has: name + (phone|email|title|company) within a few lines
+
+                    // Split into lines and scan for signature start markers
+                    var lines = text.split('\n');
+                    var sigMarkers = [
+                        /^[\s]*[-–—]{2,}/,                                    // -- or ——
+                        /^[\s]*(Med\s+)?v[aä]nlig[a]?\s+h[aä]lsning/i,       // Med vänlig hälsning / Vänliga hälsningar
+                        /^[\s]*mvh\b/i,                                        // Mvh
+                        /^[\s]*best\s+regards?/i,                              // Best regards
+                        /^[\s]*kind\s+regards?/i,                              // Kind regards
+                        /^[\s]*regards?[,]?\s*$/i,                             // Regards,
+                        /^[\s]*cheers[,]?\s*$/i,                               // Cheers,
+                        /^[\s]*tack\s+p[åa]\s+f[öo]rhand/i,                   // Tack på förhand
+                        /^[\s]*h[aä]lsningar?[,]?\s*$/i,                       // Hälsningar / Hälsning
+                        /^[\s]*sent\s+from\s+(my\s+)?(iphone|ipad|samsung|android|outlook)/i, // Sent from my iPhone
+                        /^[\s]*skickat\s+fr[åa]n\s+(min|mitt)/i               // Skickat från min
+                    ];
+
+                    // Also detect "implicit" signatures: a block at the end with name + contact info
+                    // Look for patterns like: Name\nTitle\nCompany\nTel: xxx\nEmail: xxx
+                    var contactLinePattern = /^[\s]*(tel(?:efon)?|phone|mob(?:il)?|fax|e-?post|e-?mail|webb|web|www|direkt|direct|kontor|office|avd|avdelning|org\.?\s*nr)[:\s]/i;
+                    var nameLinePattern = /^[\s]*[A-ZÅÄÖÜ][a-zåäöüé]+(?:\s+[A-ZÅÄÖÜ][a-zåäöüé]+)+[\s]*$/;
+                    var capsNameLinePattern = /^[\s]*[A-ZÅÄÖ]{2,}(?:\s+[A-ZÅÄÖ]{2,})+[\s]*$/;
+                    var titleLinePattern = /^[\s]*(VD|CEO|CTO|CFO|COO|CIO|CMO|CPO|CDO|Manager|Chef|Ansvarig|Specialist|Konsult|Koordinator|Handläggare|Projektledare|Teamledare|Utvecklare|Designer|Säljare|Rådgivare|Analytiker|Redaktör|Administratör|IT[-\s]|Support|Kundvård|Drift|Tekniker)/i;
+
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+                        var sigStart = -1;
+
+                        // Check for explicit signature marker
+                        for (var m = 0; m < sigMarkers.length; m++) {
+                            if (sigMarkers[m].test(line)) {
+                                sigStart = i;
+                                break;
+                            }
+                        }
+
+                        // Check for implicit signature: name-like line followed by contact info
+                        if (sigStart === -1 && (nameLinePattern.test(line) || capsNameLinePattern.test(line))) {
+                            // Look ahead: do the next few lines have contact info?
+                            var contactLines = 0;
+                            var lookAhead = Math.min(i + 8, lines.length);
+                            for (var j = i + 1; j < lookAhead; j++) {
+                                if (contactLinePattern.test(lines[j]) ||
+                                    /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/.test(lines[j]) ||
+                                    /(?:\+\d{1,3}|0)\s*\d[\s\-\d]{6,}/.test(lines[j])) {
+                                    contactLines++;
+                                }
+                            }
+                            // Need at least 2 contact-like lines to call it a signature
+                            if (contactLines >= 2) {
+                                sigStart = i;
+                            }
+                        }
+
+                        if (sigStart !== -1) {
+                            // Find signature end: go until end of text or a blank-line gap > 2 lines
+                            var sigEnd = lines.length - 1;
+                            var blankCount = 0;
+                            for (var k = sigStart + 1; k < lines.length; k++) {
+                                if (lines[k].trim() === '') {
+                                    blankCount++;
+                                    if (blankCount > 2) {
+                                        sigEnd = k - blankCount;
+                                        break;
+                                    }
+                                } else {
+                                    blankCount = 0;
+                                    sigEnd = k;
+                                }
+                            }
+
+                            // Calculate character positions
+                            var startPos = 0;
+                            for (var si = 0; si < sigStart; si++) {
+                                startPos += lines[si].length + 1; // +1 for \n
+                            }
+                            var endPos = 0;
+                            for (var ei = 0; ei <= sigEnd; ei++) {
+                                endPos += lines[ei].length + 1;
+                            }
+                            endPos--; // remove last \n
+
+                            // Only count if the signature block has enough substance (at least 2 lines)
+                            if (sigEnd - sigStart >= 1) {
+                                findings.push({
+                                    type: 'signature',
+                                    label: 'Signatur',
+                                    value: text.substring(startPos, endPos),
+                                    start: startPos,
+                                    end: endPos,
+                                    removed: false,
+                                    isBlock: true  // Special flag for block-level findings
+                                });
+                            }
+
+                            break; // Only find the first signature per text
+                        }
+                    }
+
+                    return findings;
+                }
+            }
+        };
+
+        function getAllPiiCategories() {
+            return Object.keys(PII_PATTERNS);
+        }
+
+        // Placeholder mapping for each PII type
+        function piiPlaceholder(finding) {
+            var type = finding.type;
+            var val = finding.value;
+
+            if (type === 'name') {
+                // Smart name replacement: try to distinguish first name vs last name
+                var parts = val.trim().split(/\s+/);
+                if (parts.length >= 2) {
+                    // Full name → "[förnamn] [efternamn]"
+                    return '[förnamn] [efternamn]';
+                }
+                // Single name — check if it looks like a last name (common suffixes)
+                var lower = val.toLowerCase();
+                if (/(?:sson|dotter|berg|ström|lund|qvist|kvist|gren|stad|stedt|man)$/.test(lower)) {
+                    return '[efternamn]';
+                }
+                // Check if this name was derived from an email or appears as part of a
+                // previously-found full name — use context from _piiNameContext
+                if (_piiNameContext[lower] === 'last' || _piiNameContext[val] === 'last') {
+                    return '[efternamn]';
+                }
+                return '[förnamn]';
+            }
+
+            switch (type) {
+                case 'personnummer': return '[personnummer]';
+                case 'email':        return '[e-post]';
+                case 'phone':        return '[telefon]';
+                case 'address':      return '[adress]';
+                case 'iban':         return '[bankkonto]';
+                case 'ip':           return '[ip-adress]';
+                case 'creditcard':   return '[kortnummer]';
+                case 'url':          return '[url]';
+                case 'signature':    return '[signatur]';
+                case 'custom':       return '[' + (finding.label || 'data') + ']';
+                default:             return '[' + type + ']';
+            }
+        }
+
+        // Context map built during scan: lowercase name → 'first' | 'last'
+        var _piiNameContext = {};
+
+        // File handling
+        function piiHandleFiles(fileList) {
+            if (!fileList || !fileList.length) return;
+            var promises = [];
+            for (var i = 0; i < fileList.length; i++) {
+                (function(file) {
+                    promises.push(new Promise(function(resolve) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            resolve({ name: file.name, content: e.target.result });
+                        };
+                        reader.onerror = function() { resolve(null); };
+                        reader.readAsText(file, 'UTF-8');
+                    }));
+                })(fileList[i]);
+            }
+            Promise.all(promises).then(function(results) {
+                results.forEach(function(r) {
+                    if (r) _piiFiles.push(r);
+                });
+                renderPiiFileList();
+                // If only one file loaded and no text, auto-select it
+                if (_piiFiles.length === 1 && !document.getElementById('pii-input').value.trim()) {
+                    piiSelectFile(0);
+                } else if (_piiFiles.length > 0 && _piiActiveFileIdx === -1) {
+                    piiSelectFile(_piiFiles.length - 1);
+                }
+                showToast(_piiFiles.length + ' fil(er) laddade');
+            });
+            // Reset file input so same files can be loaded again
+            document.getElementById('piiFileInput').value = '';
+        }
+
+        function renderPiiFileList() {
+            var container = document.getElementById('piiFileList');
+            if (_piiFiles.length === 0) { container.innerHTML = ''; return; }
+            container.innerHTML = _piiFiles.map(function(f, idx) {
+                var active = idx === _piiActiveFileIdx;
+                return '<span class="pii-file-chip' + (active ? ' active' : '') + '" onclick="piiSelectFile(' + idx + ')">' +
+                    '<i class="icon-document-text"></i> ' + escPiiHtml(f.name) +
+                    '<span class="remove-file" onclick="event.stopPropagation();piiRemoveFile(' + idx + ')">✕</span>' +
+                    '</span>';
+            }).join('');
+        }
+
+        function piiSelectFile(idx) {
+            if (idx < 0 || idx >= _piiFiles.length) return;
+            _piiActiveFileIdx = idx;
+            document.getElementById('pii-input').value = _piiFiles[idx].content;
+            renderPiiFileList();
+            // Auto-scan
+            scanPii();
+        }
+
+        function piiRemoveFile(idx) {
+            _piiFiles.splice(idx, 1);
+            if (_piiActiveFileIdx >= _piiFiles.length) _piiActiveFileIdx = _piiFiles.length - 1;
+            if (_piiActiveFileIdx >= 0) {
+                piiSelectFile(_piiActiveFileIdx);
+            } else {
+                _piiActiveFileIdx = -1;
+                document.getElementById('pii-input').value = '';
+                clearPii();
+            }
+            renderPiiFileList();
+        }
+
+        // Setup drag & drop on the drop zone + auto-scan on paste
+        (function() {
+            var dz = document.getElementById('piiDropZone');
+            if (!dz) return;
+            dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('dragover'); });
+            dz.addEventListener('dragleave', function() { dz.classList.remove('dragover'); });
+            dz.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dz.classList.remove('dragover');
+                if (e.dataTransfer.files.length) piiHandleFiles(e.dataTransfer.files);
+            });
+
+            // Also allow drag & drop files directly on the textarea
+            var ta = document.getElementById('pii-input');
+            if (ta) {
+                ta.addEventListener('dragover', function(e) {
+                    if (e.dataTransfer.types.indexOf('Files') !== -1) {
+                        e.preventDefault();
+                        ta.style.borderColor = 'var(--ic-primary)';
+                    }
+                });
+                ta.addEventListener('dragleave', function() { ta.style.borderColor = ''; });
+                ta.addEventListener('drop', function(e) {
+                    ta.style.borderColor = '';
+                    if (e.dataTransfer.files.length) {
+                        e.preventDefault();
+                        piiHandleFiles(e.dataTransfer.files);
+                    }
+                });
+                // Auto-scan on paste
+                ta.addEventListener('paste', function() {
+                    setTimeout(function() { if (ta.value.trim()) scanPii(); }, 100);
+                });
+            }
+        })();
+
+        function scanPii() {
+            var text = document.getElementById('pii-input').value;
+            if (!text.trim()) { showToast('Skriv eller klistra in text först'); return; }
+
+            _piiOriginalText = text;
+            _piiFindings = [];
+
+            // Run ALL pattern categories
+            getAllPiiCategories().forEach(function(cat) {
+                var def = PII_PATTERNS[cat];
+                if (!def) return;
+
+                // Custom scan function (e.g. signatures)
+                if (def.customScan) {
+                    var customFindings = def.customScan(text);
+                    customFindings.forEach(function(f) { _piiFindings.push(f); });
+                    return;
+                }
+
+                def.patterns.forEach(function(pattern) {
+                    var re = new RegExp(pattern.source, pattern.flags);
+                    var match;
+                    while ((match = re.exec(text)) !== null) {
+                        var value = match[0];
+                        if (def.validate && !def.validate(value)) continue;
+                        var dup = _piiFindings.some(function(f) {
+                            return f.start === match.index && f.end === match.index + value.length;
+                        });
+                        if (dup) continue;
+                        _piiFindings.push({
+                            type: cat,
+                            label: def.label,
+                            value: value,
+                            start: match.index,
+                            end: match.index + value.length,
+                            removed: false
+                        });
+                    }
+                });
+            });
+
+            // === Derived name detection ===
+            // Extract name parts from found names and emails, then search for
+            // those as standalone occurrences elsewhere in the text
+            var derivedNames = new Set();
+            var skipDerived = ['info','admin','support','noreply','no-reply','kontakt','contact',
+                'test','dev','mail','post','sales','help','office','drift','system','www',
+                'com','se','org','net','nu','io','co','eu'];
+
+            // Build name context (first/last) from full names and emails
+            _piiNameContext = {};
+
+            _piiFindings.forEach(function(f) {
+                if (f.type === 'name') {
+                    // Split full name into parts: "Björn Johansson" → ["Björn","Johansson"]
+                    var parts = f.value.trim().split(/\s+/);
+                    parts.forEach(function(part, idx) {
+                        if (part.length >= 2) {
+                            derivedNames.add(part);
+                            // First word = first name, last word = last name
+                            var role = (idx === 0) ? 'first' : 'last';
+                            _piiNameContext[part.toLowerCase()] = role;
+                            _piiNameContext[part] = role;
+                        }
+                    });
+                }
+                if (f.type === 'email') {
+                    // Extract local part: "bjorn.johansson@example.com" → "bjorn.johansson"
+                    var localPart = f.value.split('@')[0];
+                    if (localPart) {
+                        // Split on dots, hyphens, underscores: "bjorn.johansson" → ["bjorn","johansson"]
+                        var emailParts = localPart.split(/[.\-_+]/);
+                        emailParts.forEach(function(part, idx) {
+                            part = part.trim();
+                            if (part.length >= 2 && skipDerived.indexOf(part.toLowerCase()) === -1) {
+                                var titleCase = part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+                                derivedNames.add(titleCase);
+                                // In email "first.last@...", first part = first name, last = last name
+                                var role = (idx === 0 && emailParts.length > 1) ? 'first' : 'last';
+                                _piiNameContext[part.toLowerCase()] = role;
+                                _piiNameContext[titleCase] = role;
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Search for each derived name as a standalone word in the text
+            if (derivedNames.size > 0) {
+                derivedNames.forEach(function(name) {
+                    // Build case-insensitive word-boundary regex
+                    var escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    var re = new RegExp('\\b(' + escaped + ')\\b', 'gi');
+                    var match;
+                    while ((match = re.exec(text)) !== null) {
+                        var mStart = match.index;
+                        var mEnd = mStart + match[0].length;
+                        // Skip if this position is already covered by any existing finding
+                        var alreadyCovered = _piiFindings.some(function(f) {
+                            return mStart >= f.start && mEnd <= f.end;
+                        });
+                        if (alreadyCovered) continue;
+                        _piiFindings.push({
+                            type: 'name',
+                            label: 'Namn',
+                            value: match[0],
+                            start: mStart,
+                            end: mEnd,
+                            removed: false
+                        });
+                    }
+                });
+            }
+
+            // Separate block findings (signatures) from regular findings
+            var blockFindings = _piiFindings.filter(function(f) { return f.isBlock; });
+            var regularFindings = _piiFindings.filter(function(f) { return !f.isBlock; });
+
+            // Sort regular findings by position, longest first for overlaps
+            regularFindings.sort(function(a, b) { return a.start - b.start || (b.end - b.start) - (a.end - a.start); });
+
+            // Remove overlapping regular findings (keep longest)
+            var filtered = [];
+            var lastEnd = -1;
+            regularFindings.forEach(function(f) {
+                if (f.start >= lastEnd) {
+                    filtered.push(f);
+                    lastEnd = f.end;
+                }
+            });
+
+            _piiBlockFindings = blockFindings;
+            _piiFindings = filtered.concat(blockFindings);
+            _piiFindings.sort(function(a, b) { return a.start - b.start; });
+
+            renderPiiResults();
+        }
+
+        function renderPiiResults() {
+            var text = _piiOriginalText;
+
+            // Stats bar
+            var statsBar = document.getElementById('piiStatsBar');
+            var countByType = {};
+            _piiFindings.forEach(function(f) {
+                if (!f.isBlock) countByType[f.label] = (countByType[f.label] || 0) + 1;
+            });
+            var nonBlock = _piiFindings.filter(function(f) { return !f.isBlock; });
+            var removedCount = nonBlock.filter(function(f) { return f.removed; }).length;
+
+            if (nonBlock.length === 0 && _piiBlockFindings.length === 0) {
+                statsBar.innerHTML = '<span class="pii-stat-chip cat"><i class="icon-check-circle"></i> Inga personuppgifter hittades</span>';
+            } else {
+                var chips = '<span class="pii-stat-chip total"><i class="icon-search"></i> ' + nonBlock.length + ' fynd</span>';
+                if (removedCount > 0) chips += '<span class="pii-stat-chip total" style="background:#d1fae5;color:#065f46;"><i class="icon-shield-check"></i> ' + removedCount + ' ersatta</span>';
+                if (_piiBlockFindings.length > 0) chips += '<span class="pii-stat-chip sig"><i class="icon-pencil"></i> ' + _piiBlockFindings.length + ' signatur(er)</span>';
+                Object.entries(countByType).forEach(function(e) {
+                    chips += '<span class="pii-stat-chip cat">' + escPiiHtml(e[0]) + ': ' + e[1] + '</span>';
+                });
+                statsBar.innerHTML = chips;
+            }
+
+            // Right panel: cleaned text (PII removed)
+            var resultBox = document.getElementById('piiResultBox');
+            var resultHtml = '';
+            var lastIdx = 0;
+            // Only non-block findings for the result view
+            var sigBlock = _piiBlockFindings.length > 0 ? _piiBlockFindings[0] : null;
+            var sigIdx = sigBlock ? _piiFindings.indexOf(sigBlock) : -1;
+
+            // Build result: text with removed findings stripped out or shown as marks
+            // Also build the left-side highlight annotations
+            var allNonBlock = _piiFindings.filter(function(f) { return !f.isBlock; });
+
+            // Handle signature block removal
+            var sigRemoved = sigBlock && sigBlock.removed;
+
+            // Merge findings into rendering order
+            var renderItems = [];
+            allNonBlock.forEach(function(f) { renderItems.push(f); });
+            // Sorted by start
+            renderItems.sort(function(a, b) { return a.start - b.start; });
+
+            resultHtml = '';
+            lastIdx = 0;
+            var inSig = false;
+
+            renderItems.forEach(function(f, i) {
+                var realIdx = _piiFindings.indexOf(f);
+                var insideRemovedSig = sigRemoved && sigBlock && f.start >= sigBlock.start && f.end <= sigBlock.end;
+
+                // If we're about to enter the signature block zone, insert sig marker
+                if (sigBlock && !inSig && f.start >= sigBlock.start && f.end <= sigBlock.end) {
+                    if (sigRemoved) {
+                        // Signature is removed — skip all content from sig start to sig end
+                        return;
+                    }
+                    // Insert sig start marker
+                    if (lastIdx < sigBlock.start) {
+                        resultHtml += escPiiHtml(text.substring(lastIdx, sigBlock.start));
+                        lastIdx = sigBlock.start;
+                    }
+                    resultHtml += '<div class="pii-sig-block">';
+                    resultHtml += '<span class="pii-mark" data-cat="signature" style="font-size:0.7em;cursor:pointer;display:inline-block;margin-bottom:2px;" data-pii-type="Signatur" onclick="togglePiiRemove(' + sigIdx + ')"><i class="icon-pencil"></i> Signatur</span><br>';
+                    inSig = true;
+                }
+
+                if (insideRemovedSig) return; // skip items inside removed sig
+
+                // Text before finding
+                resultHtml += escPiiHtml(text.substring(lastIdx, f.start));
+
+                if (f.removed) {
+                    // Show placeholder instead of original value
+                    var ph = piiPlaceholder(f);
+                    resultHtml += '<span class="pii-mark removed" data-cat="' + f.type + '" data-pii-type="' + escPiiHtml(f.label) + '" onclick="togglePiiRemove(' + realIdx + ')">' + escPiiHtml(ph) + '</span>';
+                } else {
+                    // Show as highlighted mark (click to replace)
+                    resultHtml += '<span class="pii-mark" data-cat="' + f.type + '" data-pii-type="' + escPiiHtml(f.label) + '" onclick="togglePiiRemove(' + realIdx + ')">' + escPiiHtml(f.value) + '</span>';
+                }
+                lastIdx = f.end;
+
+                // Close sig block if next item is outside or this is last inside
+                if (inSig && sigBlock) {
+                    var nextItem = renderItems[i + 1];
+                    if (!nextItem || nextItem.start >= sigBlock.end) {
+                        resultHtml += escPiiHtml(text.substring(lastIdx, sigBlock.end));
+                        lastIdx = sigBlock.end;
+                        resultHtml += '</div>';
+                        inSig = false;
+                    }
+                }
+            });
+
+            // Handle signature with no individual findings inside
+            if (sigBlock && !sigRemoved) {
+                var anyInsideSig = renderItems.some(function(f) { return f.start >= sigBlock.start && f.end <= sigBlock.end; });
+                if (!anyInsideSig) {
+                    resultHtml += escPiiHtml(text.substring(lastIdx, sigBlock.start));
+                    resultHtml += '<div class="pii-sig-block">';
+                    resultHtml += '<span class="pii-mark" data-cat="signature" style="font-size:0.7em;cursor:pointer;display:inline-block;margin-bottom:2px;" data-pii-type="Signatur" onclick="togglePiiRemove(' + sigIdx + ')"><i class="icon-pencil"></i> Signatur</span><br>';
+                    resultHtml += escPiiHtml(sigBlock.value);
+                    resultHtml += '</div>';
+                    lastIdx = sigBlock.end;
+                }
+            }
+
+            // Handle removed sig — show placeholder instead of content
+            if (sigRemoved && sigBlock) {
+                if (lastIdx < sigBlock.start) {
+                    resultHtml += escPiiHtml(text.substring(lastIdx, sigBlock.start));
+                }
+                resultHtml += '<span class="pii-mark removed" data-cat="signature" data-pii-type="Signatur" onclick="togglePiiRemove(' + sigIdx + ')">[signatur]</span>';
+                lastIdx = Math.max(lastIdx, sigBlock.end);
+            }
+
+            if (inSig) {
+                if (sigBlock && lastIdx < sigBlock.end) {
+                    resultHtml += escPiiHtml(text.substring(lastIdx, sigBlock.end));
+                    lastIdx = sigBlock.end;
+                }
+                resultHtml += '</div>';
+            }
+
+            resultHtml += escPiiHtml(text.substring(lastIdx));
+            resultBox.innerHTML = resultHtml;
+        }
+
+        function togglePiiRemove(idx) {
+            if (idx < 0 || idx >= _piiFindings.length) return;
+            var f = _piiFindings[idx];
+            var newState = !f.removed;
+            f.removed = newState;
+
+            // If toggling a signature block, also toggle all findings inside it
+            if (f.isBlock) {
+                _piiFindings.forEach(function(other) {
+                    if (other === f || other.isBlock) return;
+                    if (other.start >= f.start && other.end <= f.end) {
+                        other.removed = newState;
+                    }
+                });
+            }
+
+            renderPiiResults();
+        }
+
+        function piiRemoveAll() {
+            if (_piiFindings.length === 0) {
+                scanPii();
+                if (_piiFindings.length === 0) return;
+            }
+            _piiFindings.forEach(function(f) { f.removed = true; });
+            renderPiiResults();
+            var count = _piiFindings.filter(function(f) { return !f.isBlock; }).length;
+            showToast(count + ' personuppgifter ersatta');
+        }
+
+        function piiRestoreAll() {
+            _piiFindings.forEach(function(f) { f.removed = false; });
+            renderPiiResults();
+        }
+
+        function buildCleanText() {
+            var text = _piiOriginalText;
+            if (!text) return '';
+            // Build cleaned version — replace findings with placeholders from end to preserve offsets
+            var sorted = _piiFindings.slice().sort(function(a, b) { return b.start - a.start; });
+            sorted.forEach(function(f) {
+                if (f.removed) {
+                    var ph = piiPlaceholder(f);
+                    text = text.substring(0, f.start) + ph + text.substring(f.end);
+                }
+            });
+            // Clean up multiple blank lines left by signature replacement
+            text = text.replace(/\n{3,}/g, '\n\n').trim();
+            return text;
+        }
+
+        function copyPiiResult() {
+            var clean = buildCleanText();
+            if (!clean && _piiOriginalText) clean = _piiOriginalText;
+            if (!clean) { showToast('Ingen text att kopiera'); return; }
+            navigator.clipboard.writeText(clean).then(function() {
+                showToast('Rensad text kopierad!');
+            });
+        }
+
+        function savePiiResult() {
+            var clean = buildCleanText();
+            if (!clean && _piiOriginalText) clean = _piiOriginalText;
+            if (!clean) { showToast('Ingen text att spara'); return; }
+
+            // Determine filename
+            var filename = 'rensad_text.txt';
+            if (_piiActiveFileIdx >= 0 && _piiFiles[_piiActiveFileIdx]) {
+                var origName = _piiFiles[_piiActiveFileIdx].name;
+                var dotIdx = origName.lastIndexOf('.');
+                if (dotIdx > 0) {
+                    filename = origName.substring(0, dotIdx) + '_rensad' + origName.substring(dotIdx);
+                } else {
+                    filename = origName + '_rensad';
+                }
+            }
+
+            var blob = new Blob([clean], { type: 'text/plain;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Sparad som ' + filename);
+        }
+
+        function clearPii() {
+            document.getElementById('pii-input').value = '';
+            _piiFindings = [];
+            _piiBlockFindings = [];
+            _piiOriginalText = '';
+            _piiFiles = [];
+            _piiActiveFileIdx = -1;
+            document.getElementById('piiResultBox').innerHTML = '';
+            document.getElementById('piiStatsBar').innerHTML = '';
+            document.getElementById('piiFileList').innerHTML = '';
+        }
+
+        function escPiiHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ========================
+        // Drag and drop
+        // ========================
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', e => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    // Trigger the corresponding file handler
+                    const input = zone.parentElement.querySelector('input[type="file"]');
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    input.files = dataTransfer.files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trigga Händelser</title>
+    <link rel="stylesheet" href="../../shared/ic-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ic-primary: #5458F2;
+            --ic-primary-hover: #4347d9;
+            --ic-radius-sm: 6px;
+            --ic-radius-md: 10px;
+            --ic-radius-lg: 16px;
+            --ic-text-dark: #323232;
+            --ic-text-muted: #6c757d;
+            --ic-bg-light: #f8f9fc;
+            --ic-bg-white: #ffffff;
+            --ic-success: #10b981;
+            --ic-danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ic-bg-light);
+            color: var(--ic-text-dark);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 1.6em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: var(--ic-text-muted);
+            font-size: 0.95em;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: var(--ic-radius-md);
+            padding: 16px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            cursor: default;
+        }
+
+        .progress-step .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #718096;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .progress-step.active .step-num {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .progress-step.done .step-num {
+            background: var(--ic-success);
+            color: white;
+        }
+
+        .progress-step .step-label {
+            font-size: 0.85em;
+            font-weight: 500;
+            color: #a0aec0;
+            transition: color 0.3s;
+        }
+
+        .progress-step.active .step-label,
+        .progress-step.done .step-label {
+            color: var(--ic-text-dark);
+        }
+
+        .progress-line {
+            flex: 0 0 40px;
+            height: 2px;
+            background: #e2e8f0;
+            transition: background 0.3s;
+        }
+
+        .progress-line.done {
+            background: var(--ic-success);
+        }
+
+        /* Steps */
+        .step-content {
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        /* Step 1: Trigger selection */
+        .trigger-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .trigger-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .trigger-card:hover {
+            border-color: var(--ic-primary);
+            box-shadow: 0 4px 15px rgba(84, 88, 242, 0.15);
+        }
+
+        .trigger-card.selected {
+            border-color: var(--ic-primary);
+            background: #f0f0ff;
+        }
+
+        .trigger-card .trigger-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .trigger-card .trigger-name {
+            font-weight: 600;
+            font-size: 0.95em;
+            margin-bottom: 4px;
+        }
+
+        .trigger-card .trigger-desc {
+            font-size: 0.8em;
+            color: var(--ic-text-muted);
+        }
+
+        /* Step 2: Events */
+        .events-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .event-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            padding: 20px;
+            position: relative;
+        }
+
+        .event-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .event-card-header h3 {
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-remove {
+            background: none;
+            border: none;
+            color: #cbd5e0;
+            cursor: pointer;
+            font-size: 1.3em;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .event-remove:hover {
+            color: var(--ic-danger);
+        }
+
+        .event-type-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: var(--ic-radius-sm);
+            font-family: inherit;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            background: white;
+        }
+
+        .event-type-select:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+        }
+
+        .event-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .field-group label {
+            font-size: 0.8em;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .field-group input,
+        .field-group textarea,
+        .field-group select {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: var(--ic-radius-sm);
+            font-family: inherit;
+            font-size: 0.9em;
+        }
+
+        .field-group input:focus,
+        .field-group textarea:focus,
+        .field-group select:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 2px rgba(84, 88, 242, 0.15);
+        }
+
+        .field-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .field-hint {
+            font-size: 0.75em;
+            color: #a0aec0;
+            margin-top: 2px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            padding: 6px 14px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 500;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: var(--ic-primary);
+            color: white;
+            border-color: var(--ic-primary);
+        }
+
+        /* Course cases */
+        .course-case {
+            background: #f8f9fc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--ic-radius-sm);
+            padding: 15px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .course-case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .course-case-header h4 {
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+
+        .add-case-btn {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #cbd5e0;
+            background: transparent;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85em;
+            color: var(--ic-text-muted);
+            transition: all 0.2s;
+        }
+
+        .add-case-btn:hover {
+            border-color: var(--ic-primary);
+            color: var(--ic-primary);
+        }
+
+        .add-event-btn {
+            width: 100%;
+            padding: 14px;
+            border: 2px dashed #cbd5e0;
+            background: transparent;
+            border-radius: var(--ic-radius-md);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: var(--ic-text-muted);
+            transition: all 0.2s;
+        }
+
+        .add-event-btn:hover {
+            border-color: var(--ic-primary);
+            color: var(--ic-primary);
+            background: #f0f0ff;
+        }
+
+        /* Step 3: Code output */
+        .code-output {
+            background: #1e1e2e;
+            border-radius: var(--ic-radius-md);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #2d2d44;
+        }
+
+        .code-header span {
+            color: #a0aec0;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: var(--ic-primary);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8em;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-btn:hover {
+            background: var(--ic-primary-hover);
+        }
+
+        .copy-btn.copied {
+            background: var(--ic-success);
+        }
+
+        .code-body {
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .code-body pre {
+            margin: 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.7;
+            color: #cdd6f4;
+            white-space: pre;
+        }
+
+        /* Syntax highlighting */
+        .code-body .kw { color: #cba6f7; }    /* keywords: var, function, switch, case, if, else, return, break */
+        .code-body .str { color: #a6e3a1; }   /* strings */
+        .code-body .fn { color: #89b4fa; }    /* function names / methods */
+        .code-body .cm { color: #6c7086; }    /* comments */
+        .code-body .num { color: #fab387; }   /* numbers */
+        .code-body .op { color: #89dceb; }    /* operators */
+
+        .code-explanation {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .code-explanation h3 {
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .code-explanation ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .code-explanation li {
+            padding: 6px 0;
+            font-size: 0.9em;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .code-explanation li::before {
+            content: "→";
+            color: var(--ic-primary);
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        /* Navigation buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9em;
+            font-weight: 500;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--ic-primary-hover);
+        }
+
+        .btn-primary:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #4a5568;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-secondary:hover {
+            background: #f7fafc;
+        }
+
+        .btn-success {
+            background: var(--ic-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        /* Ref panel */
+        .ref-panel {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .ref-panel summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--ic-primary);
+        }
+
+        .ref-panel .ref-content {
+            margin-top: 12px;
+            font-size: 0.8em;
+            color: #4a5568;
+        }
+
+        .ref-panel code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+
+        .ref-table td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+
+        .ref-table td:first-child {
+            font-family: 'Consolas', monospace;
+            white-space: nowrap;
+            color: var(--ic-primary);
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 15px; }
+            .trigger-grid { grid-template-columns: 1fr 1fr; }
+            .progress-bar { padding: 12px 16px; }
+            .progress-step .step-label { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span><i class="icon-lightning-bolt"></i></span> Trigga Händelser Builder</h1>
+            <p class="subtitle">Skapa trigger-kod visuellt utan att skriva JavaScript</p>
+        </header>
+
+        <!-- Progress -->
+        <div class="progress-bar">
+            <div class="progress-step active" id="ps1">
+                <span class="step-num">1</span>
+                <span class="step-label">Välj trigger</span>
+            </div>
+            <div class="progress-line" id="pl1"></div>
+            <div class="progress-step" id="ps2">
+                <span class="step-num">2</span>
+                <span class="step-label">Lägg till händelser</span>
+            </div>
+            <div class="progress-line" id="pl2"></div>
+            <div class="progress-step" id="ps3">
+                <span class="step-num">3</span>
+                <span class="step-label">Genererad kod</span>
+            </div>
+        </div>
+
+        <!-- Step 1: Trigger -->
+        <div class="step-content active" id="step1">
+            <h2 style="margin-bottom:15px;">Vilken trigger vill du använda?</h2>
+            <div class="trigger-grid">
+                <div class="trigger-card" onclick="selectTrigger('user_created', this)">
+                    <div class="trigger-icon"><i class="icon-document-add"></i></div>
+                    <div class="trigger-name">Användare skapad</div>
+                    <div class="trigger-desc">Körs när en ny användare skapas (SSO, import, manuellt)</div>
+                </div>
+                <div class="trigger-card" onclick="selectTrigger('user_updated', this)">
+                    <div class="trigger-icon"><i class="icon-pencil"></i></div>
+                    <div class="trigger-name">Användare uppdaterad</div>
+                    <div class="trigger-desc">Körs när en användare uppdateras</div>
+                </div>
+                <div class="trigger-card" onclick="selectTrigger('user_deleted', this)">
+                    <div class="trigger-icon"><i class="icon-trash"></i></div>
+                    <div class="trigger-name">Användare borttagen</div>
+                    <div class="trigger-desc">Körs när en användare tas bort</div>
+                </div>
+                <div class="trigger-card" onclick="selectTrigger('course_approved', this)">
+                    <div class="trigger-icon"><i class="icon-academic-cap"></i></div>
+                    <div class="trigger-name">Godkänd på kurs</div>
+                    <div class="trigger-desc">Körs vid godkänt resultat på en kurs</div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <div></div>
+                <button class="btn btn-primary" id="nextBtn1" disabled onclick="goToStep(2)">Nästa →</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Events -->
+        <div class="step-content" id="step2">
+            <h2 style="margin-bottom:15px;">Vad ska hända?</h2>
+
+            <details class="ref-panel">
+                <summary><i class="icon-book-open"></i> API-referens (ic_pub)</summary>
+                <div class="ref-content">
+                    <table class="ref-table">
+                        <tr><td>ic_pub.getUser(userID)</td><td>Hämta användarobjekt (email, firstName, etc.)</td></tr>
+                        <tr><td>ic_pub.getGroupByName(name)</td><td>Hämta grupp efter namn</td></tr>
+                        <tr><td>ic_pub.createGroup(name)</td><td>Skapa ny grupp</td></tr>
+                        <tr><td>ic_pub.connectUserToGroup(uID, gID)</td><td>Koppla användare till grupp</td></tr>
+                        <tr><td>ic_pub.groupExist(name)</td><td>Kontrollera om grupp finns</td></tr>
+                        <tr><td>ic_pub.sendEmailTo(email, subj, body)</td><td>Skicka e-post</td></tr>
+                        <tr><td>ic_pub.print(text)</td><td>Logga till serverns loggfil</td></tr>
+                    </table>
+                </div>
+            </details>
+
+            <div class="events-container" id="eventsContainer"></div>
+            <button class="add-event-btn" onclick="addEvent()">+ Lägg till händelse</button>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="goToStep(1)">← Tillbaka</button>
+                <button class="btn btn-primary" id="nextBtn2" onclick="goToStep(3)">Generera kod →</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Code -->
+        <div class="step-content" id="step3">
+            <h2 style="margin-bottom:15px;">Genererad kod</h2>
+
+            <div class="code-output">
+                <div class="code-header">
+                    <span>JavaScript — klistra in i Trigga händelser</span>
+                    <button class="copy-btn" id="copyBtn" onclick="copyCode()"><i class="icon-clipboard-copy"></i> Kopiera</button>
+                </div>
+                <div class="code-body">
+                    <pre id="codeOutput"></pre>
+                </div>
+            </div>
+
+            <div class="code-explanation" id="codeExplanation"></div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="goToStep(2)">← Ändra</button>
+                <button class="btn btn-success" onclick="goToStep(1); resetAll();"><i class="icon-lightning-bolt"></i> Skapa ny</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../shared/ic-utils.js"></script>
+    <script>
+        // State
+        let selectedTrigger = null;
+        let events = [];
+        let eventIdCounter = 0;
+
+        const triggerLabels = {
+            user_created: 'Användare skapad',
+            user_updated: 'Användare uppdaterad',
+            user_deleted: 'Användare borttagen',
+            course_approved: 'Godkänd på kurs'
+        };
+
+        // Step navigation
+        function goToStep(n) {
+            document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
+            document.getElementById('step' + n).classList.add('active');
+
+            // Update progress
+            for (let i = 1; i <= 3; i++) {
+                const ps = document.getElementById('ps' + i);
+                ps.classList.remove('active', 'done');
+                if (i < n) ps.classList.add('done');
+                else if (i === n) ps.classList.add('active');
+            }
+            document.getElementById('pl1').classList.toggle('done', n > 1);
+            document.getElementById('pl2').classList.toggle('done', n > 2);
+
+            if (n === 3) generateCode();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Step 1: Select trigger
+        function selectTrigger(type, el) {
+            selectedTrigger = type;
+            document.querySelectorAll('.trigger-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('nextBtn1').disabled = false;
+
+            // Reset events when changing trigger
+            events = [];
+            eventIdCounter = 0;
+            renderEvents();
+        }
+
+        // Step 2: Events
+        function addEvent() {
+            const id = eventIdCounter++;
+            const isCourse = selectedTrigger === 'course_approved';
+
+            events.push({
+                id,
+                type: isCourse ? 'course_flow' : 'group_static',
+                groupName: '',
+                groupMode: 'static',
+                email: '',
+                emailSubject: '',
+                emailBody: '',
+                cases: isCourse ? [{ courseId: '', groupName: '', emailSubject: '', emailBody: '', link: '' }] : []
+            });
+
+            renderEvents();
+        }
+
+        function removeEvent(id) {
+            events = events.filter(e => e.id !== id);
+            renderEvents();
+        }
+
+        function updateEvent(id, field, value) {
+            const evt = events.find(e => e.id === id);
+            if (evt) evt[field] = value;
+        }
+
+        function updateEventType(id, type) {
+            const evt = events.find(e => e.id === id);
+            if (!evt) return;
+            evt.type = type;
+            if (type === 'course_flow' && evt.cases.length === 0) {
+                evt.cases = [{ courseId: '', groupName: '', emailSubject: '', emailBody: '', link: '' }];
+            }
+            renderEvents();
+        }
+
+        function addCase(eventId) {
+            const evt = events.find(e => e.id === eventId);
+            if (evt) {
+                evt.cases.push({ courseId: '', groupName: '', emailSubject: '', emailBody: '', link: '' });
+                renderEvents();
+            }
+        }
+
+        function removeCase(eventId, caseIdx) {
+            const evt = events.find(e => e.id === eventId);
+            if (evt && evt.cases.length > 1) {
+                evt.cases.splice(caseIdx, 1);
+                renderEvents();
+            }
+        }
+
+        function updateCase(eventId, caseIdx, field, value) {
+            const evt = events.find(e => e.id === eventId);
+            if (evt && evt.cases[caseIdx]) {
+                evt.cases[caseIdx][field] = value;
+            }
+        }
+
+        function renderEvents() {
+            const container = document.getElementById('eventsContainer');
+            const isCourse = selectedTrigger === 'course_approved';
+
+            if (events.length === 0) {
+                container.innerHTML = '<p style="color:#a0aec0;text-align:center;padding:20px;">Klicka "Lägg till händelse" för att börja</p>';
+                return;
+            }
+
+            const eventTypeOptions = isCourse
+                ? `<option value="course_flow">Kursflöde (grupp + mail per kurs)</option>
+                   <option value="send_email">Skicka e-post</option>`
+                : `<option value="group_static">Koppla till statisk grupp</option>
+                   <option value="group_dynamic">Koppla till grupp (e-postdomän)</option>
+                   <option value="send_email">Skicka e-post</option>
+                   <option value="send_notification">Skicka notifiering till admin</option>`;
+
+            container.innerHTML = events.map(evt => {
+                let fieldsHtml = '';
+
+                if (evt.type === 'group_static') {
+                    fieldsHtml = `
+                        <div class="field-group">
+                            <label>Gruppnamn *</label>
+                            <input type="text" placeholder="T.ex. Nyanställda"
+                                   value="${esc(evt.groupName)}"
+                                   oninput="updateEvent(${evt.id}, 'groupName', this.value)">
+                            <span class="field-hint">Exakt namn som i InfoCaption. Skapas automatiskt om den inte finns.</span>
+                        </div>`;
+                } else if (evt.type === 'group_dynamic') {
+                    fieldsHtml = `
+                        <div class="field-group">
+                            <span class="field-hint">Användaren kopplas automatiskt till en grupp baserat på e-postdomänen.<br>
+                            T.ex. anna@beinspired.se → grupp "beinspired"</span>
+                        </div>`;
+                } else if (evt.type === 'send_email') {
+                    fieldsHtml = `
+                        <div class="field-group">
+                            <label>Till</label>
+                            <div class="toggle-row">
+                                <button class="toggle-btn ${evt.email === '' || evt.email === 'user' ? 'active' : ''}"
+                                        onclick="updateEvent(${evt.id}, 'email', 'user'); renderEvents();">Användaren</button>
+                                <button class="toggle-btn ${evt.email !== '' && evt.email !== 'user' ? 'active' : ''}"
+                                        onclick="updateEvent(${evt.id}, 'email', 'admin@'); renderEvents();">Annan e-post</button>
+                            </div>
+                        </div>
+                        ${evt.email !== '' && evt.email !== 'user' ? `
+                        <div class="field-group">
+                            <label>E-postadress *</label>
+                            <input type="email" placeholder="admin@foretag.se"
+                                   value="${esc(evt.email)}"
+                                   oninput="updateEvent(${evt.id}, 'email', this.value)">
+                        </div>` : ''}
+                        <div class="field-group">
+                            <label>Ämne *</label>
+                            <input type="text" placeholder="T.ex. Bra jobbat!"
+                                   value="${esc(evt.emailSubject)}"
+                                   oninput="updateEvent(${evt.id}, 'emailSubject', this.value)">
+                        </div>
+                        <div class="field-group">
+                            <label>Meddelande *</label>
+                            <textarea placeholder="Skriv ditt meddelande här. Använd <br> för radbrytning."
+                                      oninput="updateEvent(${evt.id}, 'emailBody', this.value)">${esc(evt.emailBody)}</textarea>
+                            <span class="field-hint">Tips: &lt;br&gt; = radbrytning, &lt;a href='url'&gt;text&lt;/a&gt; = länk</span>
+                        </div>`;
+                } else if (evt.type === 'send_notification') {
+                    fieldsHtml = `
+                        <div class="field-group">
+                            <label>Mottagarens e-post *</label>
+                            <input type="email" placeholder="admin@foretag.se"
+                                   value="${esc(evt.email)}"
+                                   oninput="updateEvent(${evt.id}, 'email', this.value)">
+                        </div>`;
+                } else if (evt.type === 'course_flow') {
+                    fieldsHtml = evt.cases.map((c, ci) => `
+                        <div class="course-case">
+                            <div class="course-case-header">
+                                <h4>Kurs ${ci + 1}</h4>
+                                ${evt.cases.length > 1 ? `<button class="event-remove" onclick="removeCase(${evt.id}, ${ci})">&times;</button>` : ''}
+                            </div>
+                            <div class="event-fields">
+                                <div class="field-group">
+                                    <label>Kurs-ID *</label>
+                                    <input type="number" placeholder="T.ex. 123"
+                                           value="${esc(c.courseId)}"
+                                           oninput="updateCase(${evt.id}, ${ci}, 'courseId', this.value)">
+                                    <span class="field-hint">Kursens ID i InfoCaption (ej GuideID)</span>
+                                </div>
+                                <div class="field-group">
+                                    <label>Gruppnamn för nästa kurs *</label>
+                                    <input type="text" placeholder="T.ex. Delmoment 2"
+                                           value="${esc(c.groupName)}"
+                                           oninput="updateCase(${evt.id}, ${ci}, 'groupName', this.value)">
+                                </div>
+                                <div class="field-group">
+                                    <label>E-post ämne</label>
+                                    <input type="text" placeholder="T.ex. Bra jobbat!"
+                                           value="${esc(c.emailSubject)}"
+                                           oninput="updateCase(${evt.id}, ${ci}, 'emailSubject', this.value)">
+                                </div>
+                                <div class="field-group">
+                                    <label>E-post meddelande</label>
+                                    <textarea placeholder="Meddelande till deltagaren"
+                                              oninput="updateCase(${evt.id}, ${ci}, 'emailBody', this.value)">${esc(c.emailBody)}</textarea>
+                                    <span class="field-hint">Tips: &lt;br&gt; = radbrytning, &lt;a href='url'&gt;text&lt;/a&gt; = länk</span>
+                                </div>
+                                <div class="field-group">
+                                    <label>Länk (valfri)</label>
+                                    <input type="url" placeholder="https://..."
+                                           value="${esc(c.link)}"
+                                           oninput="updateCase(${evt.id}, ${ci}, 'link', this.value)">
+                                </div>
+                            </div>
+                        </div>
+                    `).join('') + `<button class="add-case-btn" onclick="addCase(${evt.id})">+ Lägg till kurs</button>`;
+                }
+
+                return `
+                    <div class="event-card">
+                        <div class="event-card-header">
+                            <h3>Händelse ${events.indexOf(evt) + 1}</h3>
+                            <button class="event-remove" onclick="removeEvent(${evt.id})">&times;</button>
+                        </div>
+                        <select class="event-type-select" onchange="updateEventType(${evt.id}, this.value)">
+                            ${eventTypeOptions.replace(`value="${evt.type}"`, `value="${evt.type}" selected`)}
+                        </select>
+                        <div class="event-fields">${fieldsHtml}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        function esc(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function escJs(str) {
+            if (!str) return '';
+            return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+        }
+
+        // Step 3: Code generation
+        function generateCode() {
+            let code = '';
+            let explanation = [];
+            const lines = [];
+            let needsUser = false;
+            let needsAddFn = false;
+            let needsCourseSwitch = false;
+
+            // Determine what we need
+            events.forEach(evt => {
+                if (['group_static', 'group_dynamic', 'send_email', 'send_notification'].includes(evt.type)) {
+                    needsUser = true;
+                }
+                if (evt.type === 'group_static' || evt.type === 'group_dynamic') {
+                    needsAddFn = true;
+                    needsUser = true;
+                }
+                if (evt.type === 'course_flow') {
+                    needsCourseSwitch = true;
+                    needsUser = true;
+                }
+            });
+
+            // Build code
+            if (needsUser) {
+                lines.push('// Hämta användare');
+                lines.push('var user = ic_pub.getUser(userID);');
+                lines.push('');
+            }
+
+            if (needsAddFn) {
+                lines.push('// Hjälpfunktion: koppla till grupp (skapar om den inte finns)');
+                lines.push('function addUserToGroup(user, groupName) {');
+                lines.push('  if (ic_pub.groupExist(groupName) == true) {');
+                lines.push('    var group = ic_pub.getGroupByName(groupName);');
+                lines.push('  } else {');
+                lines.push('    var group = ic_pub.createGroup(groupName);');
+                lines.push('  }');
+                lines.push('  ic_pub.connectUserToGroup(user.getID(), group.getID());');
+                lines.push('  return group;');
+                lines.push('}');
+                lines.push('');
+            }
+
+            // Dynamic group: extract domain
+            const hasDynamic = events.some(e => e.type === 'group_dynamic');
+            if (hasDynamic) {
+                lines.push('// Extrahera företagsnamn från e-post');
+                lines.push('var domain = user.email.slice(user.email.indexOf("@") + 1);');
+                lines.push('var company = domain.substring(0, domain.lastIndexOf("."));');
+                lines.push('');
+                explanation.push('Gruppnamnet skapas automatiskt från e-postdomänen (t.ex. anna@foretag.se → "foretag")');
+            }
+
+            // Process each event
+            events.forEach((evt, i) => {
+                if (evt.type === 'group_static') {
+                    const name = evt.groupName || 'MinGrupp';
+                    lines.push(`// Koppla användaren till gruppen "${name}"`);
+                    lines.push(`addUserToGroup(user, "${escJs(name)}");`);
+                    lines.push('');
+                    explanation.push(`Kopplar användaren till gruppen "${name}" (skapas om den inte finns)`);
+                }
+
+                if (evt.type === 'group_dynamic') {
+                    lines.push('// Koppla användaren till grupp baserat på e-postdomän');
+                    lines.push('addUserToGroup(user, company);');
+                    lines.push('');
+                }
+
+                if (evt.type === 'send_email') {
+                    const to = (!evt.email || evt.email === 'user') ? 'user.email' : `"${escJs(evt.email)}"`;
+                    const subj = evt.emailSubject || 'Meddelande från InfoCaption';
+                    const body = evt.emailBody || 'Hej!';
+                    lines.push('// Skicka e-post');
+                    lines.push(`ic_pub.sendEmailTo(${to}, "${escJs(subj)}", "${escJs(body)}");`);
+                    lines.push('');
+                    const toLabel = (!evt.email || evt.email === 'user') ? 'användaren' : evt.email;
+                    explanation.push(`Skickar e-post till ${toLabel} med ämne "${subj}"`);
+                }
+
+                if (evt.type === 'send_notification') {
+                    const email = evt.email || 'admin@foretag.se';
+                    const triggerLabel = triggerLabels[selectedTrigger] || 'händelse';
+                    lines.push('// Skicka notifiering');
+                    lines.push(`var subject = "Användare i InfoCaption ${triggerLabel.toLowerCase()}";`);
+                    lines.push(`var body = "Användare: " + user.email + " har ${triggerLabel.toLowerCase().replace('användare ', '')}";`);
+                    lines.push(`ic_pub.sendEmailTo("${escJs(email)}", subject, body);`);
+                    lines.push('');
+                    explanation.push(`Skickar notifiering till ${email} när en ${triggerLabel.toLowerCase()}`);
+                }
+
+                if (evt.type === 'course_flow') {
+                    lines.push('var userEmail = user.email;');
+                    lines.push('');
+                    lines.push('switch(courseID) {');
+
+                    evt.cases.forEach((c, ci) => {
+                        const cid = c.courseId || 'XXX';
+                        const gname = c.groupName || 'NästaKursGrupp';
+                        lines.push(`  case ${cid}:`);
+                        lines.push(`    // Godkänd på kurs ${cid} → koppla till "${gname}"`);
+                        lines.push(`    var group${ci} = ic_pub.getGroupByName("${escJs(gname)}");`);
+                        lines.push(`    ic_pub.connectUserToGroup(userID, group${ci}.getID());`);
+
+                        if (c.emailSubject || c.emailBody) {
+                            const subj = c.emailSubject || 'Bra jobbat!';
+                            let body = c.emailBody || 'Du har klarat kursen!';
+                            if (c.link) {
+                                body += `<br><br>Klicka <a href='${c.link}'>här</a> för att fortsätta.`;
+                            }
+                            lines.push(`    ic_pub.sendEmailTo(userEmail, "${escJs(subj)}", "${escJs(body)}");`);
+                        }
+
+                        lines.push('    break;');
+                        explanation.push(`Kurs ${cid}: kopplar till grupp "${gname}"${c.emailSubject ? ' + skickar e-post' : ''}`);
+                    });
+
+                    lines.push('  default:');
+                    lines.push('}');
+                    lines.push('');
+                }
+            });
+
+            code = lines.join('\n');
+
+            // Apply syntax highlighting
+            const highlighted = highlightCode(code);
+            document.getElementById('codeOutput').innerHTML = highlighted;
+
+            // Explanation
+            const expHtml = explanation.length > 0
+                ? `<h3>Vad koden gör:</h3><ul>${explanation.map(e => `<li>${e}</li>`).join('')}</ul>`
+                : '<p style="color:#a0aec0">Lägg till händelser i steg 2 för att generera kod.</p>';
+            document.getElementById('codeExplanation').innerHTML = expHtml;
+        }
+
+        function highlightCode(code) {
+            // Escape HTML first
+            let h = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            // Comments
+            h = h.replace(/(\/\/.*)/g, '<span class="cm">$1</span>');
+
+            // Strings (double quotes) — skip inside comments
+            h = h.replace(/(?<!<span class="cm">.*)"([^"]*?)"/g, '<span class="str">"$1"</span>');
+
+            // Keywords
+            h = h.replace(/\b(var|function|if|else|switch|case|break|return|default)\b/g, '<span class="kw">$1</span>');
+
+            // Numbers (standalone)
+            h = h.replace(/\b(\d+)\b/g, '<span class="num">$1</span>');
+
+            return h;
+        }
+
+        function copyCode() {
+            const codeEl = document.getElementById('codeOutput');
+            const text = codeEl.textContent;
+
+            if (typeof ICUtils !== 'undefined' && ICUtils.copyToClipboard) {
+                ICUtils.copyToClipboard(text).then(() => showCopied());
+            } else {
+                navigator.clipboard.writeText(text).then(() => showCopied());
+            }
+        }
+
+        function showCopied() {
+            const btn = document.getElementById('copyBtn');
+            btn.innerHTML = '<i class="icon-check-circle"></i> Kopierad!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerHTML = '<i class="icon-clipboard-copy"></i> Kopiera';
+                btn.classList.remove('copied');
+            }, 2000);
+        }
+
+        function resetAll() {
+            selectedTrigger = null;
+            events = [];
+            eventIdCounter = 0;
+            document.querySelectorAll('.trigger-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('nextBtn1').disabled = true;
+            renderEvents();
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', function() {
+            renderEvents();
+            if (typeof ICUtils !== 'undefined') {
+                ICUtils.notifyReady('trigger-builder');
+            }
+        });
+    </script>
+</body>
+</html>

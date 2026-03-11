@@ -1,0 +1,2462 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Query Builder - InfoCaption</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/ic-icons.css">
+    <style>
+        :root {
+            --ic-primary: #5458F2;
+            --ic-primary-hover: #4347d9;
+            --ic-secondary: #D4D5FC;
+            --ic-tertiary: #BEC0F9;
+            --ic-accent: #FFE496;
+            --ic-text-dark: #323232;
+            --ic-text-muted: #6c757d;
+            --ic-bg-white: #ffffff;
+            --ic-bg-light: #f8f9fc;
+            --ic-success: #10b981;
+            --ic-success-light: #d1fae5;
+            --ic-danger: #ef4444;
+            --ic-radius-sm: 6px;
+            --ic-radius-md: 10px;
+            --ic-radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ic-bg-white);
+            min-height: 100vh;
+            color: var(--ic-text-dark);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: var(--ic-bg-white);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--ic-bg-white);
+            color: var(--ic-text-dark);
+            padding: 25px 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        h1 {
+            font-size: 1.6em;
+            margin-bottom: 6px;
+            color: var(--ic-text-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subtitle {
+            color: var(--ic-text-muted);
+            font-size: 0.95em;
+        }
+
+        /* Main layout */
+        .main-layout {
+            display: flex;
+            min-height: calc(100vh - 200px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 3px rgba(84, 88, 242, 0.15);
+        }
+
+        .search-box::before {
+            content: "\eab1";
+            font-family: 'infocaption-icomoon';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1em;
+        }
+
+        .sidebar-section {
+            margin-bottom: 15px;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            padding: 0 5px;
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-item {
+            margin-bottom: 5px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 0.9em;
+            border: 1px solid transparent;
+        }
+
+        .category-header:hover {
+            border-color: var(--ic-primary);
+            background: var(--ic-secondary);
+        }
+
+        .category-header.active {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .category-icon {
+            font-size: 1.1em;
+        }
+
+        .category-count {
+            margin-left: auto;
+            background: #f8f9fa;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .category-header.active .category-count {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .query-list {
+            list-style: none;
+            margin-top: 5px;
+            margin-left: 10px;
+            display: none;
+        }
+
+        .query-list.expanded {
+            display: block;
+        }
+
+        .query-item {
+            padding: 8px 12px;
+            margin: 3px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            color: #495057;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .query-item:hover {
+            background: var(--ic-secondary);
+            color: var(--ic-primary);
+            border-left-color: var(--ic-primary);
+        }
+
+        .query-item.selected {
+            background: var(--ic-secondary);
+            color: var(--ic-primary);
+            border-left-color: var(--ic-primary);
+            font-weight: 500;
+        }
+
+        /* Create custom SQL button */
+        .create-custom-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--ic-primary);
+            color: white;
+            border: none;
+            border-radius: var(--ic-radius-md);
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: inherit;
+            margin-bottom: 20px;
+        }
+
+        .create-custom-btn:hover {
+            background: var(--ic-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(84, 88, 242, 0.3);
+        }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .placeholder {
+            text-align: center;
+            padding: 80px 40px;
+            color: #6c757d;
+        }
+
+        .placeholder-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .placeholder h2 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .query-detail {
+            display: none;
+        }
+
+        .query-detail.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .query-header {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .query-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .query-description {
+            color: #6c757d;
+            font-size: 0.95em;
+        }
+
+        /* Database selector */
+        .db-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .db-btn {
+            padding: 10px 25px;
+            border: 2px solid #dee2e6;
+            background: white;
+            color: #495057;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .db-btn:hover {
+            border-color: var(--ic-primary);
+            color: var(--ic-primary);
+        }
+
+        .db-btn.active {
+            background: var(--ic-primary);
+            border-color: transparent;
+            color: white;
+        }
+
+        /* Variables form */
+        .variables-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #dee2e6;
+        }
+
+        .variables-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .no-variables {
+            color: #6c757d;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+
+        .variable-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .variable-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .variable-label {
+            font-size: 0.85em;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .variable-label .required {
+            color: #c53030;
+            margin-left: 3px;
+        }
+
+        .variable-input {
+            padding: 10px 14px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .variable-input:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 3px rgba(84, 88, 242, 0.15);
+        }
+
+        .variable-input::placeholder {
+            color: #adb5bd;
+        }
+
+        /* SQL Output */
+        .sql-section {
+            margin-bottom: 25px;
+        }
+
+        .sql-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .sql-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--ic-primary);
+            border: none;
+            border-radius: var(--ic-radius-sm);
+            color: white;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .copy-btn:hover {
+            background: var(--ic-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(84, 88, 242, 0.3);
+        }
+
+        .copy-btn.copied {
+            background: var(--ic-success);
+        }
+
+        .sql-output {
+            background: #1e1e3f;
+            border-radius: var(--ic-radius-md);
+            padding: 20px;
+            overflow-x: auto;
+            border: 1px solid #2d3748;
+        }
+
+        .sql-output pre {
+            margin: 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .sql-output code {
+            color: #e2e8f0;
+        }
+
+        /* Syntax highlighting */
+        .keyword { color: #c678dd; font-weight: 600; }
+        .function { color: #61afef; }
+        .string { color: #98c379; }
+        .number { color: #d19a66; }
+        .comment { color: #5c6370; font-style: italic; }
+        .variable { color: #e5c07b; background: rgba(229, 192, 123, 0.15); padding: 1px 5px; border-radius: 3px; }
+
+        /* Reference section */
+        .reference-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .reference-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .reference-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .reference-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .reference-card h4 {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--ic-primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reference-list {
+            list-style: none;
+            font-size: 0.8em;
+        }
+
+        .reference-list li {
+            padding: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .reference-list li:last-child {
+            border-bottom: none;
+        }
+
+        .reference-list .id {
+            color: var(--ic-primary);
+            font-weight: 600;
+        }
+
+        .reference-list .name {
+            color: #6c757d;
+        }
+
+        /* Custom SQL Builder Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            background: var(--ic-primary);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .modal-body {
+            padding: 25px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-section {
+            margin-bottom: 25px;
+        }
+
+        .modal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-section h3 {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 3px rgba(84, 88, 242, 0.15);
+        }
+
+        .modal-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 14px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .modal-textarea:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 3px rgba(84, 88, 242, 0.15);
+        }
+
+        /* Variables builder in modal */
+        .variables-builder {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .variable-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 120px 40px;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: end;
+        }
+
+        .variable-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .variable-row input, .variable-row select {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-family: inherit;
+        }
+
+        .variable-row input:focus, .variable-row select:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+        }
+
+        .add-variable-btn {
+            padding: 8px 16px;
+            background: var(--ic-primary);
+            color: white;
+            border: none;
+            border-radius: var(--ic-radius-sm);
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+            margin-top: 10px;
+        }
+
+        .add-variable-btn:hover {
+            background: var(--ic-primary-hover);
+        }
+
+        .remove-var-btn {
+            background: #fed7d7;
+            color: #c53030;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .remove-var-btn:hover {
+            background: #fc8181;
+            color: white;
+        }
+
+        .variable-hint {
+            font-size: 0.8em;
+            color: var(--ic-text-muted);
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--ic-secondary);
+            border-radius: var(--ic-radius-sm);
+            border-left: 3px solid var(--ic-primary);
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .modal-btn-cancel {
+            background: white;
+            border: 1px solid #dee2e6;
+            color: #495057;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #f8f9fa;
+        }
+
+        .modal-btn-primary {
+            background: var(--ic-primary);
+            border: none;
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background: var(--ic-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(84, 88, 242, 0.3);
+        }
+
+        /* Custom queries section */
+        .custom-queries-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #dee2e6;
+        }
+
+        .custom-query-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .custom-query-item .query-item {
+            flex: 1;
+        }
+
+        .delete-custom-btn {
+            background: none;
+            border: none;
+            color: #adb5bd;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 0.9em;
+            transition: color 0.2s;
+        }
+
+        .delete-custom-btn:hover {
+            color: #c53030;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: var(--ic-success);
+            color: white;
+            padding: 14px 22px;
+            border-radius: var(--ic-radius-md);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9em;
+            font-weight: 500;
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.35s ease, opacity 0.35s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            font-size: 1.5em;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+                max-height: 300px;
+            }
+
+            .variable-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* DB Structure Tree */
+        .db-tree {
+            max-height: calc(100vh - 500px);
+            overflow-y: auto;
+            font-size: 0.85em;
+        }
+
+        .db-table-count {
+            font-size: 0.75em;
+            color: var(--ic-text-muted);
+            font-weight: 400;
+        }
+
+        .db-table-item {
+            margin-bottom: 2px;
+        }
+
+        .db-table-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--ic-text-dark);
+            transition: background 0.15s;
+            user-select: none;
+        }
+
+        .db-table-header:hover {
+            background: rgba(84, 88, 242, 0.08);
+        }
+
+        .db-table-header[draggable="true"] {
+            cursor: grab;
+        }
+
+        .db-table-header[draggable="true"]:active {
+            cursor: grabbing;
+        }
+
+        .db-table-header .db-toggle {
+            font-size: 0.7em;
+            color: var(--ic-text-muted);
+            width: 14px;
+            text-align: center;
+        }
+
+        .db-table-header .db-tbl-icon {
+            color: var(--ic-primary);
+        }
+
+        .db-table-header .db-col-count {
+            margin-left: auto;
+            font-size: 0.75em;
+            color: var(--ic-text-muted);
+            font-weight: 400;
+        }
+
+        .db-add-btn {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #d4d5fc;
+            border-radius: 4px;
+            background: white;
+            color: var(--ic-primary);
+            font-size: 0.9em;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.15s;
+            flex-shrink: 0;
+        }
+
+        .db-table-header:hover .db-add-btn {
+            opacity: 1;
+        }
+
+        .db-add-btn:hover {
+            background: var(--ic-primary);
+            color: white;
+        }
+
+        .db-columns {
+            display: none;
+            padding-left: 24px;
+        }
+
+        .db-columns.expanded {
+            display: block;
+        }
+
+        .db-col-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            cursor: grab;
+            transition: background 0.15s;
+            color: var(--ic-text-dark);
+        }
+
+        .db-col-item:hover {
+            background: rgba(84, 88, 242, 0.08);
+            cursor: pointer;
+        }
+
+        .db-col-item:hover .col-name {
+            color: var(--ic-primary);
+        }
+
+        .db-col-item:active {
+            cursor: grabbing;
+        }
+
+        .db-col-item .col-icon {
+            font-size: 0.8em;
+        }
+
+        .db-col-item .col-name {
+            font-family: 'Consolas', monospace;
+            font-weight: 500;
+        }
+
+        .db-col-item .col-type {
+            margin-left: auto;
+            font-size: 0.75em;
+            color: var(--ic-text-muted);
+            font-family: 'Consolas', monospace;
+        }
+
+        .db-col-item.pk .col-icon { color: #f59e0b; }
+        .db-col-item.fk .col-icon { color: #3b82f6; }
+
+        .db-col-item.dragging {
+            opacity: 0.4;
+        }
+
+        .db-table-header.dragging {
+            opacity: 0.4;
+        }
+
+        .db-table-header.search-match {
+            background: rgba(255, 228, 150, 0.3);
+        }
+
+        .db-col-item.search-match {
+            background: rgba(255, 228, 150, 0.3);
+        }
+
+        /* Visual Builder */
+        .visual-builder {
+            background: var(--ic-bg-white);
+            padding: 25px 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .vb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .vb-close-btn {
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-family: inherit;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .vb-close-btn:hover {
+            background: var(--ic-bg-light);
+        }
+
+        .vb-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .vb-section {
+            background: var(--ic-bg-light);
+            border-radius: 10px;
+            padding: 12px 16px;
+        }
+
+        .vb-section-label {
+            font-size: 0.8em;
+            font-weight: 700;
+            color: var(--ic-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vb-add-btn {
+            font-size: 0.85em;
+            padding: 2px 10px;
+            border: 1px dashed var(--ic-secondary);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--ic-primary);
+            font-family: inherit;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .vb-add-btn:hover {
+            background: var(--ic-secondary);
+        }
+
+        .vb-drop-zone {
+            min-height: 40px;
+            border: 2px dashed #d4d5fc;
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .vb-drop-zone.drag-over {
+            border-color: var(--ic-primary);
+            background: rgba(84, 88, 242, 0.05);
+        }
+
+        .vb-drop-hint {
+            color: #b0b0b0;
+            font-size: 0.85em;
+            font-style: italic;
+        }
+
+        .vb-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-family: 'Consolas', monospace;
+            font-weight: 500;
+            cursor: default;
+        }
+
+        .vb-chip .chip-table {
+            color: var(--ic-primary);
+            font-weight: 600;
+        }
+
+        .vb-chip .chip-remove {
+            cursor: pointer;
+            color: var(--ic-danger);
+            font-weight: bold;
+            margin-left: 4px;
+            font-size: 0.9em;
+        }
+
+        .vb-chip .chip-remove:hover {
+            color: #b91c1c;
+        }
+
+        .vb-join-row, .vb-where-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .vb-input, .vb-select {
+            padding: 6px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-family: inherit;
+            background: white;
+        }
+
+        .vb-input:focus, .vb-select:focus {
+            outline: none;
+            border-color: var(--ic-primary);
+            box-shadow: 0 0 0 2px rgba(84, 88, 242, 0.15);
+        }
+
+        .vb-remove-btn {
+            padding: 4px 8px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--ic-danger);
+            font-size: 1.1em;
+        }
+
+        .vb-remove-btn:hover {
+            background: var(--ic-danger);
+            color: white;
+            border-radius: 4px;
+        }
+
+        .vb-sql-output {
+            background: var(--ic-bg-light);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        /* Main content relative for visual builder overlay */
+        .main-content {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span>🗄️</span> SQL Builder</h1>
+            <p class="subtitle">Skapa SQL-frågor enkelt - välj en fråga, fyll i variablerna och kopiera resultatet</p>
+        </header>
+
+        <div class="main-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <button class="create-custom-btn" onclick="openCustomModal()">
+                    <span><i class="icon-sparkles"></i></span> Skriv egen SQL
+                </button>
+                <button class="create-custom-btn" style="background:linear-gradient(135deg,#10b981,#059669);margin-bottom:10px;" onclick="openVisualBuilder()">
+                    <span><i class="icon-adjustments"></i></span> Visuell Query Builder
+                </button>
+
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Sök efter fråga...">
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Kategorier</div>
+                    <ul class="category-list" id="categoryList">
+                        <!-- Categories will be populated by JavaScript -->
+                    </ul>
+                </div>
+
+                <div class="custom-queries-section" id="customQueriesSection" style="display: none;">
+                    <div class="sidebar-section-title">Egna frågor</div>
+                    <ul class="category-list" id="customQueryList">
+                        <!-- Custom queries will be populated here -->
+                    </ul>
+                </div>
+
+                <!-- DB Structure Section -->
+                <div class="sidebar-section" id="dbStructureSection">
+                    <div class="sidebar-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+                        🗃️ Databasstruktur
+                        <span class="db-table-count" id="dbTableCount"></span>
+                    </div>
+                    <div class="search-box" style="margin-bottom:10px;">
+                        <input type="text" id="dbSearchInput" placeholder="Sök tabell eller kolumn..." style="padding-left:15px;font-size:0.85em;">
+                    </div>
+                    <div class="db-tree" id="dbTree">
+                        <div style="text-align:center;color:var(--ic-text-muted);padding:20px;font-size:0.85em;">
+                            Laddar databasstruktur...
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="placeholder" id="placeholder">
+                    <div class="placeholder-icon"><i class="icon-chart-bar1" style="font-size:inherit"></i></div>
+                    <h2>Välj en SQL-fråga</h2>
+                    <p>Klicka på en kategori i menyn till vänster och välj sedan den fråga du vill köra.</p>
+                    <p style="margin-top: 15px; font-size: 0.9em;">Eller klicka på <strong>"Skriv egen SQL"</strong> för att bygga en egen fråga med variabler.</p>
+                </div>
+
+                <div class="query-detail" id="queryDetail">
+                    <div class="query-header">
+                        <h2 class="query-title" id="queryTitle"></h2>
+                        <p class="query-description" id="queryDescription"></p>
+                    </div>
+
+                    <!-- Database Selector -->
+                    <div class="db-selector">
+                        <button class="db-btn active" data-db="mysql">MySQL</button>
+                        <button class="db-btn" data-db="mssql">SQL Server</button>
+                    </div>
+
+                    <!-- Variables Section -->
+                    <div class="variables-section">
+                        <h3 class="variables-title"><i class="icon-cog1"></i> Variabler</h3>
+                        <div id="variablesContainer">
+                            <p class="no-variables">Inga variabler krävs för denna fråga.</p>
+                        </div>
+                    </div>
+
+                    <!-- SQL Output -->
+                    <div class="sql-section">
+                        <div class="sql-header">
+                            <h3 class="sql-title"><i class="icon-save1"></i> Genererad SQL</h3>
+                            <button class="copy-btn" id="copyBtn" onclick="copySQL()">
+                                <span><i class="icon-clipboard-copy"></i></span> Kopiera
+                            </button>
+                        </div>
+                        <div class="sql-output">
+                            <pre><code id="sqlOutput"></code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Reference Section -->
+                    <div class="reference-section">
+                        <h3 class="reference-title"><i class="icon-book-open"></i> Referens</h3>
+                        <div class="reference-grid" id="referenceGrid">
+                            <!-- Reference cards will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Visual Query Builder (flex sibling to sidebar) -->
+            <div class="visual-builder" id="visualBuilder" style="display:none;">
+                <div class="vb-header">
+                    <h2 style="font-size:1.2em;display:flex;align-items:center;gap:10px;">
+                        <span><i class="icon-adjustments"></i></span> Visuell Query Builder
+                    </h2>
+                    <button class="vb-close-btn" onclick="closeVisualBuilder()">← Tillbaka</button>
+                </div>
+
+                <div class="vb-sections">
+                    <!-- SELECT -->
+                    <div class="vb-section">
+                        <div class="vb-section-label">SELECT</div>
+                        <div class="vb-drop-zone" id="vbSelect" data-vb="select">
+                            <span class="vb-drop-hint">Dra kolumner hit (eller lämna tomt för *)</span>
+                        </div>
+                    </div>
+
+                    <!-- FROM -->
+                    <div class="vb-section">
+                        <div class="vb-section-label">FROM</div>
+                        <div class="vb-drop-zone" id="vbFrom" data-vb="from">
+                            <span class="vb-drop-hint">Dra en tabell hit</span>
+                        </div>
+                    </div>
+
+                    <!-- JOIN -->
+                    <div class="vb-section">
+                        <div class="vb-section-label">JOIN <button class="vb-add-btn" onclick="addJoinRow()">+ Lägg till JOIN</button></div>
+                        <div id="vbJoins"></div>
+                    </div>
+
+                    <!-- WHERE -->
+                    <div class="vb-section">
+                        <div class="vb-section-label">WHERE <button class="vb-add-btn" onclick="addWhereRow()">+ Lägg till villkor</button></div>
+                        <div id="vbWheres"></div>
+                    </div>
+
+                    <!-- ORDER BY -->
+                    <div class="vb-section">
+                        <div class="vb-section-label">ORDER BY</div>
+                        <div class="vb-drop-zone" id="vbOrderBy" data-vb="orderby">
+                            <span class="vb-drop-hint">Dra kolumner för sortering</span>
+                        </div>
+                    </div>
+
+                    <!-- LIMIT -->
+                    <div class="vb-section" style="max-width:200px;">
+                        <div class="vb-section-label">LIMIT</div>
+                        <input type="number" class="vb-input" id="vbLimit" placeholder="100" value="100" oninput="generateVisualSQL()">
+                    </div>
+                </div>
+
+                <!-- Generated SQL -->
+                <div class="vb-sql-output">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <h3 style="font-size:1em;color:var(--ic-primary);"><i class="icon-save1"></i> Genererad SQL</h3>
+                        <div style="display:flex;gap:8px;">
+                            <button class="copy-btn" onclick="copyVisualSQL()"><span><i class="icon-clipboard-copy"></i></span> Kopiera</button>
+                            <button class="copy-btn" onclick="useInCustomQuery()" style="background:var(--ic-primary);color:white;"><span><i class="icon-sparkles"></i></span> Spara som egen fråga</button>
+                        </div>
+                    </div>
+                    <div class="sql-output">
+                        <pre><code id="vbSqlOutput">-- Dra tabeller och kolumner från DB-strukturen till vänster</code></pre>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Custom SQL Modal -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="icon-sparkles"></i> Skriv egen SQL-fråga</h2>
+                <button class="modal-close" onclick="closeCustomModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h3>📝 Namn på frågan</h3>
+                    <input type="text" class="modal-input" id="customName" placeholder="T.ex. 'Hämta guider per kategori'">
+                </div>
+
+                <div class="modal-section">
+                    <h3>📄 Beskrivning</h3>
+                    <input type="text" class="modal-input" id="customDescription" placeholder="Kort beskrivning av vad frågan gör">
+                </div>
+
+                <div class="modal-section">
+                    <h3>🔧 Variabler</h3>
+                    <div class="variables-builder" id="variablesBuilder">
+                        <div id="variableRows">
+                            <!-- Variable rows will be added here -->
+                        </div>
+                        <button class="add-variable-btn" onclick="addVariableRow()">+ Lägg till variabel</button>
+                    </div>
+                    <div class="variable-hint">
+                        <strong>Tips:</strong> Använd <code>{{variabelnamn}}</code> i din SQL för att infoga variabler.<br>
+                        Exempel: <code>WHERE TopicID = {{topicId}}</code>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <h3>🐬 MySQL</h3>
+                    <textarea class="modal-textarea" id="customMysql" placeholder="SELECT * FROM guide WHERE TopicID = {{topicId}}"></textarea>
+                </div>
+
+                <div class="modal-section">
+                    <h3>🔷 SQL Server (valfritt)</h3>
+                    <textarea class="modal-textarea" id="customMssql" placeholder="Lämna tomt för att använda samma som MySQL"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeCustomModal()">Avbryt</button>
+                <button class="modal-btn modal-btn-primary" onclick="saveCustomQuery()">Spara fråga</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon"><i class="icon-check-circle"></i></span>
+        <span id="toastMessage">SQL kopierad!</span>
+    </div>
+
+    <script>
+        let queryData = null;
+        let currentQuery = null;
+        let currentDb = 'mysql';
+        let customQueries = [];
+        let customVarCounter = 0;
+
+        // Load JSON data
+        async function loadData() {
+            try {
+                const response = await fetch('sql-queries.json');
+                queryData = await response.json();
+                renderCategories();
+                renderReference();
+                loadCustomQueries();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('placeholder').innerHTML = `
+                    <div class="placeholder-icon"><i class="icon-x-circle" style="font-size:inherit"></i></div>
+                    <h2>Kunde inte ladda data</h2>
+                    <p>Kontrollera att sql-queries.json finns i samma mapp.</p>
+                `;
+            }
+        }
+
+        // Render categories in sidebar
+        function renderCategories() {
+            const container = document.getElementById('categoryList');
+            container.innerHTML = '';
+
+            queryData.categories.forEach(category => {
+                const li = document.createElement('li');
+                li.className = 'category-item';
+                li.innerHTML = `
+                    <div class="category-header" onclick="toggleCategory('${category.id}')">
+                        <span class="category-icon">${category.icon}</span>
+                        <span>${category.name}</span>
+                        <span class="category-count">${category.queries.length}</span>
+                    </div>
+                    <ul class="query-list" id="queries-${category.id}">
+                        ${category.queries.map(q => `
+                            <li class="query-item" onclick="selectQuery('${category.id}', '${q.id}')" data-query-id="${q.id}">
+                                ${q.name}
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                container.appendChild(li);
+            });
+        }
+
+        // Toggle category expansion
+        function toggleCategory(categoryId) {
+            const queryList = document.getElementById(`queries-${categoryId}`);
+            const header = queryList.previousElementSibling;
+
+            // Close other categories
+            document.querySelectorAll('.query-list').forEach(list => {
+                if (list.id !== `queries-${categoryId}`) {
+                    list.classList.remove('expanded');
+                    list.previousElementSibling.classList.remove('active');
+                }
+            });
+
+            queryList.classList.toggle('expanded');
+            header.classList.toggle('active');
+        }
+
+        // Select a query
+        function selectQuery(categoryId, queryId) {
+            const category = queryData.categories.find(c => c.id === categoryId);
+            const query = category.queries.find(q => q.id === queryId);
+            currentQuery = query;
+
+            // Update selected state
+            document.querySelectorAll('.query-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-query-id="${queryId}"]`).classList.add('selected');
+
+            showQueryDetail(query);
+        }
+
+        // Select custom query
+        function selectCustomQuery(index) {
+            currentQuery = customQueries[index];
+
+            // Update selected state
+            document.querySelectorAll('.query-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-custom-id="${index}"]`).classList.add('selected');
+
+            showQueryDetail(currentQuery);
+        }
+
+        // Show query detail
+        function showQueryDetail(query) {
+            // Show query detail
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('queryDetail').classList.add('active');
+
+            // Update content
+            document.getElementById('queryTitle').textContent = query.name;
+            document.getElementById('queryDescription').textContent = query.description;
+
+            // Render variables
+            renderVariables(query.variables);
+
+            // Update SQL
+            updateSQL();
+        }
+
+        // Render variables form
+        function renderVariables(variables) {
+            const container = document.getElementById('variablesContainer');
+
+            if (!variables || variables.length === 0) {
+                container.innerHTML = '<p class="no-variables">Inga variabler krävs för denna fråga.</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="variable-grid">
+                    ${variables.map(v => `
+                        <div class="variable-field">
+                            <label class="variable-label">
+                                ${v.label}
+                                ${v.required ? '<span class="required">*</span>' : ''}
+                            </label>
+                            <input
+                                type="${v.type === 'date' ? 'date' : v.type === 'number' ? 'number' : 'text'}"
+                                class="variable-input"
+                                id="var-${v.name}"
+                                placeholder="${v.placeholder || ''}"
+                                value="${v.default || ''}"
+                                data-var-name="${v.name}"
+                                data-required="${v.required || false}"
+                                onchange="updateSQL()"
+                                oninput="updateSQL()"
+                            >
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Update SQL output
+        function updateSQL() {
+            if (!currentQuery) return;
+
+            let sql = currentDb === 'mysql' ? currentQuery.mysql : (currentQuery.mssql || currentQuery.mysql);
+
+            // Replace variables
+            if (currentQuery.variables) {
+                currentQuery.variables.forEach(v => {
+                    const input = document.getElementById(`var-${v.name}`);
+                    if (input) {
+                        let value = input.value || v.default || `{{${v.name}}}`;
+
+                        // Handle special case for CURRENT_DATE
+                        if (value === 'CURRENT_DATE') {
+                            value = currentDb === 'mysql' ? 'CURRENT_DATE' : 'GETDATE()';
+                        }
+
+                        // Replace all occurrences
+                        const regex = new RegExp(`\\{\\{${v.name}\\}\\}`, 'g');
+                        sql = sql.replace(regex, value);
+                    }
+                });
+            }
+
+            // Apply syntax highlighting
+            document.getElementById('sqlOutput').innerHTML = highlightSQL(sql);
+        }
+
+        // SQL Syntax highlighting
+        function highlightSQL(sql) {
+            const keywords = ['SELECT', 'FROM', 'WHERE', 'JOIN', 'LEFT JOIN', 'INNER JOIN', 'RIGHT JOIN',
+                            'ON', 'AND', 'OR', 'NOT', 'IN', 'LIKE', 'BETWEEN', 'IS', 'NULL', 'AS',
+                            'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET', 'DISTINCT',
+                            'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'CREATE', 'ALTER', 'DROP',
+                            'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'ASC', 'DESC', 'TOP', 'TRUNCATE'];
+
+            const functions = ['COUNT', 'SUM', 'AVG', 'MAX', 'MIN', 'COALESCE', 'IFNULL', 'ISNULL',
+                             'DATE_SUB', 'DATE_ADD', 'NOW', 'CURRENT_DATE', 'GETDATE', 'DATEADD',
+                             'CONCAT', 'GROUP_CONCAT', 'STRING_AGG', 'REPLACE', 'SUBSTRING', 'CAST', 'CONVERT',
+                             'INTERVAL'];
+
+            let highlighted = sql
+                // Escape HTML
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            // Comments
+            highlighted = highlighted.replace(/(--.*$)/gm, '<span class="comment">$1</span>');
+            highlighted = highlighted.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="comment">$1</span>');
+
+            // Strings
+            highlighted = highlighted.replace(/('(?:[^'\\]|\\.)*')/g, '<span class="string">$1</span>');
+
+            // Numbers
+            highlighted = highlighted.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="number">$1</span>');
+
+            // Keywords
+            keywords.forEach(keyword => {
+                const regex = new RegExp(`\\b(${keyword})\\b`, 'gi');
+                highlighted = highlighted.replace(regex, '<span class="keyword">$1</span>');
+            });
+
+            // Functions
+            functions.forEach(func => {
+                const regex = new RegExp(`\\b(${func})\\s*\\(`, 'gi');
+                highlighted = highlighted.replace(regex, '<span class="function">$1</span>(');
+            });
+
+            // Unfilled variables
+            highlighted = highlighted.replace(/(\{\{[^}]+\}\})/g, '<span class="variable">$1</span>');
+
+            return highlighted;
+        }
+
+        // Copy SQL to clipboard
+        async function copySQL() {
+            const sqlOutput = document.getElementById('sqlOutput');
+            const text = sqlOutput.textContent;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = '<span>✓</span> Kopierat!';
+                btn.classList.add('copied');
+
+                showToast('SQL kopierad till urklipp!');
+
+                setTimeout(() => {
+                    btn.innerHTML = '<span><i class="icon-clipboard-copy"></i></span> Kopiera';
+                    btn.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Database selector
+        document.querySelectorAll('.db-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.db-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentDb = this.dataset.db;
+                updateSQL();
+            });
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+
+            queryData.categories.forEach(category => {
+                const queryList = document.getElementById(`queries-${category.id}`);
+                let hasVisibleQueries = false;
+
+                category.queries.forEach(query => {
+                    const queryItem = queryList.querySelector(`[data-query-id="${query.id}"]`);
+                    const matches = query.name.toLowerCase().includes(searchTerm) ||
+                                  query.description.toLowerCase().includes(searchTerm);
+
+                    queryItem.style.display = matches ? 'block' : 'none';
+                    if (matches) hasVisibleQueries = true;
+                });
+
+                // Show/hide category based on matching queries
+                const categoryItem = queryList.parentElement;
+                categoryItem.style.display = hasVisibleQueries || searchTerm === '' ? 'block' : 'none';
+
+                // Expand categories with matches
+                if (hasVisibleQueries && searchTerm !== '') {
+                    queryList.classList.add('expanded');
+                    queryList.previousElementSibling.classList.add('active');
+                }
+            });
+        });
+
+        // Render reference section
+        function renderReference() {
+            const container = document.getElementById('referenceGrid');
+            const ref = queryData.reference;
+
+            container.innerHTML = `
+                <div class="reference-card">
+                    <h4>LogTypes</h4>
+                    <ul class="reference-list">
+                        ${ref.logTypes.slice(0, 8).map(item => `
+                            <li>
+                                <span class="id">${item.id}</span>
+                                <span class="name">${item.name}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                <div class="reference-card">
+                    <h4>GuideTypes</h4>
+                    <ul class="reference-list">
+                        ${ref.guideTypes.slice(0, 8).map(item => `
+                            <li>
+                                <span class="id">${item.id}</span>
+                                <span class="name">${item.name}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                <div class="reference-card">
+                    <h4>Rättighetsområden</h4>
+                    <ul class="reference-list">
+                        ${ref.rightAreas.slice(0, 8).map(item => `
+                            <li>
+                                <span class="id">${item.id}</span>
+                                <span class="name">${item.name}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                <div class="reference-card">
+                    <h4>CreateTypes</h4>
+                    <ul class="reference-list">
+                        ${ref.createTypes.map(item => `
+                            <li>
+                                <span class="id">${item.id}</span>
+                                <span class="name">${item.name}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // --- Custom Query Builder ---
+
+        function openCustomModal() {
+            document.getElementById('customModal').classList.add('show');
+            document.getElementById('customName').value = '';
+            document.getElementById('customDescription').value = '';
+            document.getElementById('customMysql').value = '';
+            document.getElementById('customMssql').value = '';
+            document.getElementById('variableRows').innerHTML = '';
+            customVarCounter = 0;
+        }
+
+        function closeCustomModal() {
+            document.getElementById('customModal').classList.remove('show');
+        }
+
+        function addVariableRow() {
+            const container = document.getElementById('variableRows');
+            const rowId = customVarCounter++;
+
+            const row = document.createElement('div');
+            row.className = 'variable-row';
+            row.id = `var-row-${rowId}`;
+            row.innerHTML = `
+                <div>
+                    <label style="font-size: 0.8em; color: #6c757d; display: block; margin-bottom: 4px;">Variabelnamn</label>
+                    <input type="text" placeholder="t.ex. topicId" data-var-name>
+                </div>
+                <div>
+                    <label style="font-size: 0.8em; color: #6c757d; display: block; margin-bottom: 4px;">Label (visningsnamn)</label>
+                    <input type="text" placeholder="t.ex. Kategori-ID" data-var-label>
+                </div>
+                <div>
+                    <label style="font-size: 0.8em; color: #6c757d; display: block; margin-bottom: 4px;">Typ</label>
+                    <select data-var-type>
+                        <option value="text">Text</option>
+                        <option value="number">Nummer</option>
+                        <option value="date">Datum</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: end;">
+                    <button class="remove-var-btn" onclick="removeVariableRow(${rowId})">✕</button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        function removeVariableRow(id) {
+            const row = document.getElementById(`var-row-${id}`);
+            if (row) row.remove();
+        }
+
+        function saveCustomQuery() {
+            const name = document.getElementById('customName').value.trim();
+            const description = document.getElementById('customDescription').value.trim();
+            const mysql = document.getElementById('customMysql').value.trim();
+            const mssql = document.getElementById('customMssql').value.trim();
+
+            if (!name || !mysql) {
+                alert('Namn och MySQL-fråga krävs!');
+                return;
+            }
+
+            // Collect variables
+            const variables = [];
+            document.querySelectorAll('.variable-row').forEach(row => {
+                const varName = row.querySelector('[data-var-name]').value.trim();
+                const varLabel = row.querySelector('[data-var-label]').value.trim();
+                const varType = row.querySelector('[data-var-type]').value;
+
+                if (varName) {
+                    variables.push({
+                        name: varName,
+                        label: varLabel || varName,
+                        type: varType,
+                        required: true,
+                        placeholder: ''
+                    });
+                }
+            });
+
+            const customQuery = {
+                id: 'custom_' + Date.now(),
+                name: name,
+                description: description || 'Egen fråga',
+                variables: variables,
+                mysql: mysql,
+                mssql: mssql || mysql,
+                isCustom: true
+            };
+
+            customQueries.push(customQuery);
+            saveCustomQueries();
+            renderCustomQueries();
+            closeCustomModal();
+            showToast('Fråga sparad!');
+
+            // Select the new query
+            selectCustomQuery(customQueries.length - 1);
+        }
+
+        function saveCustomQueries() {
+            localStorage.setItem('customSqlQueries', JSON.stringify(customQueries));
+        }
+
+        function loadCustomQueries() {
+            const saved = localStorage.getItem('customSqlQueries');
+            if (saved) {
+                customQueries = JSON.parse(saved);
+                renderCustomQueries();
+            }
+        }
+
+        function renderCustomQueries() {
+            const section = document.getElementById('customQueriesSection');
+            const container = document.getElementById('customQueryList');
+
+            if (customQueries.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            container.innerHTML = customQueries.map((q, index) => `
+                <li class="custom-query-item">
+                    <div class="query-item" onclick="selectCustomQuery(${index})" data-custom-id="${index}">
+                        ${q.name}
+                    </div>
+                    <button class="delete-custom-btn" onclick="deleteCustomQuery(${index}, event)" title="Ta bort"><i class="icon-trash"></i></button>
+                </li>
+            `).join('');
+        }
+
+        function deleteCustomQuery(index, event) {
+            event.stopPropagation();
+            if (confirm('Vill du ta bort denna fråga?')) {
+                customQueries.splice(index, 1);
+                saveCustomQueries();
+                renderCustomQueries();
+
+                // If we deleted the current query, go back to placeholder
+                if (currentQuery && currentQuery.isCustom) {
+                    document.getElementById('placeholder').style.display = 'block';
+                    document.getElementById('queryDetail').classList.remove('active');
+                    currentQuery = null;
+                }
+
+                showToast('Fråga borttagen');
+            }
+        }
+
+        // Close modal on overlay click
+        document.getElementById('customModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCustomModal();
+            }
+        });
+
+        // ==================== DB Structure Parser ====================
+
+        let dbSchema = []; // [{name, columns:[{name,type,isPK,isFK,fkRef}]}]
+
+        async function loadDbSchema() {
+            try {
+                const resp = await fetch('ic-database.sql');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const sql = await resp.text();
+                dbSchema = parseCreateTables(sql);
+                renderDbTree();
+                document.getElementById('dbTableCount').textContent = dbSchema.length + ' tabeller';
+            } catch (e) {
+                console.error('Failed to load DB schema:', e);
+                document.getElementById('dbTree').innerHTML =
+                    '<div style="text-align:center;color:var(--ic-text-muted);padding:20px;font-size:0.85em;">Kunde inte ladda databasstruktur</div>';
+            }
+        }
+
+        function parseCreateTables(sql) {
+            const tables = [];
+            // Match CREATE TABLE blocks
+            const tableRegex = /CREATE TABLE IF NOT EXISTS `(\w+)`\s*\(([\s\S]*?)\)\s*ENGINE/gi;
+            let match;
+            while ((match = tableRegex.exec(sql)) !== null) {
+                const tableName = match[1];
+                const body = match[2];
+                const columns = [];
+                const pkCols = [];
+
+                // Find PRIMARY KEY
+                const pkMatch = body.match(/PRIMARY KEY\s*\(`([^)]+)`\)/i);
+                if (pkMatch) {
+                    pkMatch[1].split(/`,\s*`/).forEach(function(col) {
+                        pkCols.push(col.trim());
+                    });
+                }
+
+                // Parse column lines
+                const lines = body.split('\n');
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    // Skip KEY, INDEX, PRIMARY, UNIQUE, CONSTRAINT lines
+                    if (/^(PRIMARY|KEY|INDEX|UNIQUE|CONSTRAINT|FULLTEXT)/i.test(line)) continue;
+                    if (!line.startsWith('`')) continue;
+
+                    const colMatch = line.match(/^`(\w+)`\s+(\w+(?:\([^)]*\))?)/);
+                    if (colMatch) {
+                        const colName = colMatch[1];
+                        const colType = colMatch[2];
+                        const isPK = pkCols.indexOf(colName) !== -1;
+                        const isFK = /ID$/i.test(colName) && !isPK;
+                        columns.push({
+                            name: colName,
+                            type: colType,
+                            isPK: isPK,
+                            isFK: isFK
+                        });
+                    }
+                }
+
+                if (columns.length > 0) {
+                    tables.push({ name: tableName, columns: columns });
+                }
+            }
+            return tables.sort(function(a, b) { return a.name.localeCompare(b.name); });
+        }
+
+        function renderDbTree() {
+            const container = document.getElementById('dbTree');
+            if (dbSchema.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:var(--ic-text-muted);padding:20px;font-size:0.85em;">Inga tabeller hittades</div>';
+                return;
+            }
+
+            container.innerHTML = dbSchema.map(function(table, ti) {
+                const colHtml = table.columns.map(function(col) {
+                    const icon = col.isPK ? '🔑' : (col.isFK ? '🔗' : '·');
+                    const cls = col.isPK ? 'pk' : (col.isFK ? 'fk' : '');
+                    return '<div class="db-col-item ' + cls + '" draggable="true" ' +
+                        'data-table="' + table.name + '" data-column="' + col.name + '" data-type="' + col.type + '" ' +
+                        'onclick="onDbClick(event,\'' + table.name + '\',\'' + col.name + '\')" ' +
+                        'ondragstart="onDbDragStart(event,\'' + table.name + '\',\'' + col.name + '\')" ' +
+                        'ondragend="onDbDragEnd(event)" ' +
+                        'title="Klicka för att lägga till, eller dra till en zon">' +
+                        '<span class="col-icon">' + icon + '</span>' +
+                        '<span class="col-name">' + col.name + '</span>' +
+                        '<span class="col-type">' + col.type + '</span>' +
+                        '</div>';
+                }).join('');
+
+                return '<div class="db-table-item">' +
+                    '<div class="db-table-header" draggable="true" ' +
+                    'data-table="' + table.name + '" ' +
+                    'onclick="toggleDbTable(' + ti + ')" ' +
+                    'ondragstart="onDbDragStart(event,\'' + table.name + '\',null)" ' +
+                    'ondragend="onDbDragEnd(event)">' +
+                    '<span class="db-toggle" id="dbToggle' + ti + '">▶</span>' +
+                    '<span class="db-tbl-icon"><i class="icon-clipboard"></i></span>' +
+                    '<span>' + table.name + '</span>' +
+                    '<span class="db-col-count">' + table.columns.length + '</span>' +
+                    '<button class="db-add-btn" onclick="event.stopPropagation();onDbClick(event,\'' + table.name + '\',null)" title="Lägg till i FROM">+</button>' +
+                    '</div>' +
+                    '<div class="db-columns" id="dbCols' + ti + '">' + colHtml + '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        // Click handler for DB items — adds to visual builder if open
+        function onDbClick(event, table, column) {
+            event.stopPropagation();
+            var vb = document.getElementById('visualBuilder');
+            if (vb && vb.style.display !== 'none') {
+                // Visual builder is open — add to appropriate zone
+                if (!column) {
+                    // Table click → add to FROM
+                    addVbChip('vbFrom', table, null);
+                } else {
+                    // Column click → add to SELECT
+                    addVbChip('vbSelect', table, column);
+                }
+                generateVisualSQL();
+                showToast((column ? table + '.' + column : table) + ' tillagd');
+            } else {
+                // Visual builder not open — copy to clipboard
+                var text = column ? table + '.' + column : table;
+                navigator.clipboard.writeText(text).then(function() {
+                    showToast(text + ' kopierad');
+                });
+            }
+        }
+
+        function toggleDbTable(index) {
+            const cols = document.getElementById('dbCols' + index);
+            const toggle = document.getElementById('dbToggle' + index);
+            const expanded = cols.classList.toggle('expanded');
+            toggle.textContent = expanded ? '▼' : '▶';
+        }
+
+        // DB search
+        document.getElementById('dbSearchInput').addEventListener('input', function() {
+            const q = this.value.trim().toLowerCase();
+            document.querySelectorAll('.db-table-item').forEach(function(item) {
+                const header = item.querySelector('.db-table-header');
+                const tableName = header.dataset.table.toLowerCase();
+                const cols = item.querySelector('.db-columns');
+                const colItems = item.querySelectorAll('.db-col-item');
+
+                let tableMatch = tableName.includes(q);
+                let anyColMatch = false;
+
+                colItems.forEach(function(ci) {
+                    const colName = ci.dataset.column.toLowerCase();
+                    const match = colName.includes(q);
+                    ci.classList.toggle('search-match', match && q !== '');
+                    if (match) anyColMatch = true;
+                });
+
+                header.classList.toggle('search-match', tableMatch && q !== '');
+
+                if (q === '') {
+                    item.style.display = '';
+                    cols.classList.remove('expanded');
+                    item.querySelector('.db-toggle').textContent = '▶';
+                } else if (tableMatch || anyColMatch) {
+                    item.style.display = '';
+                    if (anyColMatch) {
+                        cols.classList.add('expanded');
+                        item.querySelector('.db-toggle').textContent = '▼';
+                    }
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // ==================== Drag & Drop ====================
+
+        let _dragData = null; // {table, column}
+
+        function onDbDragStart(event, table, column) {
+            _dragData = { table: table, column: column };
+            event.dataTransfer.effectAllowed = 'copy';
+            event.dataTransfer.setData('text/plain', column ? table + '.' + column : table);
+            event.target.classList.add('dragging');
+        }
+
+        function onDbDragEnd(event) {
+            event.target.classList.remove('dragging');
+            _dragData = null;
+        }
+
+        // Setup drop zones (guarded against duplicate calls)
+        var _dropZonesInitialized = false;
+        function setupDropZones() {
+            if (_dropZonesInitialized) return;
+            _dropZonesInitialized = true;
+
+            // Use event delegation on the visual builder container
+            var vb = document.getElementById('visualBuilder');
+            if (!vb) return;
+
+            vb.addEventListener('dragover', function(e) {
+                var zone = e.target.closest('.vb-drop-zone');
+                if (zone) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    zone.classList.add('drag-over');
+                }
+            });
+            vb.addEventListener('dragleave', function(e) {
+                var zone = e.target.closest('.vb-drop-zone');
+                if (zone) zone.classList.remove('drag-over');
+            });
+            vb.addEventListener('drop', function(e) {
+                var zone = e.target.closest('.vb-drop-zone');
+                if (zone) {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+                    if (!_dragData) return;
+                    handleDrop(zone.dataset.vb, _dragData);
+                }
+            });
+
+            // Also make custom SQL textarea a drop target
+            var customMysql = document.getElementById('customMysql');
+            if (customMysql) {
+                customMysql.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                });
+                customMysql.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    if (!_dragData) return;
+                    var text = _dragData.column ? _dragData.table + '.' + _dragData.column : _dragData.table;
+                    var pos = customMysql.selectionStart;
+                    var before = customMysql.value.substring(0, pos);
+                    var after = customMysql.value.substring(pos);
+                    customMysql.value = before + text + after;
+                    customMysql.selectionStart = customMysql.selectionEnd = pos + text.length;
+                    customMysql.focus();
+                });
+            }
+        }
+
+        function handleDrop(target, data) {
+            if (target === 'from') {
+                // Drop table into FROM
+                addVbChip('vbFrom', data.table, null);
+            } else if (target === 'select') {
+                // Drop column (or table.*) into SELECT
+                if (data.column) {
+                    addVbChip('vbSelect', data.table, data.column);
+                } else {
+                    addVbChip('vbSelect', data.table, '*');
+                }
+            } else if (target === 'orderby') {
+                if (data.column) {
+                    addVbChip('vbOrderBy', data.table, data.column);
+                }
+            }
+            generateVisualSQL();
+        }
+
+        function addVbChip(zoneId, table, column) {
+            var zone = document.getElementById(zoneId);
+            // Remove hint text
+            var hint = zone.querySelector('.vb-drop-hint');
+            if (hint) hint.style.display = 'none';
+
+            var chip = document.createElement('span');
+            chip.className = 'vb-chip';
+            var label = column ? '<span class="chip-table">' + table + '</span>.' + column : '<span class="chip-table">' + table + '</span>';
+            chip.innerHTML = label + ' <span class="chip-remove" onclick="removeVbChip(this)">×</span>';
+            chip.dataset.table = table;
+            if (column) chip.dataset.column = column;
+            zone.appendChild(chip);
+        }
+
+        function removeVbChip(removeBtn) {
+            var chip = removeBtn.parentElement;
+            var zone = chip.parentElement;
+            chip.remove();
+            // Show hint if empty
+            var chips = zone.querySelectorAll('.vb-chip');
+            if (chips.length === 0) {
+                var hint = zone.querySelector('.vb-drop-hint');
+                if (hint) hint.style.display = '';
+            }
+            generateVisualSQL();
+        }
+
+        // ==================== Visual Builder Logic ====================
+
+        let vbJoinCounter = 0;
+        let vbWhereCounter = 0;
+
+        function openVisualBuilder() {
+            document.getElementById('visualBuilder').style.display = 'block';
+            // Hide the main content area but keep sidebar visible for table dragging
+            document.querySelector('.main-content').style.display = 'none';
+            setupDropZones();
+        }
+
+        function closeVisualBuilder() {
+            document.getElementById('visualBuilder').style.display = 'none';
+            document.querySelector('.main-content').style.display = 'block';
+        }
+
+        function addJoinRow() {
+            var id = vbJoinCounter++;
+            var container = document.getElementById('vbJoins');
+            var row = document.createElement('div');
+            row.className = 'vb-join-row';
+            row.id = 'vbJoin' + id;
+            row.innerHTML =
+                '<select class="vb-select" onchange="generateVisualSQL()">' +
+                '<option value="JOIN">JOIN</option>' +
+                '<option value="LEFT JOIN">LEFT JOIN</option>' +
+                '<option value="RIGHT JOIN">RIGHT JOIN</option>' +
+                '<option value="INNER JOIN">INNER JOIN</option>' +
+                '</select>' +
+                '<div class="vb-drop-zone" data-vb="join-table-' + id + '" style="min-height:32px;flex:1;min-width:120px;">' +
+                '<span class="vb-drop-hint">Tabell</span></div>' +
+                '<span style="font-weight:600;color:var(--ic-primary);">ON</span>' +
+                '<input class="vb-input" placeholder="t1.col = t2.col" style="flex:2;min-width:200px;" oninput="generateVisualSQL()">' +
+                '<button class="vb-remove-btn" onclick="removeJoinRow(' + id + ')">✕</button>';
+            container.appendChild(row);
+
+            // Setup drop zone for the new row
+            var dropZone = row.querySelector('.vb-drop-zone');
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; dropZone.classList.add('drag-over');
+            });
+            dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('drag-over'); });
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault(); dropZone.classList.remove('drag-over');
+                if (!_dragData) return;
+                addVbChip(dropZone.id || ('vbJoinZone' + id), _dragData.table, null);
+                // Auto-suggest ON clause
+                var fromChips = document.querySelectorAll('#vbFrom .vb-chip');
+                if (fromChips.length > 0) {
+                    var fromTable = fromChips[0].dataset.table;
+                    var joinTable = _dragData.table;
+                    var onInput = row.querySelector('input');
+                    if (onInput && !onInput.value) {
+                        // Try to guess join column
+                        var fromTbl = dbSchema.find(function(t) { return t.name === fromTable; });
+                        var joinTbl = dbSchema.find(function(t) { return t.name === joinTable; });
+                        if (fromTbl && joinTbl) {
+                            // Look for matching *ID columns
+                            var match = null;
+                            fromTbl.columns.forEach(function(fc) {
+                                joinTbl.columns.forEach(function(jc) {
+                                    if (fc.name === jc.name && /ID$/i.test(fc.name) && !match) {
+                                        match = fromTable + '.' + fc.name + ' = ' + joinTable + '.' + jc.name;
+                                    }
+                                });
+                            });
+                            if (match) onInput.value = match;
+                        }
+                    }
+                }
+                // Store table ref on the zone
+                dropZone.dataset.joinTable = _dragData.table;
+                generateVisualSQL();
+            });
+        }
+
+        function removeJoinRow(id) {
+            var row = document.getElementById('vbJoin' + id);
+            if (row) row.remove();
+            generateVisualSQL();
+        }
+
+        function addWhereRow() {
+            var id = vbWhereCounter++;
+            var container = document.getElementById('vbWheres');
+            var row = document.createElement('div');
+            row.className = 'vb-where-row';
+            row.id = 'vbWhere' + id;
+            row.innerHTML =
+                (id > 0 ? '<select class="vb-select" style="width:70px;" onchange="generateVisualSQL()"><option>AND</option><option>OR</option></select>' : '<span style="width:70px;display:inline-block;"></span>') +
+                '<input class="vb-input" placeholder="kolumn" style="flex:1;min-width:120px;" oninput="generateVisualSQL()">' +
+                '<select class="vb-select" style="width:80px;" onchange="generateVisualSQL()">' +
+                '<option>=</option><option>!=</option><option>&lt;</option><option>&gt;</option>' +
+                '<option>&lt;=</option><option>&gt;=</option><option>LIKE</option><option>IN</option>' +
+                '<option>IS NULL</option><option>IS NOT NULL</option>' +
+                '</select>' +
+                '<input class="vb-input" placeholder="v\u00e4rde" style="flex:1;min-width:120px;" oninput="generateVisualSQL()">' +
+                '<button class="vb-remove-btn" onclick="removeWhereRow(' + id + ')">✕</button>';
+            container.appendChild(row);
+
+            // Allow column drop on the first input
+            var colInput = row.querySelectorAll('input')[0];
+            colInput.addEventListener('dragover', function(e) { e.preventDefault(); });
+            colInput.addEventListener('drop', function(e) {
+                e.preventDefault();
+                if (_dragData && _dragData.column) {
+                    colInput.value = _dragData.table + '.' + _dragData.column;
+                    generateVisualSQL();
+                }
+            });
+        }
+
+        function removeWhereRow(id) {
+            var row = document.getElementById('vbWhere' + id);
+            if (row) row.remove();
+            generateVisualSQL();
+        }
+
+        function generateVisualSQL() {
+            var sql = '';
+
+            // SELECT
+            var selectChips = document.querySelectorAll('#vbSelect .vb-chip');
+            if (selectChips.length === 0) {
+                sql += 'SELECT *\n';
+            } else {
+                var cols = [];
+                selectChips.forEach(function(chip) {
+                    var t = chip.dataset.table;
+                    var c = chip.dataset.column;
+                    cols.push(c ? t + '.' + c : t + '.*');
+                });
+                sql += 'SELECT ' + cols.join(', ') + '\n';
+            }
+
+            // FROM
+            var fromChips = document.querySelectorAll('#vbFrom .vb-chip');
+            if (fromChips.length === 0) {
+                sql += 'FROM {{tabell}}';
+            } else {
+                var tables = [];
+                fromChips.forEach(function(chip) { tables.push(chip.dataset.table); });
+                sql += 'FROM ' + tables.join(', ') + '\n';
+            }
+
+            // JOINs
+            document.querySelectorAll('.vb-join-row').forEach(function(row) {
+                var joinType = row.querySelector('select').value;
+                var joinZone = row.querySelector('.vb-drop-zone');
+                var joinTable = joinZone ? joinZone.dataset.joinTable : '';
+                var joinChips = joinZone ? joinZone.querySelectorAll('.vb-chip') : [];
+                if (joinChips.length > 0) joinTable = joinChips[0].dataset.table;
+                var onClause = row.querySelector('input').value.trim();
+                if (joinTable) {
+                    sql += joinType + ' ' + joinTable;
+                    if (onClause) sql += ' ON ' + onClause;
+                    sql += '\n';
+                }
+            });
+
+            // WHERE
+            var whereRows = document.querySelectorAll('.vb-where-row');
+            var whereParts = [];
+            whereRows.forEach(function(row, idx) {
+                var inputs = row.querySelectorAll('input');
+                var selects = row.querySelectorAll('select');
+                var col = inputs[0] ? inputs[0].value.trim() : '';
+                if (!col) return;
+                var op = selects.length > 0 ? selects[selects.length - 1].value : '=';
+                // For operators with "Other" button
+                if (selects.length > 1) {
+                    // First select is AND/OR, second is operator
+                    op = selects[1].value;
+                } else if (selects.length === 1) {
+                    op = selects[0].value;
+                }
+                var val = inputs[1] ? inputs[1].value.trim() : '';
+                var connector = '';
+                if (idx > 0 && selects.length > 1) {
+                    connector = selects[0].value + ' ';
+                } else if (idx > 0) {
+                    connector = 'AND ';
+                }
+
+                if (op === 'IS NULL' || op === 'IS NOT NULL') {
+                    whereParts.push(connector + col + ' ' + op);
+                } else if (val) {
+                    // Auto-quote strings
+                    var qVal = /^\d+$/.test(val) ? val : "'" + val.replace(/'/g, "''") + "'";
+                    whereParts.push(connector + col + ' ' + op + ' ' + qVal);
+                }
+            });
+            if (whereParts.length > 0) {
+                sql += 'WHERE ' + whereParts.join('\n  ') + '\n';
+            }
+
+            // ORDER BY
+            var orderChips = document.querySelectorAll('#vbOrderBy .vb-chip');
+            if (orderChips.length > 0) {
+                var orderCols = [];
+                orderChips.forEach(function(chip) {
+                    orderCols.push(chip.dataset.table + '.' + (chip.dataset.column || ''));
+                });
+                sql += 'ORDER BY ' + orderCols.join(', ') + '\n';
+            }
+
+            // LIMIT
+            var limit = document.getElementById('vbLimit').value.trim();
+            if (limit) {
+                sql += 'LIMIT ' + limit;
+            }
+
+            document.getElementById('vbSqlOutput').innerHTML = highlightSQL(sql.trim());
+        }
+
+        function copyVisualSQL() {
+            var text = document.getElementById('vbSqlOutput').textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                showToast('SQL kopierad till urklipp!');
+            });
+        }
+
+        function useInCustomQuery() {
+            var sql = document.getElementById('vbSqlOutput').textContent;
+            closeVisualBuilder();
+            openCustomModal();
+            document.getElementById('customMysql').value = sql;
+            document.getElementById('customName').value = 'Visuell fråga ' + new Date().toLocaleDateString('sv-SE');
+        }
+
+        // ==================== Initialize ====================
+
+        // Initialize
+        loadData();
+        loadDbSchema();
+        setupDropZones();
+    </script>
+</body>
+</html>

@@ -1,0 +1,715 @@
+{
+  "version": "1.0",
+  "description": "SQL-frågor för InfoCaption databas",
+  "categories": [
+    {
+      "id": "guides",
+      "name": "Guider",
+      "icon": "📚",
+      "queries": [
+        {
+          "id": "guide_views_by_category",
+          "name": "Guidevisningar per kategori",
+          "description": "Ta fram lista över guider i en specifik kategori med antal visningar",
+          "variables": [
+            {"name": "topicId", "label": "Kategori-ID", "type": "number", "placeholder": "1546", "required": true},
+            {"name": "startDate", "label": "Från datum", "type": "date", "placeholder": "2023-01-01", "required": true},
+            {"name": "endDate", "label": "Till datum", "type": "date", "placeholder": "2024-12-31", "default": "CURRENT_DATE", "required": false}
+          ],
+          "mysql": "SELECT \n    s.id1 AS GuideID, \n    g.title AS Titel, \n    COUNT(*) AS Visningar,\n    u.UserName AS Ägare,\n    u.Email AS Email\nFROM smartasslog s\nJOIN guide g ON s.id1 = g.guideid\nJOIN topicguidelink tgl ON g.guideid = tgl.guideid\nJOIN authorguidelink agl ON g.guideid = agl.guideid\nJOIN smartassuser u ON agl.UserID = u.UserID\nWHERE s.logtype = 1 \n    AND s.logdate BETWEEN '{{startDate}}' AND {{endDate}}\n    AND tgl.TopicID = {{topicId}}\nGROUP BY s.id1, g.title, u.UserName, u.Email\nORDER BY Visningar DESC;",
+          "mssql": "SELECT \n    s.id1 AS GuideID, \n    g.title AS Titel, \n    COUNT(*) AS Visningar,\n    u.UserName AS [Ägare],\n    u.Email AS Email\nFROM smartasslog s\nJOIN guide g ON s.id1 = g.guideid\nJOIN topicguidelink tgl ON g.guideid = tgl.guideid\nJOIN authorguidelink agl ON g.guideid = agl.guideid\nJOIN smartassuser u ON agl.UserID = u.UserID\nWHERE s.logtype = 1 \n    AND s.logdate BETWEEN '{{startDate}}' AND {{endDate}}\n    AND tgl.TopicID = {{topicId}}\nGROUP BY s.id1, g.title, u.UserName, u.Email\nORDER BY Visningar DESC;"
+        },
+        {
+          "id": "search_textguides_content",
+          "name": "Sök i textguiders innehåll",
+          "description": "Hitta textguider som innehåller ett specifikt ord i innehållet",
+          "variables": [
+            {"name": "searchPhrase", "label": "Sökfras", "type": "text", "placeholder": "sökord", "required": true}
+          ],
+          "mysql": "SELECT g.guideid, g.title \nFROM guide AS g \nJOIN sectionentitylink AS sel ON sel.EntityID = g.guideid\nJOIN cellsectionlink AS csl ON csl.SectionID = sel.SectionID\nJOIN cells AS c ON c.CellID = csl.CellID\nWHERE g.guidetype = 7 \n    AND c.Widget LIKE '%{{searchPhrase}}%' \n    AND g.removed = 'N';",
+          "mssql": "SELECT g.guideid, g.title \nFROM guide AS g \nJOIN sectionentitylink AS sel ON sel.EntityID = g.guideid\nJOIN cellsectionlink AS csl ON csl.SectionID = sel.SectionID\nJOIN cells AS c ON c.CellID = csl.CellID\nWHERE g.guidetype = 7 \n    AND c.Widget LIKE '%{{searchPhrase}}%' \n    AND g.removed = 'N';"
+        },
+        {
+          "id": "guides_created_per_user",
+          "name": "Skapade guider per användare",
+          "description": "Antal skapade guider grupperat per användare",
+          "variables": [],
+          "mysql": "SELECT smartassuser.userid, smartassuser.username, COUNT(guide.ownerid) AS AntalGuider\nFROM smartassuser\nJOIN guide ON smartassuser.userid = guide.ownerid\nGROUP BY guide.ownerid\nORDER BY COUNT(guide.ownerid) DESC;",
+          "mssql": "SELECT smartassuser.userid, smartassuser.username, COUNT(guide.ownerid) AS AntalGuider\nFROM smartassuser\nJOIN guide ON smartassuser.userid = guide.ownerid\nGROUP BY smartassuser.userid, smartassuser.username, guide.ownerid\nORDER BY COUNT(guide.ownerid) DESC;"
+        },
+        {
+          "id": "guides_per_type",
+          "name": "Guider per guidetyp",
+          "description": "Antal guider per guidetyp sorterat fallande",
+          "variables": [],
+          "mysql": "SELECT\n  COUNT(*) AS Antal,\n  CASE guidetype\n    WHEN 1 THEN 'Snabbguide'\n    WHEN 2 THEN 'Steg-för-steg-guide'\n    WHEN 6 THEN 'LMS'\n    WHEN 7 THEN 'Textguide'\n    WHEN 9 THEN 'Kunskapstest'\n    WHEN 11 THEN 'Översikt'\n    WHEN 12 THEN 'Snabbinspelning'\n    WHEN 13 THEN 'Push training'\n    WHEN 14 THEN 'Kurs'\n    WHEN 15 THEN 'URL'\n    WHEN 16 THEN 'Ranking'\n    WHEN 17 THEN 'Arbetsflöde'\n    WHEN 100 THEN 'Process'\n    ELSE 'Okänd'\n  END AS Guidetyp\nFROM guide\nWHERE removed = 'N'\nGROUP BY guidetype\nORDER BY Antal DESC;",
+          "mssql": "SELECT\n  COUNT(*) AS Antal,\n  CASE guidetype\n    WHEN 1 THEN 'Snabbguide'\n    WHEN 2 THEN 'Steg-för-steg-guide'\n    WHEN 6 THEN 'LMS'\n    WHEN 7 THEN 'Textguide'\n    WHEN 9 THEN 'Kunskapstest'\n    WHEN 11 THEN 'Översikt'\n    WHEN 12 THEN 'Snabbinspelning'\n    WHEN 13 THEN 'Push training'\n    WHEN 14 THEN 'Kurs'\n    WHEN 15 THEN 'URL'\n    WHEN 16 THEN 'Ranking'\n    WHEN 17 THEN 'Arbetsflöde'\n    WHEN 100 THEN 'Process'\n    ELSE 'Okänd'\n  END AS Guidetyp\nFROM guide\nWHERE removed = 'N'\nGROUP BY guidetype\nORDER BY Antal DESC;"
+        },
+        {
+          "id": "who_deleted_guide",
+          "name": "Vem raderade guiden?",
+          "description": "Ta fram vem som raderat en guide (om den hunnit återställas)",
+          "variables": [],
+          "mysql": "SELECT id1 AS GuideID, id2 AS UserID, logdate \nFROM smartasslog \nWHERE logtype = 31 \nORDER BY logdate DESC;",
+          "mssql": "SELECT id1 AS GuideID, id2 AS UserID, logdate \nFROM smartasslog \nWHERE logtype = 31 \nORDER BY logdate DESC;"
+        },
+        {
+          "id": "guides_with_categories",
+          "name": "Guider med kategorier",
+          "description": "Lista alla guider med deras kategorikopplingar",
+          "variables": [],
+          "mysql": "SELECT guide.guideid, guide.title, topic.Name AS Kategori\nFROM guide \nJOIN topicguidelink ON guide.guideid = topicguidelink.guideid \nJOIN topic ON topic.topicid = topicguidelink.topicid \nORDER BY guide.guideid;",
+          "mssql": "SELECT guide.guideid, guide.title, topic.Name AS Kategori\nFROM guide \nJOIN topicguidelink ON guide.guideid = topicguidelink.guideid \nJOIN topic ON topic.topicid = topicguidelink.topicid \nORDER BY guide.guideid;"
+        },
+        {
+          "id": "guides_without_categories",
+          "name": "Guider utan kategorier",
+          "description": "Hitta guider som saknar kategorikoppling",
+          "variables": [],
+          "mysql": "SELECT guide.guideid, guide.title, smartassuser.email AS Ägare\nFROM guide\nJOIN smartassuser ON smartassuser.userid = guide.ownerid\nLEFT JOIN topicguidelink ON guide.guideid = topicguidelink.guideid\nLEFT JOIN topic ON topicguidelink.topicid = topic.topicid\nWHERE topic.topicid IS NULL\nORDER BY guide.guideid;",
+          "mssql": "SELECT guide.guideid, guide.title, smartassuser.email AS [Ägare]\nFROM guide\nJOIN smartassuser ON smartassuser.userid = guide.ownerid\nLEFT JOIN topicguidelink ON guide.guideid = topicguidelink.guideid\nLEFT JOIN topic ON topicguidelink.topicid = topic.topicid\nWHERE topic.topicid IS NULL\nORDER BY guide.guideid;"
+        },
+        {
+          "id": "duplicate_guide_titles",
+          "name": "Dubletter av guider",
+          "description": "Hitta guider med samma titel",
+          "variables": [],
+          "mysql": "SELECT title, COUNT(title) AS Antal\nFROM guide \nGROUP BY title \nHAVING COUNT(title) > 1;",
+          "mssql": "SELECT title, COUNT(title) AS Antal\nFROM guide \nGROUP BY title \nHAVING COUNT(title) > 1;"
+        },
+        {
+          "id": "expired_guides",
+          "name": "Utgångna guider",
+          "description": "Guider vars giltighetsdatum har passerat",
+          "variables": [],
+          "mysql": "SELECT title, guideID, Validto\nFROM guide\nWHERE validto < CURRENT_DATE\nORDER BY Validto DESC;",
+          "mssql": "SELECT title, guideID, Validto\nFROM guide\nWHERE validto < GETDATE()\nORDER BY Validto DESC;"
+        },
+        {
+          "id": "reset_guide_views",
+          "name": "Nollställ visningar",
+          "description": "Sätt visningar till 0 på en specifik guide",
+          "variables": [
+            {"name": "guideId", "label": "Guide-ID", "type": "number", "placeholder": "123", "required": true}
+          ],
+          "mysql": "UPDATE guide SET NoOfAccesses = 0 WHERE GuideID = {{guideId}};",
+          "mssql": "UPDATE guide SET NoOfAccesses = 0 WHERE GuideID = {{guideId}};"
+        },
+        {
+          "id": "guide_views_interval",
+          "name": "Guidevisningar i tidsintervall",
+          "description": "Lista guider sorterade efter visningar inom ett datumintervall",
+          "variables": [
+            {"name": "startDate", "label": "Från datum", "type": "date", "placeholder": "2022-01-01", "required": true},
+            {"name": "endDate", "label": "Till datum", "type": "date", "placeholder": "2022-12-31", "required": true}
+          ],
+          "mysql": "SELECT g.Title, log.ID1 AS GuideID, COUNT(log.ID1) AS Antal \nFROM smartasslog AS log \nJOIN guide AS g ON g.guideid = log.ID1 \nWHERE log.LogDate > '{{startDate}}' AND log.LogDate < '{{endDate}}' AND log.logtype = 1 \nGROUP BY log.ID1, g.Title\nORDER BY COUNT(log.ID1) DESC;",
+          "mssql": "SELECT g.Title, log.ID1 AS GuideID, COUNT(log.ID1) AS Antal \nFROM smartasslog AS log \nJOIN guide AS g ON g.guideid = log.ID1 \nWHERE log.LogDate > '{{startDate}}' AND log.LogDate < '{{endDate}}' AND log.logtype = 1 \nGROUP BY log.ID1, g.Title\nORDER BY COUNT(log.ID1) DESC;"
+        },
+        {
+          "id": "guide_views_with_pubdate",
+          "name": "Guidevisningar med publiceringsdatum",
+          "description": "Lista guider med visningar och publiceringsdatum",
+          "variables": [
+            {"name": "startDate", "label": "Från datum", "type": "date", "placeholder": "2022-01-01", "required": true},
+            {"name": "endDate", "label": "Till datum", "type": "date", "placeholder": "2022-12-31", "required": true}
+          ],
+          "mysql": "SELECT g.PublicationDate AS Publicerad, g.Title, log.ID1 AS GuideID, COUNT(log.ID1) AS Antal \nFROM smartasslog AS log \nJOIN guide AS g ON g.guideid = log.ID1 \nWHERE log.LogDate > '{{startDate}}' AND log.LogDate < '{{endDate}}' AND log.logtype = 1 \nGROUP BY log.ID1, g.Title, g.PublicationDate\nORDER BY COUNT(log.ID1) DESC;",
+          "mssql": "SELECT g.PublicationDate AS Publicerad, g.Title, log.ID1 AS GuideID, COUNT(log.ID1) AS Antal \nFROM smartasslog AS log \nJOIN guide AS g ON g.guideid = log.ID1 \nWHERE log.LogDate > '{{startDate}}' AND log.LogDate < '{{endDate}}' AND log.logtype = 1 \nGROUP BY log.ID1, g.Title, g.PublicationDate\nORDER BY COUNT(log.ID1) DESC;"
+        },
+        {
+          "id": "top_views_specific_date",
+          "name": "Topplista visningar specifikt datum",
+          "description": "Guider med flest visningar på ett specifikt datum",
+          "variables": [
+            {"name": "date", "label": "Datum", "type": "date", "placeholder": "2024-05-02", "required": true}
+          ],
+          "mysql": "SELECT s.id1 AS GuideID, g.title AS Titel, COUNT(*) AS Visningar\nFROM smartasslog s\nJOIN guide g ON s.id1 = g.guideid\nWHERE s.logtype = 1 AND s.logdate LIKE '{{date}}%'\nGROUP BY s.id1, g.title\nORDER BY Visningar DESC;",
+          "mssql": "SELECT s.id1 AS GuideID, g.title AS Titel, COUNT(*) AS Visningar\nFROM smartasslog s\nJOIN guide g ON s.id1 = g.guideid\nWHERE s.logtype = 1 AND CONVERT(DATE, s.logdate) = '{{date}}'\nGROUP BY s.id1, g.title\nORDER BY Visningar DESC;"
+        },
+        {
+          "id": "classic_textguides",
+          "name": "Klassiska textguider",
+          "description": "Lista alla klassiska textguider med GuideID, titel och användarnamn",
+          "variables": [],
+          "mysql": "SELECT guide.guideid, guide.title, smartassuser.username\nFROM guide\nINNER JOIN smartassuser ON guide.ownerid = smartassuser.UserID \nWHERE guidetype = 7 AND playmode = 0;",
+          "mssql": "SELECT guide.guideid, guide.title, smartassuser.username\nFROM guide\nINNER JOIN smartassuser ON guide.ownerid = smartassuser.UserID \nWHERE guidetype = 7 AND playmode = 0;"
+        },
+        {
+          "id": "guides_linked_to_other",
+          "name": "Guider som länkar till specifik guide",
+          "description": "Hitta guider som innehåller en länk till en specifik guide",
+          "variables": [
+            {"name": "linkedGuideId", "label": "Guide-ID att söka efter", "type": "number", "placeholder": "22011", "required": true}
+          ],
+          "mysql": "SELECT g.guideid, g.title \nFROM cells AS c\nJOIN cellsectionlink AS csl ON csl.CellID = c.CellID\nJOIN sections AS s ON s.SectionID = csl.EntityID\nJOIN sectionentitylink AS sel ON sel.sectionid = s.SectionID\nJOIN guide AS g ON sel.entityid = g.guideid\nWHERE c.widget LIKE '%{{linkedGuideId}}.guide%';",
+          "mssql": "SELECT g.guideid, g.title \nFROM cells AS c\nJOIN cellsectionlink AS csl ON csl.CellID = c.CellID\nJOIN sections AS s ON s.SectionID = csl.EntityID\nJOIN sectionentitylink AS sel ON sel.sectionid = s.SectionID\nJOIN guide AS g ON sel.entityid = g.guideid\nWHERE c.widget LIKE '%{{linkedGuideId}}.guide%';"
+        },
+        {
+          "id": "all_guides_detailed",
+          "name": "Alla guider - detaljerad vy",
+          "description": "Komplett lista över alla guider med kategorier, typ och ägarinfo",
+          "variables": [],
+          "mysql": "SELECT \n   g.guideid,\n   g.title,\n   g.lastmodifiedtimestamp AS SenastÄndrad,\n   g.publicationdate AS Publicerad,\n   g.lastaccessed AS SenastVisad,\n   g.searchable AS Sökbar,\n   g.NoOfAccesses AS Visningar,\n   CASE g.guidetype\n     WHEN 1 THEN 'Snabbguide'\n     WHEN 2 THEN 'Steg-för-steg-guide'\n     WHEN 6 THEN 'LMS'\n     WHEN 7 THEN 'Textguide'\n     WHEN 9 THEN 'Kunskapstest'\n     WHEN 11 THEN 'Översikt'\n     WHEN 12 THEN 'Snabbinspelning'\n     WHEN 13 THEN 'Push training'\n     WHEN 14 THEN 'Kurs'\n     WHEN 15 THEN 'URL'\n     WHEN 16 THEN 'Ranking'\n     WHEN 17 THEN 'Arbetsflöde'\n     WHEN 100 THEN 'Process'\n     ELSE 'Okänd'\n   END AS Guidetyp,\n   u.email AS ÄgareEmail,\n   u.username AS Ägare,\n   t.name AS Kategori\nFROM guide g\nLEFT JOIN smartassuser u ON g.ownerid = u.userid\nLEFT JOIN topicguidelink tg ON g.guideid = tg.guideid  \nLEFT JOIN topic t ON tg.topicid = t.topicid  \nWHERE g.removed = 'N'\nORDER BY g.guidetype, g.guideid;",
+          "mssql": "SELECT \n   g.guideid,\n   g.title,\n   g.lastmodifiedtimestamp AS SenastÄndrad,\n   g.publicationdate AS Publicerad,\n   g.lastaccessed AS SenastVisad,\n   g.searchable AS Sökbar,\n   g.NoOfAccesses AS Visningar,\n   CASE g.guidetype\n     WHEN 1 THEN 'Snabbguide'\n     WHEN 2 THEN 'Steg-för-steg-guide'\n     WHEN 6 THEN 'LMS'\n     WHEN 7 THEN 'Textguide'\n     WHEN 9 THEN 'Kunskapstest'\n     WHEN 11 THEN 'Översikt'\n     WHEN 12 THEN 'Snabbinspelning'\n     WHEN 13 THEN 'Push training'\n     WHEN 14 THEN 'Kurs'\n     WHEN 15 THEN 'URL'\n     WHEN 16 THEN 'Ranking'\n     WHEN 17 THEN 'Arbetsflöde'\n     WHEN 100 THEN 'Process'\n     ELSE 'Okänd'\n   END AS Guidetyp,\n   u.email AS [ÄgareEmail],\n   u.username AS [Ägare],\n   t.name AS Kategori\nFROM guide g\nLEFT JOIN smartassuser u ON g.ownerid = u.userid\nLEFT JOIN topicguidelink tg ON g.guideid = tg.guideid  \nLEFT JOIN topic t ON tg.topicid = t.topicid  \nWHERE g.removed = 'N'\nORDER BY g.guidetype, g.guideid;"
+        },
+        {
+          "id": "search_title_summary",
+          "name": "Sök i titel och summering",
+          "description": "Hitta guider baserat på innehåll i titel och summering",
+          "variables": [
+            {"name": "searchWord", "label": "Sökord", "type": "text", "placeholder": "sökord", "required": true}
+          ],
+          "mysql": "SELECT title, guideid \nFROM guide AS g \nWHERE g.title LIKE '%{{searchWord}}%' \n   OR g.description LIKE '%{{searchWord}}%' \n   OR g.summary LIKE '%{{searchWord}}%';",
+          "mssql": "SELECT title, guideid \nFROM guide AS g \nWHERE g.title LIKE '%{{searchWord}}%' \n   OR g.description LIKE '%{{searchWord}}%' \n   OR g.summary LIKE '%{{searchWord}}%';"
+        },
+        {
+          "id": "search_cell_content",
+          "name": "Sök i cellinnehåll",
+          "description": "Hitta guider där en cell innehåller ett visst ord",
+          "variables": [
+            {"name": "searchWord", "label": "Sökord", "type": "text", "placeholder": "ord", "required": true}
+          ],
+          "mysql": "SELECT title, guideid FROM guide WHERE guideid IN \n   (SELECT EntityID FROM sectionentitylink WHERE SectionID IN\n     (SELECT sectionID FROM sections WHERE sectionid IN \n       (SELECT EntityID FROM cellsectionlink WHERE CellID IN \n        (SELECT CellID FROM cells WHERE widget LIKE '%{{searchWord}}%'))));",
+          "mssql": "SELECT title, guideid FROM guide WHERE guideid IN \n   (SELECT EntityID FROM sectionentitylink WHERE SectionID IN\n     (SELECT sectionID FROM sections WHERE sectionid IN \n       (SELECT EntityID FROM cellsectionlink WHERE CellID IN \n        (SELECT CellID FROM cells WHERE widget LIKE '%{{searchWord}}%'))));"
+        },
+        {
+          "id": "guides_in_workflow",
+          "name": "Guider i arbetsflöde",
+          "description": "Lista alla guider kopplade till ett specifikt arbetsflöde",
+          "variables": [
+            {"name": "workflowGuideId", "label": "Arbetsflöde Guide-ID", "type": "number", "placeholder": "123", "required": true},
+            {"name": "guideType", "label": "Guidetyp (valfritt)", "type": "number", "placeholder": "7", "required": false}
+          ],
+          "mysql": "SELECT do.GuideID\nFROM Diagram d\nJOIN DiagramObject do ON do.DiagramID = d.DiagramID\nJOIN Guide g ON g.GuideID = do.GuideID\nWHERE d.ProsydoEntityID = {{workflowGuideId}}\n  AND d.DiagramTypeID = 3\n  AND do.GuideID IS NOT NULL\n  {{#guideType}}AND g.GuideType = {{guideType}}{{/guideType}};",
+          "mssql": "SELECT do.GuideID\nFROM Diagram d\nJOIN DiagramObject do ON do.DiagramID = d.DiagramID\nJOIN Guide g ON g.GuideID = do.GuideID\nWHERE d.ProsydoEntityID = {{workflowGuideId}}\n  AND d.DiagramTypeID = 3\n  AND do.GuideID IS NOT NULL\n  {{#guideType}}AND g.GuideType = {{guideType}}{{/guideType}};"
+        },
+        {
+          "id": "guides_in_process",
+          "name": "Guider i process",
+          "description": "Lista alla guider kopplade till en process (via processnamn)",
+          "variables": [
+            {"name": "processName", "label": "Processnamn", "type": "text", "placeholder": "Försäljning", "required": true}
+          ],
+          "mysql": "SELECT DISTINCT do.GuideID\nFROM DiagramObject do\nJOIN Diagram d ON d.DiagramID = do.DiagramID\nJOIN Process p ON p.DiagramID = d.DiagramID\nWHERE p.ProcessName = '{{processName}}'\n  AND p.ActiveVersion = 1\n  AND d.DiagramTypeID = 2\n  AND do.GuideID IS NOT NULL;",
+          "mssql": "SELECT DISTINCT do.GuideID\nFROM DiagramObject do\nJOIN Diagram d ON d.DiagramID = do.DiagramID\nJOIN Process p ON p.DiagramID = d.DiagramID\nWHERE p.ProcessName = '{{processName}}'\n  AND p.ActiveVersion = 1\n  AND d.DiagramTypeID = 2\n  AND do.GuideID IS NOT NULL;"
+        },
+        {
+          "id": "guides_global_templates",
+          "name": "Guider med globala mallar",
+          "description": "Lista guider som använder globala sektions- och cellmallar",
+          "variables": [],
+          "mysql": "SELECT \n    g.GuideID,\n    g.Title AS GuideName,\n    GROUP_CONCAT(DISTINCT gt.Name ORDER BY gt.Name SEPARATOR ', ') AS TemplateNames\nFROM guide g\nINNER JOIN sectionentitylink sel ON g.GuideID = sel.EntityID AND sel.EntityType = 0\nINNER JOIN cellsectionlink csl ON sel.SectionID = csl.EntityID\nINNER JOIN cells c ON csl.CellID = c.CellID\nINNER JOIN guidetemplate gt ON c.TemplateID = gt.GuideTemplateID\nWHERE gt.GlobalState = 'Y'\nGROUP BY g.GuideID, g.Title\nORDER BY g.Title;",
+          "mssql": "SELECT \n    g.GuideID,\n    g.Title AS GuideName,\n    STRING_AGG(gt.Name, ', ') AS TemplateNames\nFROM guide g\nINNER JOIN sectionentitylink sel ON g.GuideID = sel.EntityID AND sel.EntityType = 0\nINNER JOIN cellsectionlink csl ON sel.SectionID = csl.EntityID\nINNER JOIN cells c ON csl.CellID = c.CellID\nINNER JOIN guidetemplate gt ON c.TemplateID = gt.GuideTemplateID\nWHERE gt.GlobalState = 'Y'\nGROUP BY g.GuideID, g.Title\nORDER BY g.Title;"
+        },
+        {
+          "id": "user_published_guides",
+          "name": "Användares publicerade guider",
+          "description": "Visa vilka guider en specifik användare senast har publicerat/uppdaterat",
+          "variables": [
+            {"name": "userId", "label": "Användar-ID", "type": "number", "placeholder": "123", "required": true}
+          ],
+          "mysql": "SELECT\n  g.guideid,\n  g.title AS guide_title,\n  CASE l.logtype\n    WHEN 7  THEN 'Publicerad'\n    WHEN 20 THEN 'Uppdaterad'\n  END AS event_type,\n  l.logdate AS log_timestamp\nFROM guide AS g\nJOIN (\n  SELECT ID1 AS guideid, MAX(logdate) AS max_logdate\n  FROM smartasslog\n  WHERE logtype IN (7, 20) AND ID2 = {{userId}}\n  GROUP BY ID1\n) latest ON latest.guideid = g.guideid\nJOIN smartasslog AS l ON l.ID1 = latest.guideid AND l.logdate = latest.max_logdate\nWHERE l.logtype IN (7, 20) AND l.ID2 = {{userId}}\nORDER BY l.logdate DESC, g.guideid;",
+          "mssql": "SELECT\n  g.guideid,\n  g.title AS guide_title,\n  CASE l.logtype\n    WHEN 7  THEN 'Publicerad'\n    WHEN 20 THEN 'Uppdaterad'\n  END AS event_type,\n  l.logdate AS log_timestamp\nFROM guide AS g\nJOIN (\n  SELECT ID1 AS guideid, MAX(logdate) AS max_logdate\n  FROM smartasslog\n  WHERE logtype IN (7, 20) AND ID2 = {{userId}}\n  GROUP BY ID1\n) latest ON latest.guideid = g.guideid\nJOIN smartasslog AS l ON l.ID1 = latest.guideid AND l.logdate = latest.max_logdate\nWHERE l.logtype IN (7, 20) AND l.ID2 = {{userId}}\nORDER BY l.logdate DESC, g.guideid;"
+        }
+      ]
+    },
+    {
+      "id": "users",
+      "name": "Användare",
+      "icon": "👤",
+      "queries": [
+        {
+          "id": "active_producers_6months",
+          "name": "Aktiva producenter (6 mån)",
+          "description": "Antal producenter som varit aktiva senaste 6 månaderna",
+          "variables": [],
+          "mysql": "SELECT COUNT(DISTINCT ID2) AS AktivaProdcenter\nFROM smartasslog \nWHERE LogDate >= DATE_SUB(NOW(), INTERVAL 6 MONTH) \n  AND (LogType = 19 OR LogType = 20);",
+          "mssql": "SELECT COUNT(DISTINCT ID2) AS AktivaProdcenter\nFROM smartasslog \nWHERE LogDate >= DATEADD(MONTH, -6, GETDATE()) \n  AND (LogType = 19 OR LogType = 20);"
+        },
+        {
+          "id": "all_users_email",
+          "name": "Alla användare med email",
+          "description": "Lista alla användare med användarnamn och email",
+          "variables": [],
+          "mysql": "SELECT userid, username, email \nFROM smartassuser;",
+          "mssql": "SELECT userid, username, email \nFROM smartassuser;"
+        },
+        {
+          "id": "all_users_full",
+          "name": "Alla användare - komplett",
+          "description": "All information om alla användare",
+          "variables": [],
+          "mysql": "SELECT * FROM smartassuser;",
+          "mssql": "SELECT * FROM smartassuser;"
+        },
+        {
+          "id": "reset_password",
+          "name": "Återställ lösenord",
+          "description": "Återställ lösenord till 'smartass' för en specifik användare",
+          "variables": [
+            {"name": "username", "label": "Användarnamn", "type": "text", "placeholder": "infocaptionserviceuser", "required": true}
+          ],
+          "mysql": "UPDATE usercredential\nSET EncryptedPassword='44d3df2c01530f8edc3c7dc72abeebb45bc0d332d23f5ca916eeeaae3dc609cf', salt='gqsPRL'\nWHERE UserName='{{username}}' AND CredentialType=1;",
+          "mssql": "UPDATE usercredential\nSET EncryptedPassword='44d3df2c01530f8edc3c7dc72abeebb45bc0d332d23f5ca916eeeaae3dc609cf', salt='gqsPRL'\nWHERE UserName='{{username}}' AND CredentialType=1;"
+        },
+        {
+          "id": "group_member_count",
+          "name": "Antal medlemmar per grupp",
+          "description": "Lista antal medlemmar i varje grupp",
+          "variables": [
+            {"name": "groupType", "label": "Grupptyp (0=manuell, 1=importerad)", "type": "number", "placeholder": "1", "required": false, "default": "1"}
+          ],
+          "mysql": "SELECT g.GroupId, g.Name,\n(SELECT COUNT(*) FROM lmsusergroup AS ug WHERE ug.GroupId = g.GroupId) AS Users\nFROM lmsgroup AS g \nWHERE GroupType = {{groupType}} \nORDER BY Users DESC;",
+          "mssql": "SELECT g.GroupId, g.Name,\n(SELECT COUNT(*) FROM lmsusergroup AS ug WHERE ug.GroupId = g.GroupId) AS Users\nFROM lmsgroup AS g \nWHERE GroupType = {{groupType}} \nORDER BY Users DESC;"
+        },
+        {
+          "id": "group_members_list",
+          "name": "Gruppmedlemmar",
+          "description": "Lista alla medlemmar i alla grupper",
+          "variables": [
+            {"name": "groupTypes", "label": "Grupptyper (kommaseparerade)", "type": "text", "placeholder": "0, 1", "required": false, "default": "0, 1"}
+          ],
+          "mysql": "SELECT g.GroupId, g.name,\n(SELECT GROUP_CONCAT(su.UserName) FROM lmsusergroup AS ug\nJOIN smartassuser AS su ON su.UserID = ug.UserId\nWHERE ug.GroupId = g.GroupId) AS Members \nFROM lmsgroup AS g\nWHERE g.GroupType IN ({{groupTypes}})\nORDER BY g.Name;",
+          "mssql": "SELECT g.GroupId, g.name,\n(SELECT STRING_AGG(su.UserName, ', ') FROM lmsusergroup AS ug\nJOIN smartassuser AS su ON su.UserID = ug.UserId\nWHERE ug.GroupId = g.GroupId) AS Members \nFROM lmsgroup AS g\nWHERE g.GroupType IN ({{groupTypes}})\nORDER BY g.Name;"
+        },
+        {
+          "id": "groups_linked_to_course",
+          "name": "Grupper kopplade till kurser",
+          "description": "Lista alla grupper som är kopplade till en kurs",
+          "variables": [],
+          "mysql": "SELECT lmscourse.title AS Kurs, lmsgroup.name AS Grupp \nFROM lmsgroupcourse\nJOIN lmscourse ON lmsgroupcourse.courseid = lmscourse.courseid\nJOIN lmsgroup ON lmsgroupcourse.groupid = lmsgroup.groupid\nORDER BY lmscourse.title;",
+          "mssql": "SELECT lmscourse.title AS Kurs, lmsgroup.name AS Grupp \nFROM lmsgroupcourse\nJOIN lmscourse ON lmsgroupcourse.courseid = lmscourse.courseid\nJOIN lmsgroup ON lmsgroupcourse.groupid = lmsgroup.groupid\nORDER BY lmscourse.title;"
+        },
+        {
+          "id": "user_creation_report",
+          "name": "Rapport - skapade användare",
+          "description": "Statistik över hur användare är skapade",
+          "variables": [],
+          "mysql": "SELECT\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 1) AS Config,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 2) AS SSO,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 3) AS PushTraining,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 4) AS SelfRegistred,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 5) AS Imported,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType IS NULL) AS Unknown;",
+          "mssql": "SELECT\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 1) AS Config,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 2) AS SSO,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 3) AS PushTraining,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 4) AS SelfRegistred,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType = 5) AS Imported,\n(SELECT COUNT(UserID) FROM smartassuser WHERE CreateType IS NULL) AS [Unknown];"
+        },
+        {
+          "id": "user_creation_detailed",
+          "name": "Användare - skapningsmetod",
+          "description": "Lista användare med hur de skapades",
+          "variables": [],
+          "mysql": "SELECT\n    u.username,\n    u.email,\n    u.validto,\n    CASE u.CreateType\n        WHEN 1 THEN 'Manuellt'\n        WHEN 2 THEN 'SSO'\n        WHEN 3 THEN 'PushTraining'\n        WHEN 4 THEN 'SelfRegistered'\n        WHEN 5 THEN 'Importerad'\n        WHEN 0 THEN 'Okänd'\n        ELSE 'Okänd'\n    END AS CreateTypeLabel\nFROM smartassuser AS u\nORDER BY u.username;",
+          "mssql": "SELECT\n    u.username,\n    u.email,\n    u.validto,\n    CASE u.CreateType\n        WHEN 1 THEN 'Manuellt'\n        WHEN 2 THEN 'SSO'\n        WHEN 3 THEN 'PushTraining'\n        WHEN 4 THEN 'SelfRegistered'\n        WHEN 5 THEN 'Importerad'\n        WHEN 0 THEN 'Okänd'\n        ELSE 'Okänd'\n    END AS CreateTypeLabel\nFROM smartassuser AS u\nORDER BY u.username;"
+        },
+        {
+          "id": "producers_by_date",
+          "name": "Producenter per datumintervall",
+          "description": "Vilka som har publicerat guider mellan specifika datum",
+          "variables": [
+            {"name": "startDate", "label": "Från datum", "type": "date", "placeholder": "2020-01-01", "required": true},
+            {"name": "endDate", "label": "Till datum", "type": "date", "placeholder": "2022-01-17", "required": true}
+          ],
+          "mysql": "SELECT firstname, lastname, email \nFROM smartassuser\nJOIN authorguidelink ON authorguidelink.UserID = smartassuser.userID\nJOIN guide ON authorguidelink.GuideID = guide.GuideID\nWHERE guide.PublicationDate > '{{startDate}}' AND guide.PublicationDate < '{{endDate}}'\nGROUP BY smartassuser.UserID, firstname, lastname, email;",
+          "mssql": "SELECT firstname, lastname, email \nFROM smartassuser\nJOIN authorguidelink ON authorguidelink.UserID = smartassuser.userID\nJOIN guide ON authorguidelink.GuideID = guide.GuideID\nWHERE guide.PublicationDate > '{{startDate}}' AND guide.PublicationDate < '{{endDate}}'\nGROUP BY smartassuser.UserID, firstname, lastname, email;"
+        },
+        {
+          "id": "unique_portal_visitors",
+          "name": "Unika portalbesökare",
+          "description": "Antal unika användare som besökt en specifik portal",
+          "variables": [
+            {"name": "portalId", "label": "Portal-ID", "type": "number", "placeholder": "123", "required": true}
+          ],
+          "mysql": "SELECT COUNT(*) AS UnikaAnvändare FROM(\nSELECT ID2 FROM smartasslog \nWHERE ID1 = {{portalId}}\nAND ID2 IS NOT NULL \nGROUP BY ID2\nORDER BY ID2 DESC) AS A;",
+          "mssql": "SELECT COUNT(*) AS UnikaAnvändare FROM(\nSELECT ID2 FROM smartasslog \nWHERE ID1 = {{portalId}}\nAND ID2 IS NOT NULL \nGROUP BY ID2) AS A;"
+        },
+        {
+          "id": "all_groups_with_count",
+          "name": "Alla grupper med medlemsantal",
+          "description": "Lista alla grupper med antal medlemmar och senaste redigering",
+          "variables": [],
+          "mysql": "SELECT\n    lg.groupid,\n    lg.name,\n    COUNT(lug.userID) AS user_count,\n    lg.grouptype,\n    CASE\n        WHEN lg.grouptype = 0 THEN 'System Group'\n        WHEN lg.grouptype = 1 THEN 'Importerad'\n        WHEN lg.grouptype = 2 THEN 'Unknown'\n        WHEN lg.grouptype = 3 THEN 'Automatisk Systemgrupp'\n        WHEN lg.grouptype = 4 THEN 'Automatisk Systemgrupp'\n        ELSE 'Other'\n    END AS grouptype_description,\n    lg.lastmodified\nFROM lmsgroup lg\nLEFT JOIN lmsusergroup lug ON lg.groupid = lug.groupid\nWHERE lg.name NOT LIKE '%push training%'\n  AND lg.name NOT LIKE '%manager%'\n  AND lg.name NOT LIKE '%temp -%'\nGROUP BY lg.groupid, lg.name, lg.grouptype, lg.lastmodified;",
+          "mssql": "SELECT\n    lg.groupid,\n    lg.name,\n    COUNT(lug.userID) AS user_count,\n    lg.grouptype,\n    CASE\n        WHEN lg.grouptype = 0 THEN 'System Group'\n        WHEN lg.grouptype = 1 THEN 'Importerad'\n        WHEN lg.grouptype = 2 THEN 'Unknown'\n        WHEN lg.grouptype = 3 THEN 'Automatisk Systemgrupp'\n        WHEN lg.grouptype = 4 THEN 'Automatisk Systemgrupp'\n        ELSE 'Other'\n    END AS grouptype_description,\n    lg.lastmodified\nFROM lmsgroup lg\nLEFT JOIN lmsusergroup lug ON lg.groupid = lug.groupid\nWHERE lg.name NOT LIKE '%push training%'\n  AND lg.name NOT LIKE '%manager%'\n  AND lg.name NOT LIKE '%temp -%'\nGROUP BY lg.groupid, lg.name, lg.grouptype, lg.lastmodified;"
+        }
+      ]
+    },
+    {
+      "id": "rights",
+      "name": "Rättigheter",
+      "icon": "🔐",
+      "queries": [
+        {
+          "id": "guide_editor_users",
+          "name": "GuideEditor-användare",
+          "description": "Alla användare med GuideEditor-rättigheter",
+          "variables": [],
+          "mysql": "SELECT smartassuserrights.area, smartassuser.email, smartassuser.username \nFROM smartassuserrights \nLEFT JOIN smartassuser ON smartassuserrights.userid = smartassuser.userid \nWHERE smartassuserrights.area = 6 AND smartassuserrights.level = 1;",
+          "mssql": "SELECT smartassuserrights.area, smartassuser.email, smartassuser.username \nFROM smartassuserrights \nLEFT JOIN smartassuser ON smartassuserrights.userid = smartassuser.userid \nWHERE smartassuserrights.area = 6 AND smartassuserrights.level = 1;"
+        },
+        {
+          "id": "all_users_with_rights",
+          "name": "Alla användare med rättigheter",
+          "description": "Detaljerad lista över alla användare som har rättigheter",
+          "variables": [],
+          "mysql": "SELECT DISTINCT \n    su.userid AS AnvändarID,\n    su.email AS Mailadress, \n    su.username AS Användarnamn,\n    su.firstname AS Förnamn,\n    su.lastname AS Efternamn,\n    su.Interests AS Chef,\n    su.Occupation AS Sysselsättning,\n    su.department AS Förvaltning,\n    CASE \n        WHEN SUM(CASE WHEN sar.area IN (3, 4, 5) THEN 1 ELSE 0 END) > 0\n             AND SUM(CASE WHEN sar.area IN (6, 7, 8, 12, 13, 15, 16) THEN 1 ELSE 0 END) > 0\n        THEN 'Administratör och Producent'\n        WHEN SUM(CASE WHEN sar.area IN (3, 4, 5) THEN 1 ELSE 0 END) > 0\n        THEN 'Administratör'\n        WHEN SUM(CASE WHEN sar.area IN (6, 7, 8, 12, 13, 15, 16) THEN 1 ELSE 0 END) > 0\n        THEN 'Producent'\n        ELSE 'None'\n    END AS Rättigheter\nFROM smartassuserrights sar\nINNER JOIN smartassuser su ON sar.userid = su.userid\nWHERE sar.level = 1\nGROUP BY su.userid, su.email, su.username, su.firstname, su.lastname, su.Interests, su.Occupation, su.department\nHAVING Rättigheter != 'None';",
+          "mssql": "SELECT DISTINCT \n    su.userid AS AnvändarID,\n    su.email AS Mailadress, \n    su.username AS Användarnamn,\n    su.firstname AS Förnamn,\n    su.lastname AS Efternamn,\n    su.Interests AS Chef,\n    su.Occupation AS Sysselsättning,\n    su.department AS Förvaltning,\n    CASE \n        WHEN SUM(CASE WHEN sar.area IN (3, 4, 5) THEN 1 ELSE 0 END) > 0\n             AND SUM(CASE WHEN sar.area IN (6, 7, 8, 12, 13, 15, 16) THEN 1 ELSE 0 END) > 0\n        THEN 'Administratör och Producent'\n        WHEN SUM(CASE WHEN sar.area IN (3, 4, 5) THEN 1 ELSE 0 END) > 0\n        THEN 'Administratör'\n        WHEN SUM(CASE WHEN sar.area IN (6, 7, 8, 12, 13, 15, 16) THEN 1 ELSE 0 END) > 0\n        THEN 'Producent'\n        ELSE 'None'\n    END AS Rättigheter\nFROM smartassuserrights sar\nINNER JOIN smartassuser su ON sar.userid = su.userid\nWHERE sar.level = 1\nGROUP BY su.userid, su.email, su.username, su.firstname, su.lastname, su.Interests, su.Occupation, su.department\nHAVING CASE WHEN SUM(CASE WHEN sar.area IN (3, 4, 5) THEN 1 ELSE 0 END) > 0 AND SUM(CASE WHEN sar.area IN (6, 7, 8, 12, 13, 15, 16) THEN 1 ELSE 0 END) > 0 THEN 'Administratör och Producent' WHEN SUM(CASE WHEN sar.area IN (3, 4, 5) THEN 1 ELSE 0 END) > 0 THEN 'Administratör' WHEN SUM(CASE WHEN sar.area IN (6, 7, 8, 12, 13, 15, 16) THEN 1 ELSE 0 END) > 0 THEN 'Producent' ELSE 'None' END != 'None';"
+        },
+        {
+          "id": "count_producers",
+          "name": "Antal producenter",
+          "description": "Räkna totalt antal producenter på servern",
+          "variables": [],
+          "mysql": "SELECT COUNT(DISTINCT UserID) AS AntalProducenter\nFROM smartassuserrights \nWHERE (Area = 7 AND Level = 1) \n   OR (Area = 8 AND Level = 1) \n   OR (Area = 6 AND Level = 1) \n   OR (Area = 12 AND Level = 1) \n   OR (Area = 13 AND Level = 1) \n   OR (Area = 16 AND Level = 1) \n   OR (Area = 19 AND Level = 1);",
+          "mssql": "SELECT COUNT(DISTINCT UserID) AS AntalProducenter\nFROM smartassuserrights \nWHERE (Area = 7 AND Level = 1) \n   OR (Area = 8 AND Level = 1) \n   OR (Area = 6 AND Level = 1) \n   OR (Area = 12 AND Level = 1) \n   OR (Area = 13 AND Level = 1) \n   OR (Area = 16 AND Level = 1) \n   OR (Area = 19 AND Level = 1);"
+        },
+        {
+          "id": "list_producers",
+          "name": "Lista producenter",
+          "description": "Lista alla producenter med användarinfo",
+          "variables": [],
+          "mysql": "SELECT DISTINCT smartassuser.userid, smartassuser.email, smartassuser.username \nFROM smartassuserrights \nLEFT JOIN smartassuser ON smartassuserrights.userid = smartassuser.userid\nWHERE (smartassuserrights.area = 7 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 8 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 6 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 12 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 13 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 16 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 19 AND smartassuserrights.level = 1);",
+          "mssql": "SELECT DISTINCT smartassuser.userid, smartassuser.email, smartassuser.username \nFROM smartassuserrights \nLEFT JOIN smartassuser ON smartassuserrights.userid = smartassuser.userid\nWHERE (smartassuserrights.area = 7 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 8 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 6 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 12 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 13 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 16 AND smartassuserrights.level = 1) \n   OR (smartassuserrights.area = 19 AND smartassuserrights.level = 1);"
+        },
+        {
+          "id": "list_administrators",
+          "name": "Lista administratörer",
+          "description": "Alla användare med administratörsrättigheter",
+          "variables": [],
+          "mysql": "SELECT smartassuser.userid, smartassuser.email, smartassuser.username \nFROM smartassuserrights \nLEFT JOIN smartassuser ON smartassuserrights.userid = smartassuser.userid \nWHERE smartassuserrights.area = 3 AND smartassuserrights.level = 1;",
+          "mssql": "SELECT smartassuser.userid, smartassuser.email, smartassuser.username \nFROM smartassuserrights \nLEFT JOIN smartassuser ON smartassuserrights.userid = smartassuser.userid \nWHERE smartassuserrights.area = 3 AND smartassuserrights.level = 1;"
+        },
+        {
+          "id": "give_config_rights",
+          "name": "Ge config-rättigheter",
+          "description": "Ge en användare config-rättigheter",
+          "variables": [
+            {"name": "userId", "label": "Användar-ID", "type": "number", "placeholder": "1", "required": true}
+          ],
+          "mysql": "INSERT INTO smartassuserrights (userid, area, type, level) VALUES({{userId}}, 4, 2, 1);",
+          "mssql": "INSERT INTO smartassuserrights (userid, area, type, level) VALUES({{userId}}, 4, 2, 1);"
+        }
+      ]
+    },
+    {
+      "id": "track",
+      "name": "Track & Spårning",
+      "icon": "📊",
+      "queries": [
+        {
+          "id": "course_data",
+          "name": "Kursdata",
+          "description": "Hämta ut kursdata med guidekoppling",
+          "variables": [],
+          "mysql": "SELECT c.courseID, c.title, c.created, g.guideid, g.title AS GuideTitle\nFROM lmscourse AS c \nLEFT JOIN guide AS g ON g.title = c.title AND g.guidetype = 14  \nORDER BY c.title;",
+          "mssql": "SELECT c.courseID, c.title, c.created, g.guideid, g.title AS GuideTitle\nFROM lmscourse AS c \nLEFT JOIN guide AS g ON g.title = c.title AND g.guidetype = 14  \nORDER BY c.title;"
+        },
+        {
+          "id": "reset_all_guide_views",
+          "name": "Nollställ alla guidevisningar",
+          "description": "Sätt visningar till 0 på alla guider (används vid klonkopiering)",
+          "variables": [],
+          "mysql": "UPDATE guide SET NoOfAccesses = 0 WHERE GuideType IS NOT NULL;",
+          "mssql": "UPDATE guide SET NoOfAccesses = 0 WHERE GuideType IS NOT NULL;"
+        },
+        {
+          "id": "courses_without_guide",
+          "name": "Kurser utan guidekoppling",
+          "description": "Hitta kurser som saknar koppling till guide",
+          "variables": [],
+          "mysql": "SELECT c.CourseID, c.Title, c.guideID \nFROM lmscourse AS c \nLEFT JOIN guide AS g ON c.GuideID = g.GuideID \nWHERE c.GuideID IS NULL;",
+          "mssql": "SELECT c.CourseID, c.Title, c.guideID \nFROM lmscourse AS c \nLEFT JOIN guide AS g ON c.GuideID = g.GuideID \nWHERE c.GuideID IS NULL;"
+        },
+        {
+          "id": "courses_in_trash",
+          "name": "Kurser i papperskorgen",
+          "description": "Hitta kurser där guiden ligger i papperskorgen",
+          "variables": [],
+          "mysql": "SELECT c.CourseID, c.Title, c.guideID, g.title, g.removed \nFROM lmscourse AS c \nJOIN guide AS g ON c.GuideID = g.GuideID \nWHERE g.removed <> 'N' OR g.removed IS NULL;",
+          "mssql": "SELECT c.CourseID, c.Title, c.guideID, g.title, g.removed \nFROM lmscourse AS c \nJOIN guide AS g ON c.GuideID = g.GuideID \nWHERE g.removed <> 'N' OR g.removed IS NULL;"
+        },
+        {
+          "id": "recalculate_course",
+          "name": "Räkna om kurs",
+          "description": "Markera en kurs för omräkning",
+          "variables": [
+            {"name": "courseId", "label": "Kurs-ID", "type": "number", "placeholder": "123", "required": true}
+          ],
+          "mysql": "INSERT INTO lmscourseneedsumup (courseID) VALUES ({{courseId}});",
+          "mssql": "INSERT INTO lmscourseneedsumup (courseID) VALUES ({{courseId}});"
+        },
+        {
+          "id": "quiz_result_user_course",
+          "name": "Kunskapstest-resultat",
+          "description": "Hämta kunskapstestdata för specifik användare och kurs",
+          "variables": [
+            {"name": "courseId", "label": "Kurs-ID", "type": "number", "placeholder": "1", "required": true},
+            {"name": "hRefId", "label": "hRef-ID", "type": "number", "placeholder": "1", "required": true},
+            {"name": "userId", "label": "Användar-ID", "type": "number", "placeholder": "1", "required": true}
+          ],
+          "mysql": "SELECT cm.userID, su.username, cs.raw, co.lesson_status, co.Started, co.LastTime, se.* \nFROM lmscmi AS cm\nJOIN lmscorescore AS cs ON cm.cmiID = cs.cmiID\nJOIN lmscore AS co ON co.cmiid = cm.cmiID\nJOIN smartassuser AS su ON su.userID = cm.userID\nJOIN lmssession AS se ON se.cmiID = cm.cmiID\nWHERE cm.CourseID = {{courseId}} AND hRefID = {{hRefId}} AND cm.userID = {{userId}};",
+          "mssql": "SELECT cm.userID, su.username, cs.raw, co.lesson_status, co.Started, co.LastTime, se.* \nFROM lmscmi AS cm\nJOIN lmscorescore AS cs ON cm.cmiID = cs.cmiID\nJOIN lmscore AS co ON co.cmiid = cm.cmiID\nJOIN smartassuser AS su ON su.userID = cm.userID\nJOIN lmssession AS se ON se.cmiID = cm.cmiID\nWHERE cm.CourseID = {{courseId}} AND hRefID = {{hRefId}} AND cm.userID = {{userId}};"
+        },
+        {
+          "id": "user_guide_results_course",
+          "name": "Användarresultat för guide i kurs",
+          "description": "Lista en användares resultat på en guide i en kurs",
+          "variables": [
+            {"name": "userId", "label": "Användar-ID", "type": "number", "placeholder": "4", "required": true},
+            {"name": "courseId", "label": "Kurs-ID", "type": "number", "placeholder": "1", "required": true},
+            {"name": "guideId", "label": "Guide-ID", "type": "number", "placeholder": "3", "required": true}
+          ],
+          "mysql": "SELECT ses.* FROM lmscmi AS cmi\nJOIN lmshref AS href ON href.hRefId = cmi.hRefId\nJOIN lmssession AS ses ON ses.cmiId = cmi.cmiId\nWHERE cmi.UserId = {{userId}} AND cmi.CourseID = {{courseId}} AND href.GuideId = {{guideId}};",
+          "mssql": "SELECT ses.* FROM lmscmi AS cmi\nJOIN lmshref AS href ON href.hRefId = cmi.hRefId\nJOIN lmssession AS ses ON ses.cmiId = cmi.cmiId\nWHERE cmi.UserId = {{userId}} AND cmi.CourseID = {{courseId}} AND href.GuideId = {{guideId}};"
+        },
+        {
+          "id": "group_course_results",
+          "name": "Gruppresultat för kurs",
+          "description": "Lista en grupps detaljerade resultat på en kurs",
+          "variables": [
+            {"name": "groupId", "label": "Grupp-ID", "type": "number", "placeholder": "5", "required": true},
+            {"name": "courseId", "label": "Kurs-ID", "type": "number", "placeholder": "1", "required": true}
+          ],
+          "mysql": "SELECT su.userID, su.UserName, href.GuideId, g.Title, g.GuideType, sc.raw, href.mastery_score, core.lesson_status, core.Started, core.LastTime\nFROM lmshref AS href\nJOIN lmsusergroup AS ug ON ug.GroupId = {{groupId}}\nJOIN smartassuser AS su ON su.UserID = ug.UserId\nLEFT JOIN lmscmi AS cmi ON cmi.hRefId = href.hRefId AND cmi.UserId = ug.UserId AND cmi.CourseId = href.CourseID\nLEFT JOIN lmscorescore AS sc ON sc.cmiId = cmi.cmiId\nLEFT JOIN lmscore AS core ON core.cmiId = cmi.cmiId\nLEFT JOIN guide AS g ON g.GuideID = href.GuideId\nWHERE href.CourseID = {{courseId}}\nORDER BY su.UserName, href.hRefId;",
+          "mssql": "SELECT su.userID, su.UserName, href.GuideId, g.Title, g.GuideType, sc.raw, href.mastery_score, core.lesson_status, core.Started, core.LastTime\nFROM lmshref AS href\nJOIN lmsusergroup AS ug ON ug.GroupId = {{groupId}}\nJOIN smartassuser AS su ON su.UserID = ug.UserId\nLEFT JOIN lmscmi AS cmi ON cmi.hRefId = href.hRefId AND cmi.UserId = ug.UserId AND cmi.CourseId = href.CourseID\nLEFT JOIN lmscorescore AS sc ON sc.cmiId = cmi.cmiId\nLEFT JOIN lmscore AS core ON core.cmiId = cmi.cmiId\nLEFT JOIN guide AS g ON g.GuideID = href.GuideId\nWHERE href.CourseID = {{courseId}}\nORDER BY su.UserName, href.hRefId;"
+        }
+      ]
+    },
+    {
+      "id": "process",
+      "name": "Processer",
+      "icon": "🔄",
+      "queries": [
+        {
+          "id": "processes_without_category",
+          "name": "Processer utan kategori",
+          "description": "Hitta processer som saknar kategori",
+          "variables": [],
+          "mysql": "SELECT\n    p.ProcessID,\n    p.ProcessName,\n    COALESCE(u.Email, 'Ingen ägare') AS ProcessOwnerEmail,\n    o.OrganizationName\nFROM (\n    SELECT MAX(ProcessID) AS MaxProcessID, ProcessName\n    FROM Process\n    WHERE Removed = 0 \n    GROUP BY ProcessName\n) latest_process\nJOIN Process p ON latest_process.MaxProcessID = p.ProcessID\nLEFT JOIN topicprocesslink tpl ON p.ProcessID = tpl.ProcessID\nLEFT JOIN Positions pos ON p.ProcessOwnerPositionID = pos.PositionID\nLEFT JOIN smartassuser u ON pos.PositionID = u.UserID\nLEFT JOIN Organization o ON p.OrganizationID = o.OrganizationID\nWHERE tpl.ProcessID IS NULL;",
+          "mssql": "SELECT\n    p.ProcessID,\n    p.ProcessName,\n    COALESCE(u.Email, 'Ingen ägare') AS ProcessOwnerEmail,\n    o.OrganizationName\nFROM (\n    SELECT MAX(ProcessID) AS MaxProcessID, ProcessName\n    FROM Process\n    WHERE Removed = 0 \n    GROUP BY ProcessName\n) latest_process\nJOIN Process p ON latest_process.MaxProcessID = p.ProcessID\nLEFT JOIN topicprocesslink tpl ON p.ProcessID = tpl.ProcessID\nLEFT JOIN Positions pos ON p.ProcessOwnerPositionID = pos.PositionID\nLEFT JOIN smartassuser u ON pos.PositionID = u.UserID\nLEFT JOIN Organization o ON p.OrganizationID = o.OrganizationID\nWHERE tpl.ProcessID IS NULL;"
+        },
+        {
+          "id": "add_category_to_processes",
+          "name": "Lägg till kategori till processer",
+          "description": "Lägg till en kategori till alla processer som saknar kategori",
+          "variables": [
+            {"name": "topicId", "label": "Kategori-ID", "type": "number", "placeholder": "123", "required": true}
+          ],
+          "mysql": "INSERT INTO topicprocesslink (TopicID, ProcessID)\nSELECT {{topicId}}, p.ProcessID\nFROM Process p\nLEFT JOIN topicprocesslink t ON p.ProcessID = t.ProcessID\nWHERE t.ProcessID IS NULL;",
+          "mssql": "INSERT INTO topicprocesslink (TopicID, ProcessID)\nSELECT {{topicId}}, p.ProcessID\nFROM Process p\nLEFT JOIN topicprocesslink t ON p.ProcessID = t.ProcessID\nWHERE t.ProcessID IS NULL;"
+        }
+      ]
+    },
+    {
+      "id": "portals",
+      "name": "Portaler & Sökningar",
+      "icon": "🔍",
+      "queries": [
+        {
+          "id": "all_searches",
+          "name": "Alla sökningar",
+          "description": "Lista alla sökningar inom ett datumintervall",
+          "variables": [
+            {"name": "startDate", "label": "Från datum", "type": "date", "placeholder": "2023-01-01", "required": true}
+          ],
+          "mysql": "SELECT data1 AS Sökfras, logdate AS Datum \nFROM smartasslog \nWHERE logtype = 2 AND logdate > '{{startDate}}';",
+          "mssql": "SELECT data1 AS Sökfras, logdate AS Datum \nFROM smartasslog \nWHERE logtype = 2 AND logdate > '{{startDate}}';"
+        },
+        {
+          "id": "top_portals",
+          "name": "Topplista portaler",
+          "description": "De mest besökta portalerna senaste året",
+          "variables": [],
+          "mysql": "SELECT sf.FilterName AS Portal, COUNT(*) AS Besök \nFROM smartasslog AS sl\nJOIN searchfilter AS sf ON sf.SearchFilterID = sl.ID1\nWHERE sl.LogType = 25 AND sl.LogDate > DATE_SUB(NOW(), INTERVAL 1 YEAR)\nGROUP BY ID1, sf.FilterName\nORDER BY COUNT(*) DESC\nLIMIT 10;",
+          "mssql": "SELECT TOP 10 sf.FilterName AS Portal, COUNT(*) AS Besök \nFROM smartasslog AS sl\nJOIN searchfilter AS sf ON sf.SearchFilterID = sl.ID1\nWHERE sl.LogType = 25 AND sl.LogDate > DATEADD(YEAR, -1, GETDATE())\nGROUP BY ID1, sf.FilterName\nORDER BY COUNT(*) DESC;"
+        },
+        {
+          "id": "clear_unmatched_searches",
+          "name": "Rensa omatchade sökningar",
+          "description": "Ta bort alla omatchade sökningar",
+          "variables": [],
+          "mysql": "DELETE FROM unmatchedsearch;",
+          "mssql": "DELETE FROM unmatchedsearch;"
+        }
+      ]
+    },
+    {
+      "id": "inline",
+      "name": "Inline",
+      "icon": "💡",
+      "queries": [
+        {
+          "id": "inline_starts",
+          "name": "Inline-starter",
+          "description": "Antal gånger Inline har startats",
+          "variables": [
+            {"name": "startDate", "label": "Från datum", "type": "date", "placeholder": "2021-06-28", "required": true}
+          ],
+          "mysql": "SELECT COUNT(*) AS AntalStarter\nFROM smartasslog \nWHERE LogType = 28 AND LogDate > '{{startDate}}';",
+          "mssql": "SELECT COUNT(*) AS AntalStarter\nFROM smartasslog \nWHERE LogType = 28 AND LogDate > '{{startDate}}';"
+        },
+        {
+          "id": "top_contexts",
+          "name": "Topplista kontexter",
+          "description": "Mest visade Inline-kontexter",
+          "variables": [
+            {"name": "startDate", "label": "Från datum", "type": "date", "placeholder": "2021-06-01", "required": true}
+          ],
+          "mysql": "SELECT c.ContextHelpID, c.Name, COUNT(c.ContextHelpID) AS Antal \nFROM smartasslog l \nINNER JOIN contexthelptarget t ON t.TargetID = l.ID2\nINNER JOIN contexthelp c ON c.ContextHelpID = t.ContextHelpID \nWHERE l.LogType = 29 AND l.LogDate > '{{startDate}}'\nGROUP BY c.ContextHelpID, c.Name \nORDER BY Antal DESC;",
+          "mssql": "SELECT c.ContextHelpID, c.Name, COUNT(c.ContextHelpID) AS Antal \nFROM smartasslog l \nINNER JOIN contexthelptarget t ON t.TargetID = l.ID2\nINNER JOIN contexthelp c ON c.ContextHelpID = t.ContextHelpID \nWHERE l.LogType = 29 AND l.LogDate > '{{startDate}}'\nGROUP BY c.ContextHelpID, c.Name \nORDER BY Antal DESC;"
+        },
+        {
+          "id": "top_inline_guides",
+          "name": "Topplista startade guider",
+          "description": "Mest startade guider via Inline",
+          "variables": [
+            {"name": "startDate", "label": "Från datum", "type": "date", "placeholder": "2021-06-01", "required": true}
+          ],
+          "mysql": "SELECT g.GuideID, g.Title, COUNT(g.GuideID) AS Antal \nFROM smartasslog l \nINNER JOIN guide g ON g.GuideID = l.ID1 \nWHERE l.LogType = 30 AND l.LogDate > '{{startDate}}'\nGROUP BY g.GuideID, g.Title \nORDER BY Antal DESC;",
+          "mssql": "SELECT g.GuideID, g.Title, COUNT(g.GuideID) AS Antal \nFROM smartasslog l \nINNER JOIN guide g ON g.GuideID = l.ID1 \nWHERE l.LogType = 30 AND l.LogDate > '{{startDate}}'\nGROUP BY g.GuideID, g.Title \nORDER BY Antal DESC;"
+        },
+        {
+          "id": "inline_api_per_day",
+          "name": "Inline-API starter per dag",
+          "description": "Hur ofta har Inline-API startat per dag",
+          "variables": [
+            {"name": "startDate", "label": "Från datum", "type": "date", "placeholder": "2021-06-01", "required": true},
+            {"name": "endDate", "label": "Till datum", "type": "date", "placeholder": "2021-09-16", "required": true}
+          ],
+          "mysql": "SELECT CAST(LogDate AS DATE) AS Datum, COUNT(*) AS Antal\nFROM smartasslog \nWHERE LogType = 28 \n  AND LogDate > '{{startDate}}' \n  AND LogDate < '{{endDate}}' \n  AND Data1 = 'API' \nGROUP BY CAST(LogDate AS DATE) \nORDER BY Datum;",
+          "mssql": "SELECT CAST(LogDate AS DATE) AS Datum, COUNT(*) AS Antal\nFROM smartasslog \nWHERE LogType = 28 \n  AND LogDate > '{{startDate}}' \n  AND LogDate < '{{endDate}}' \n  AND Data1 = 'API' \nGROUP BY CAST(LogDate AS DATE) \nORDER BY Datum;"
+        }
+      ]
+    },
+    {
+      "id": "email",
+      "name": "E-post",
+      "icon": "📧",
+      "queries": [
+        {
+          "id": "invalid_email_recipients",
+          "name": "Ogiltiga e-postmottagare",
+          "description": "Hitta e-postutskick med ogiltiga mottagaradresser",
+          "variables": [],
+          "mysql": "SELECT EmailID, ToRecipient, FromText, Subject, Status, CreateDate, SentDate, ErrorMessage, BodyContainsHTML, SendAttempts, MailType, ExternalMailID \nFROM emailqueue \nWHERE STATUS != 4;",
+          "mssql": "SELECT EmailID, ToRecipient, FromText, Subject, Status, CreateDate, SentDate, ErrorMessage, BodyContainsHTML, SendAttempts, MailType, ExternalMailID \nFROM emailqueue \nWHERE STATUS != 4;"
+        }
+      ]
+    },
+    {
+      "id": "other",
+      "name": "Övrigt",
+      "icon": "⚙️",
+      "queries": [
+        {
+          "id": "login_count_6months",
+          "name": "Antal inloggningar (6 mån)",
+          "description": "Hämta antal inloggningar senaste 6 månaderna",
+          "variables": [
+            {"name": "months", "label": "Antal månader", "type": "number", "placeholder": "6", "required": false, "default": "6"}
+          ],
+          "mysql": "SELECT COUNT(*) AS AntalInloggningar\nFROM smartasslog \nWHERE logtype = 14 \n  AND logdate >= DATE_SUB(NOW(), INTERVAL {{months}} MONTH) \n  AND logdate <= NOW();",
+          "mssql": "SELECT COUNT(*) AS AntalInloggningar\nFROM smartasslog \nWHERE logtype = 14 \n  AND logdate >= DATEADD(MONTH, -{{months}}, GETDATE()) \n  AND logdate <= GETDATE();"
+        },
+        {
+          "id": "login_count_per_user",
+          "name": "Inloggningar per användare",
+          "description": "Antal inloggningar per användare senaste månaden",
+          "variables": [],
+          "mysql": "SELECT ID1 AS Id, Data1 AS Användare, COUNT(*) AS Antal\nFROM smartasslog\nWHERE logtype = 14\n  AND logdate >= DATE_SUB(NOW(), INTERVAL 1 MONTH)\n  AND logdate <= NOW()\nGROUP BY ID1, Data1;",
+          "mssql": "SELECT ID1 AS Id, Data1 AS [Användare], COUNT(*) AS Antal\nFROM smartasslog\nWHERE logtype = 14\n  AND logdate >= DATEADD(MONTH, -1, GETDATE())\n  AND logdate <= GETDATE()\nGROUP BY ID1, Data1;"
+        },
+        {
+          "id": "fix_everyone_group",
+          "name": "Fixa Everyone-gruppen",
+          "description": "Visa Everyone-gruppen om den är gömd",
+          "variables": [
+            {"name": "groupId", "label": "Grupp-ID", "type": "number", "placeholder": "1", "required": true}
+          ],
+          "mysql": "UPDATE lmsgroup SET GroupType = 0 WHERE GroupID = {{groupId}};",
+          "mssql": "UPDATE lmsgroup SET GroupType = 0 WHERE GroupID = {{groupId}};"
+        },
+        {
+          "id": "fix_lms_course_holder",
+          "name": "Fixa LMS kurshållare",
+          "description": "Ändra validto-datum för kurshållare",
+          "variables": [
+            {"name": "guideId", "label": "Kurshållarens Guide-ID", "type": "number", "placeholder": "123", "required": true}
+          ],
+          "mysql": "UPDATE guide\nSET validto = '9999-12-31'\nWHERE guideid = {{guideId}};",
+          "mssql": "UPDATE guide\nSET validto = '9999-12-31'\nWHERE guideid = {{guideId}};"
+        },
+        {
+          "id": "scorm_html_url",
+          "name": "SCORM HTML-URL",
+          "description": "Hämta HTML-URL för importerad SCORM i LMS",
+          "variables": [
+            {"name": "guideId", "label": "Guide-ID", "type": "number", "placeholder": "123", "required": true}
+          ],
+          "mysql": "SELECT lmshref.href \nFROM lmscourse \nJOIN lmshref ON lmshref.courseid = lmscourse.courseid \nWHERE lmscourse.guideid = {{guideId}};",
+          "mssql": "SELECT lmshref.href \nFROM lmscourse \nJOIN lmshref ON lmshref.courseid = lmscourse.courseid \nWHERE lmscourse.guideid = {{guideId}};"
+        },
+        {
+          "id": "guides_as_json",
+          "name": "Guider som JSON",
+          "description": "Exportera guider i JSON-format",
+          "variables": [],
+          "mysql": "SELECT \n    CONCAT(\n        '{\"id\": \"', IFNULL(guideid, ''), '\", ',\n        '\"guidetype\": \"', IFNULL(guidetype, ''), '\", ',\n        '\"themeid\": \"', IFNULL(themeid, ''), '\", ',\n        '\"summary\": \"', REPLACE(REPLACE(IFNULL(summary, ''), '\\r', ''), '\\n', ''), '\", ',\n        '\"title\": \"', REPLACE(REPLACE(IFNULL(title, ''), '\\r', ''), '\\n', ''), '\"}'\n    ) AS json_data\nFROM guide;",
+          "mssql": "SELECT \n    CONCAT(\n        '{\"id\": \"', ISNULL(CAST(guideid AS VARCHAR), ''), '\", ',\n        '\"guidetype\": \"', ISNULL(CAST(guidetype AS VARCHAR), ''), '\", ',\n        '\"themeid\": \"', ISNULL(CAST(themeid AS VARCHAR), ''), '\", ',\n        '\"summary\": \"', REPLACE(REPLACE(ISNULL(summary, ''), CHAR(13), ''), CHAR(10), ''), '\", ',\n        '\"title\": \"', REPLACE(REPLACE(ISNULL(title, ''), CHAR(13), ''), CHAR(10), ''), '\"}'\n    ) AS json_data\nFROM guide;"
+        }
+      ]
+    }
+  ],
+  "reference": {
+    "logTypes": [
+      {"id": 1, "name": "Guidevisning"},
+      {"id": 2, "name": "Sökning"},
+      {"id": 7, "name": "Producentaktivitet / Publicering"},
+      {"id": 13, "name": "Processvisning"},
+      {"id": 14, "name": "Inloggning"},
+      {"id": 19, "name": "Publicering (typ 1)"},
+      {"id": 20, "name": "Publicering (typ 2)"},
+      {"id": 25, "name": "Portalbesök"},
+      {"id": 28, "name": "Inline start"},
+      {"id": 29, "name": "Inline kontext visad"},
+      {"id": 30, "name": "Inline guide startad"},
+      {"id": 31, "name": "Guide raderad"}
+    ],
+    "guideTypes": [
+      {"id": 1, "name": "Snabbguide"},
+      {"id": 2, "name": "Steg-för-steg-guide"},
+      {"id": 6, "name": "LMS"},
+      {"id": 7, "name": "Textguide"},
+      {"id": 9, "name": "Kunskapstest"},
+      {"id": 11, "name": "Översikt"},
+      {"id": 12, "name": "Snabbinspelning"},
+      {"id": 13, "name": "Push training"},
+      {"id": 14, "name": "Kurs"},
+      {"id": 15, "name": "URL"},
+      {"id": 16, "name": "Ranking"},
+      {"id": 17, "name": "Arbetsflöde"},
+      {"id": 100, "name": "Process"}
+    ],
+    "rightAreas": [
+      {"id": 3, "name": "Admin"},
+      {"id": 4, "name": "Config"},
+      {"id": 5, "name": "Admin (övrigt)"},
+      {"id": 6, "name": "GuideEditor"},
+      {"id": 7, "name": "Producent"},
+      {"id": 8, "name": "Producent (övrigt)"},
+      {"id": 12, "name": "Producent (process)"},
+      {"id": 13, "name": "Producent (mall)"},
+      {"id": 15, "name": "Producent (kurs)"},
+      {"id": 16, "name": "Producent (arbetsflöde)"},
+      {"id": 19, "name": "Producent (övrigt)"}
+    ],
+    "createTypes": [
+      {"id": 1, "name": "Manuellt (Config)"},
+      {"id": 2, "name": "SSO"},
+      {"id": 3, "name": "Push Training"},
+      {"id": 4, "name": "Självregistrerad"},
+      {"id": 5, "name": "Importerad"}
+    ],
+    "groupTypes": [
+      {"id": 0, "name": "System Group / Manuell"},
+      {"id": 1, "name": "Importerad"},
+      {"id": 2, "name": "Okänd"},
+      {"id": 3, "name": "Automatisk Systemgrupp"},
+      {"id": 4, "name": "Automatisk Systemgrupp"}
+    ]
+  }
+}

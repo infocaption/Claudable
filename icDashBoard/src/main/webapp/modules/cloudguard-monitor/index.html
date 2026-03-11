@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudGuard Monitor</title>
+    <link rel="stylesheet" href="../../shared/ic-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ic-primary: #5458F2;
+            --ic-primary-hover: #4347d9;
+            --ic-secondary: #D4D5FC;
+            --ic-text-dark: #323232;
+            --ic-text-muted: #6c757d;
+            --ic-bg-white: #ffffff;
+            --ic-bg-light: #f8f9fc;
+            --ic-success: #10b981;
+            --ic-success-light: #d1fae5;
+            --ic-danger: #ef4444;
+            --ic-danger-light: #fee2e2;
+            --ic-warning: #f59e0b;
+            --ic-warning-light: #fef3c7;
+            --ic-info: #3b82f6;
+            --ic-info-light: #dbeafe;
+            --ic-radius-sm: 6px;
+            --ic-radius-md: 10px;
+            --ic-radius-lg: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ic-bg-light);
+            min-height: 100vh;
+            color: var(--ic-text-dark);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: var(--ic-bg-white);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--ic-bg-white);
+            padding: 25px 30px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1 {
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--ic-radius-sm);
+            border: 1px solid #e5e7eb;
+            background: var(--ic-bg-white);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            position: relative;
+            transition: all 0.15s;
+        }
+        .btn-icon:hover { background: var(--ic-bg-light); border-color: var(--ic-primary); }
+
+        .btn-icon .notification-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ic-success);
+        }
+        .btn-icon .notification-dot.inactive { background: var(--ic-text-muted); }
+
+        .auto-refresh-indicator {
+            font-size: 12px;
+            color: var(--ic-text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Summary cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            padding: 20px 30px;
+        }
+
+        .summary-card {
+            background: var(--ic-bg-white);
+            border: 1px solid #e5e7eb;
+            border-radius: var(--ic-radius-md);
+            padding: 16px 20px;
+            text-align: center;
+        }
+        .summary-card .count {
+            font-size: 2em;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .summary-card .label {
+            font-size: 0.85em;
+            color: var(--ic-text-muted);
+            margin-top: 4px;
+        }
+        .summary-card.critical .count { color: var(--ic-danger); }
+        .summary-card.error .count { color: #f97316; }
+        .summary-card.warning .count { color: var(--ic-warning); }
+        .summary-card.info .count { color: var(--ic-info); }
+        .summary-card.total .count { color: var(--ic-text-dark); }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 0 30px;
+            gap: 0;
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: var(--ic-text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.15s;
+        }
+        .tab-btn:hover { color: var(--ic-text-dark); }
+        .tab-btn.active {
+            color: var(--ic-primary);
+            border-bottom-color: var(--ic-primary);
+        }
+
+        .tab-content { display: none; padding: 20px 30px; }
+        .tab-content.active { display: block; }
+
+        /* Incident table */
+        .incident-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .incident-table th {
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            color: var(--ic-text-muted);
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .incident-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.9em;
+            vertical-align: top;
+        }
+        .incident-table tr:hover td { background: var(--ic-bg-light); }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .severity-badge.critical { background: var(--ic-danger-light); color: var(--ic-danger); }
+        .severity-badge.error    { background: #ffedd5; color: #ea580c; }
+        .severity-badge.warning  { background: var(--ic-warning-light); color: #b45309; }
+        .severity-badge.info     { background: var(--ic-info-light); color: #1d4ed8; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ic-text-muted);
+        }
+        .empty-state .icon { font-size: 3em; margin-bottom: 12px; }
+        .empty-state .message { font-size: 1.1em; }
+
+        .time-ago { color: var(--ic-text-muted); font-size: 0.85em; }
+
+        /* History filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-bar label { font-size: 0.85em; color: var(--ic-text-muted); }
+        .filter-bar select, .filter-bar input {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: var(--ic-radius-sm);
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+
+        /* Notification modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--ic-bg-white);
+            border-radius: var(--ic-radius-lg);
+            padding: 30px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal h2 {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px;
+            border-radius: var(--ic-radius-sm);
+            margin-bottom: 16px;
+            font-size: 0.9em;
+        }
+        .modal-status.active { background: var(--ic-success-light); color: #065f46; }
+        .modal-status.inactive { background: #f3f4f6; color: var(--ic-text-muted); }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .status-dot.green { background: var(--ic-success); }
+        .status-dot.gray { background: var(--ic-text-muted); }
+
+        .severity-filters {
+            margin: 16px 0;
+        }
+        .severity-filters label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        .severity-filters input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--ic-primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--ic-radius-sm);
+            border: none;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .btn-primary { background: var(--ic-primary); color: white; }
+        .btn-primary:hover { background: var(--ic-primary-hover); }
+        .btn-secondary { background: #f3f4f6; color: var(--ic-text-dark); }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .btn-danger { background: var(--ic-danger); color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: var(--ic-radius-sm);
+            color: white;
+            font-size: 0.9em;
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--ic-success); }
+        .toast.error { background: var(--ic-danger); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>CloudGuard Monitor</h1>
+            </div>
+            <div class="header-actions">
+                <span class="auto-refresh-indicator" id="refreshIndicator">
+                    <span class="icon-refresh"></span> Auto-refresh: <span id="countdown">30</span>s
+                </span>
+                <button class="btn-icon" id="bellBtn" title="Notifikationer">
+                    <span class="icon-bell"></span>
+                    <span class="notification-dot inactive" id="notifDot"></span>
+                </button>
+                <button class="btn-icon" id="refreshBtn" title="Uppdatera nu">
+                    <span class="icon-refresh"></span>
+                </button>
+            </div>
+        </header>
+
+        <div class="summary-cards" id="summaryCards">
+            <div class="summary-card total">
+                <div class="count" id="countTotal">-</div>
+                <div class="label">Aktiva</div>
+            </div>
+            <div class="summary-card critical">
+                <div class="count" id="countCritical">0</div>
+                <div class="label">Critical</div>
+            </div>
+            <div class="summary-card error">
+                <div class="count" id="countError">0</div>
+                <div class="label">Error</div>
+            </div>
+            <div class="summary-card warning">
+                <div class="count" id="countWarning">0</div>
+                <div class="label">Warning</div>
+            </div>
+            <div class="summary-card info">
+                <div class="count" id="countInfo">0</div>
+                <div class="label">Info</div>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="active">Aktiva incidenter</button>
+            <button class="tab-btn" data-tab="history">Historik</button>
+        </div>
+
+        <div class="tab-content active" id="tab-active">
+            <table class="incident-table" id="activeTable">
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Entity</th>
+                        <th>Meddelande</th>
+                        <th>Rapporterad av</th>
+                        <th>Tid</th>
+                    </tr>
+                </thead>
+                <tbody id="activeBody"></tbody>
+            </table>
+            <div class="empty-state" id="activeEmpty" style="display:none;">
+                <div class="icon">&#x2705;</div>
+                <div class="message">Inga aktiva incidenter</div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-history">
+            <div class="filter-bar">
+                <label>Senaste</label>
+                <select id="historyDays">
+                    <option value="7">7 dagar</option>
+                    <option value="30" selected>30 dagar</option>
+                    <option value="90">90 dagar</option>
+                </select>
+                <label>Max</label>
+                <select id="historyLimit">
+                    <option value="25">25</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                </select>
+                <button class="btn btn-secondary" id="historyLoadBtn">Ladda</button>
+            </div>
+            <table class="incident-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Entity</th>
+                        <th>Meddelande</th>
+                        <th>Rapporterad</th>
+                        <th>Resolved</th>
+                        <th>Av</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+            </table>
+            <div class="empty-state" id="historyEmpty" style="display:none;">
+                <div class="icon">&#x1F4AD;</div>
+                <div class="message">Ingen historik hittades</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div class="modal-overlay" id="notifModal">
+        <div class="modal">
+            <h2><span class="icon-bell"></span> Push-notifikationer</h2>
+
+            <div class="modal-status" id="notifStatus">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Laddar...</span>
+            </div>
+
+            <div class="severity-filters" id="severityFilters">
+                <label><input type="checkbox" value="critical" checked> Critical</label>
+                <label><input type="checkbox" value="error" checked> Error</label>
+                <label><input type="checkbox" value="warning" checked> Warning</label>
+                <label><input type="checkbox" value="info" checked> Info</label>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="enableBtn">Aktivera notiser</button>
+                <button class="btn btn-secondary" id="testBtn" style="display:none;">Testa</button>
+                <button class="btn btn-danger" id="disableBtn" style="display:none;">Avaktivera</button>
+                <button class="btn btn-secondary" id="savePrefsBtn" style="display:none;">Spara filter</button>
+                <button class="btn btn-secondary" id="closeModalBtn">Stang</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (async function() {
+        // Relative path from modules/cloudguard-monitor/ to webapp root
+        const BASE = '../../';
+        let refreshTimer = null;
+        let countdown = 30;
+        let pushSubscription = null;
+        let swRegistration = null;
+
+        // ==================== API Helpers ====================
+
+        async function apiFetch(path, options) {
+            return await fetch(BASE + path, options);
+        }
+
+        async function apiJson(path, options) {
+            const resp = await apiFetch(path, options);
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            return resp.json();
+        }
+
+        // ==================== Active Incidents ====================
+
+        async function loadActive() {
+            try {
+                const incidents = await apiJson('api/cloudguard/active');
+                renderActive(incidents);
+                updateSummary(incidents);
+            } catch (e) {
+                console.error('Failed to load active incidents:', e);
+            }
+        }
+
+        function renderActive(incidents) {
+            const tbody = document.getElementById('activeBody');
+            const empty = document.getElementById('activeEmpty');
+            const table = document.getElementById('activeTable');
+
+            if (incidents.length === 0) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+            table.style.display = 'table';
+            empty.style.display = 'none';
+
+            tbody.innerHTML = incidents.map(function(inc) {
+                return '<tr>' +
+                    '<td><span class="severity-badge ' + esc(inc.severity) + '">' + esc(inc.severity) + '</span></td>' +
+                    '<td><strong>' + esc(inc.entityName) + '</strong><br><span class="time-ago">' + esc(inc.entityType) + '</span></td>' +
+                    '<td>' + esc(inc.message || '') + '</td>' +
+                    '<td>' + esc(inc.reportedBy || '-') + '</td>' +
+                    '<td class="time-ago">' + formatTime(inc.reportedAt) + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function updateSummary(incidents) {
+            var counts = { critical: 0, error: 0, warning: 0, info: 0 };
+            incidents.forEach(function(inc) {
+                var s = (inc.severity || '').toLowerCase();
+                if (counts.hasOwnProperty(s)) counts[s]++;
+            });
+            document.getElementById('countTotal').textContent = incidents.length;
+            document.getElementById('countCritical').textContent = counts.critical;
+            document.getElementById('countError').textContent = counts.error;
+            document.getElementById('countWarning').textContent = counts.warning;
+            document.getElementById('countInfo').textContent = counts.info;
+        }
+
+        // ==================== History ====================
+
+        async function loadHistory() {
+            var days = document.getElementById('historyDays').value;
+            var limit = document.getElementById('historyLimit').value;
+            try {
+                const incidents = await apiJson('api/cloudguard/history?days=' + days + '&limit=' + limit);
+                renderHistory(incidents);
+            } catch (e) {
+                console.error('Failed to load history:', e);
+            }
+        }
+
+        function renderHistory(incidents) {
+            const tbody = document.getElementById('historyBody');
+            const empty = document.getElementById('historyEmpty');
+            const table = document.getElementById('historyTable');
+
+            if (incidents.length === 0) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+            table.style.display = 'table';
+            empty.style.display = 'none';
+
+            tbody.innerHTML = incidents.map(function(inc) {
+                return '<tr>' +
+                    '<td><span class="severity-badge ' + esc(inc.severity) + '">' + esc(inc.severity) + '</span></td>' +
+                    '<td><strong>' + esc(inc.entityName) + '</strong></td>' +
+                    '<td>' + esc(inc.message || '') + '</td>' +
+                    '<td class="time-ago">' + formatTime(inc.reportedAt) + '</td>' +
+                    '<td class="time-ago">' + formatTime(inc.resolvedAt) + '</td>' +
+                    '<td>' + esc(inc.resolvedBy || '-') + '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        // ==================== Tabs ====================
+
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+                if (btn.dataset.tab === 'history') loadHistory();
+            });
+        });
+
+        document.getElementById('historyLoadBtn').addEventListener('click', loadHistory);
+
+        // ==================== Auto-refresh ====================
+
+        function startAutoRefresh() {
+            countdown = 30;
+            clearInterval(refreshTimer);
+            refreshTimer = setInterval(function() {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+                if (countdown <= 0) {
+                    loadActive();
+                    countdown = 30;
+                }
+            }, 1000);
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            loadActive();
+            countdown = 30;
+        });
+
+        // ==================== Push Notifications ====================
+
+        async function initPush() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                document.getElementById('enableBtn').disabled = true;
+                document.getElementById('enableBtn').textContent = 'Ej stott i denna webblasare';
+                return;
+            }
+
+            try {
+                swRegistration = await navigator.serviceWorker.register(BASE + 'sw-push.js');
+                pushSubscription = await swRegistration.pushManager.getSubscription();
+                updateNotifUI();
+            } catch (e) {
+                console.error('SW registration failed:', e);
+            }
+        }
+
+        function updateNotifUI() {
+            const dot = document.getElementById('notifDot');
+            const statusDiv = document.getElementById('notifStatus');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const enableBtn = document.getElementById('enableBtn');
+            const disableBtn = document.getElementById('disableBtn');
+            const testBtn = document.getElementById('testBtn');
+            const savePrefsBtn = document.getElementById('savePrefsBtn');
+
+            if (pushSubscription) {
+                dot.classList.remove('inactive');
+                statusDiv.className = 'modal-status active';
+                statusDot.className = 'status-dot green';
+                statusText.textContent = 'Notifikationer aktiverade';
+                enableBtn.style.display = 'none';
+                disableBtn.style.display = '';
+                testBtn.style.display = '';
+                savePrefsBtn.style.display = '';
+            } else {
+                dot.classList.add('inactive');
+                statusDiv.className = 'modal-status inactive';
+                statusDot.className = 'status-dot gray';
+                statusText.textContent = 'Notifikationer avaktiverade';
+                enableBtn.style.display = '';
+                disableBtn.style.display = 'none';
+                testBtn.style.display = 'none';
+                savePrefsBtn.style.display = 'none';
+            }
+        }
+
+        document.getElementById('enableBtn').addEventListener('click', async function() {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    showToast('Notifikationer blockerade av webblasaren', 'error');
+                    return;
+                }
+
+                // Get VAPID key
+                const config = await apiJson('api/notifications/vapid-key');
+                if (!config.publicKey) {
+                    showToast('VAPID-nyckel saknas pa servern', 'error');
+                    return;
+                }
+
+                // Subscribe
+                const vapidKeyBytes = urlBase64ToUint8Array(config.publicKey);
+                pushSubscription = await swRegistration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: vapidKeyBytes
+                });
+
+                // Send subscription to server
+                const subJson = pushSubscription.toJSON();
+                await apiFetch('api/notifications/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: subJson.endpoint,
+                        p256dh: subJson.keys.p256dh,
+                        auth: subJson.keys.auth
+                    })
+                });
+
+                updateNotifUI();
+                showToast('Notifikationer aktiverade!', 'success');
+            } catch (e) {
+                console.error('Subscribe failed:', e);
+                showToast('Kunde inte aktivera: ' + e.message, 'error');
+            }
+        });
+
+        document.getElementById('disableBtn').addEventListener('click', async function() {
+            try {
+                if (pushSubscription) {
+                    const endpoint = pushSubscription.endpoint;
+                    await pushSubscription.unsubscribe();
+                    await apiFetch('api/notifications/unsubscribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ endpoint: endpoint })
+                    });
+                    pushSubscription = null;
+                }
+                updateNotifUI();
+                showToast('Notifikationer avaktiverade', 'success');
+            } catch (e) {
+                console.error('Unsubscribe failed:', e);
+                showToast('Fel: ' + e.message, 'error');
+            }
+        });
+
+        document.getElementById('testBtn').addEventListener('click', async function() {
+            try {
+                const resp = await apiFetch('api/notifications/test', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    showToast('Testnotis skickad!', 'success');
+                } else {
+                    showToast('Fel: ' + (data.error || 'Okant'), 'error');
+                }
+            } catch (e) {
+                showToast('Fel: ' + e.message, 'error');
+            }
+        });
+
+        document.getElementById('savePrefsBtn').addEventListener('click', async function() {
+            const checks = document.querySelectorAll('#severityFilters input:checked');
+            const filter = Array.from(checks).map(function(c) { return c.value; }).join(',');
+            if (!filter) {
+                showToast('Valj minst en severity-niva', 'error');
+                return;
+            }
+            try {
+                await apiFetch('api/notifications/preferences', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ severityFilter: filter })
+                });
+                showToast('Filter sparat!', 'success');
+            } catch (e) {
+                showToast('Fel: ' + e.message, 'error');
+            }
+        });
+
+        // Load current severity preferences
+        async function loadPreferences() {
+            try {
+                const subs = await apiJson('api/notifications/subscriptions');
+                if (subs.length > 0) {
+                    const filter = (subs[0].severityFilter || '').split(',');
+                    document.querySelectorAll('#severityFilters input').forEach(function(cb) {
+                        cb.checked = filter.indexOf(cb.value) !== -1;
+                    });
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // Modal open/close
+        document.getElementById('bellBtn').addEventListener('click', function() {
+            document.getElementById('notifModal').classList.add('active');
+            loadPreferences();
+        });
+        document.getElementById('closeModalBtn').addEventListener('click', function() {
+            document.getElementById('notifModal').classList.remove('active');
+        });
+        document.getElementById('notifModal').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+
+        // ==================== Utilities ====================
+
+        function esc(s) {
+            if (!s) return '';
+            var el = document.createElement('span');
+            el.textContent = s;
+            return el.innerHTML;
+        }
+
+        function formatTime(ts) {
+            if (!ts) return '-';
+            try {
+                var d = new Date(ts.replace(' ', 'T'));
+                var now = new Date();
+                var diff = Math.floor((now - d) / 1000);
+                if (diff < 60) return diff + 's sedan';
+                if (diff < 3600) return Math.floor(diff / 60) + 'min sedan';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h sedan';
+                return d.toLocaleDateString('sv-SE') + ' ' + d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return ts;
+            }
+        }
+
+        function showToast(msg, type) {
+            var toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(function() { toast.classList.remove('show'); }, 3000);
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            var padding = '='.repeat((4 - base64String.length % 4) % 4);
+            var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            var rawData = atob(base64);
+            var outputArray = new Uint8Array(rawData.length);
+            for (var i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        // ==================== Listen for notification clicks from SW ====================
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'cloudguard-notification-click') {
+                    loadActive();
+                }
+            });
+        }
+
+        // ==================== Init ====================
+
+        await loadActive();
+        startAutoRefresh();
+        initPush();
+    })();
+    </script>
+</body>
+</html>

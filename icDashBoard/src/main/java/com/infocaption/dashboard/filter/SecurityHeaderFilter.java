@@ -37,9 +37,20 @@ public class SecurityHeaderFilter implements Filter {
         // Content Security Policy — nonce-based script-src replaces 'unsafe-inline'
         // script-src-attr 'unsafe-inline' allows onclick/onchange handlers (CSP Level 3)
         // without weakening <script> tag protection (those still require nonce)
+        //
+        // Modules are plain HTML (not JSP) loaded in iframes — they cannot access the
+        // nonce, so they get 'unsafe-inline' instead. This is safe because modules are
+        // already sandboxed via X-Frame-Options SAMEORIGIN and require authentication.
+        String path = req.getRequestURI();
+        boolean isModule = path.contains("/modules/");
+
+        String scriptSrc = isModule
+            ? "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            : "script-src 'self' 'nonce-" + nonce + "' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; ";
+
         res.setHeader("Content-Security-Policy",
             "default-src 'self'; " +
-            "script-src 'self' 'nonce-" + nonce + "' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
+            scriptSrc +
             "script-src-attr 'unsafe-inline'; " +
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
             "font-src 'self' https://fonts.gstatic.com; " +

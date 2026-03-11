@@ -24,7 +24,8 @@ Snabbversion:
 | Dokument | Innehåll |
 |----------|----------|
 | [icDashBoard/README.md](icDashBoard/README.md) | Arkitektur, API-endpoints, moduler, changelog |
-| [docs/GETTING_STARTED.md](icDashBoard/docs/GETTING_STARTED.md) | Installationsguide steg-för-steg |
+| [docs/GETTING_STARTED.md](icDashBoard/docs/GETTING_STARTED.md) | Installationsguide (Eclipse IDE) |
+| [docs/SETUP-AI.md](icDashBoard/docs/SETUP-AI.md) | Snabbsetup via PowerShell (utan IDE) |
 | [docs/API-GUIDE.md](icDashBoard/docs/API-GUIDE.md) | API-dokumentation, Bearer tokens |
 | [docs/SAML-SETUP.md](icDashBoard/docs/SAML-SETUP.md) | SSO med Microsoft Entra ID |
 | [docs/MODULE-GUIDE.md](icDashBoard/docs/MODULE-GUIDE.md) | Skapa egna moduler |

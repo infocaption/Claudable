@@ -213,4 +213,5 @@ icDashBoard/
 | [MODULE-SPEC.md](MODULE-SPEC.md) | Teknisk modulspecifikation |
 | [SAML-SETUP.md](SAML-SETUP.md) | SSO med Microsoft Entra ID |
 | [KNOWLEDGE-BASE.md](KNOWLEDGE-BASE.md) | Kunskapsbas / MCP-integration |
+| [SETUP-AI.md](SETUP-AI.md) | Snabbsetup via PowerShell (utan IDE) |
 | `../CLAUDE.md` | Kodkonventioner och arkitekturbeslut |

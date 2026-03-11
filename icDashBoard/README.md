@@ -207,7 +207,8 @@ Migreringsskript finns i `sql/` (001–025). For fullständigt schema, se instal
 
 | Dokument | Innehåll |
 |----------|----------|
-| [GETTING_STARTED.md](docs/GETTING_STARTED.md) | Fullständig installationsguide |
+| [GETTING_STARTED.md](docs/GETTING_STARTED.md) | Installationsguide (Eclipse IDE) |
+| [SETUP-AI.md](docs/SETUP-AI.md) | Snabbsetup via PowerShell (utan IDE) |
 | [API-GUIDE.md](docs/API-GUIDE.md) | API-endpoints, tokens, exempel |
 | [MODULE-GUIDE.md](docs/MODULE-GUIDE.md) | Skapa egna moduler |
 | [MODULE-SPEC.md](docs/MODULE-SPEC.md) | Teknisk modulspecifikation |

@@ -2066,6 +2066,21 @@
                         event.source.postMessage({ type: 'CSRF_TOKEN', token: csrfVal }, event.origin);
                     }
                     break;
+                case 'UPDATE_URL':
+                    // Module requests parent URL update with its params
+                    if (data.moduleParams) {
+                        var parentUrl = new URL(window.location);
+                        // Preserve 'module' param, replace everything else
+                        var keep = parentUrl.searchParams.get('module');
+                        // Clear old module params
+                        ['from','to','tab','site'].forEach(function(k) { parentUrl.searchParams.delete(k); });
+                        if (keep) parentUrl.searchParams.set('module', keep);
+                        Object.keys(data.moduleParams).forEach(function(k) {
+                            parentUrl.searchParams.set(k, data.moduleParams[k]);
+                        });
+                        history.replaceState(null, '', parentUrl);
+                    }
+                    break;
                 case 'REFRESH_USER':
                     if (data.fullName) {
                         var nameEl = document.getElementById('topbarUserName');
@@ -2411,7 +2426,13 @@
                 showToast('Kunde inte ladda modulen', 'error');
             };
 
-            iframe.src = module.path;
+            // Pass parent URL params (from, to, tab, site) to module iframe
+            var moduleUrl = new URL(module.path, window.location.origin);
+            var parentParams = new URLSearchParams(window.location.search);
+            ['from','to','tab','site'].forEach(function(k) {
+                if (parentParams.get(k)) moduleUrl.searchParams.set(k, parentParams.get(k));
+            });
+            iframe.src = moduleUrl.pathname + moduleUrl.search;
         }
 
         // Show welcome screen

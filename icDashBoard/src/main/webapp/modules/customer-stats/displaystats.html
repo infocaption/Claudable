@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="../../shared/ic-icons.css">
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha384-T0jARMiyENrhSuDpEHTOGRubCFMH6jJC0fBVDxIRcxgKGXVbt3V3JVXxwaOb6VJB" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-UPJBMirSlEKpBUM4kJNQ9FIe3JQQQHIB7TFzEMjRWQFHbHFrM65TMr+X5EDEbwaO" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" integrity="sha384-0tMNhEzr/MBYDRMiSeHGMMpbFnZqKn1rNbWJB2hCH/0R4jASfBXYPfJxyXOkuig/" crossorigin="anonymous"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" crossorigin="anonymous"></script>
     <style>
         :root {
             --ic-primary: #5458F2;
@@ -393,6 +393,33 @@
             padding-top: 10px;
         }
 
+        .date-custom-toggle {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.82em;
+            font-weight: 500;
+            color: #4a5568;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            font-family: inherit;
+        }
+        .date-custom-toggle:hover { color: var(--ic-primary); }
+        .date-custom-toggle .chevron {
+            display: inline-block;
+            font-size: 0.7em;
+            transition: transform 0.2s;
+        }
+        .date-custom-toggle.open .chevron { transform: rotate(90deg); }
+
+        .date-custom-body {
+            display: none;
+            margin-top: 6px;
+        }
+        .date-custom-body.open { display: block; }
+
         .date-custom-section label {
             font-size: 0.82em;
             font-weight: 500;
@@ -578,6 +605,132 @@
         }
 
         .track-clear-btn:hover {
+            border-color: var(--ic-danger);
+            color: var(--ic-danger);
+        }
+
+        /* Risk filter popout */
+        .risk-popout {
+            width: 220px;
+        }
+
+        .risk-list {
+            margin-bottom: 10px;
+        }
+
+        .risk-list label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 4px;
+            font-size: 0.85em;
+            color: var(--ic-text-dark);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: opacity 0.15s;
+        }
+
+        .risk-list label:hover {
+            background: #f7fafc;
+        }
+
+        .risk-list input[type="checkbox"] {
+            accent-color: var(--ic-primary);
+        }
+
+        .risk-popout-actions {
+            display: flex;
+            gap: 6px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+        }
+
+        .risk-popout-actions button {
+            flex: 1;
+            padding: 6px 0;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82em;
+            font-weight: 500;
+            border: 1px solid #dee2e6;
+            transition: all 0.15s;
+        }
+
+        .risk-clear-btn {
+            background: white;
+            color: #4a5568;
+        }
+
+        .risk-clear-btn:hover {
+            border-color: var(--ic-danger);
+            color: var(--ic-danger);
+        }
+
+        /* Onboarding filter popout */
+        .onboarding-popout {
+            width: 220px;
+        }
+
+        .onboarding-options {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+
+        .onboarding-option-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            font-size: 0.85em;
+            color: var(--ic-text-dark);
+            cursor: pointer;
+            border-radius: var(--ic-radius-sm);
+            border: 1px solid #dee2e6;
+            background: white;
+            font-family: inherit;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .onboarding-option-btn:hover {
+            border-color: var(--ic-primary);
+            color: var(--ic-primary);
+        }
+
+        .onboarding-option-btn.active {
+            background: var(--ic-primary);
+            color: white;
+            border-color: var(--ic-primary);
+        }
+
+        .onboarding-popout-actions {
+            display: flex;
+            gap: 6px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+        }
+
+        .onboarding-popout-actions button {
+            flex: 1;
+            padding: 6px 0;
+            border-radius: var(--ic-radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82em;
+            font-weight: 500;
+            border: 1px solid #dee2e6;
+            transition: all 0.15s;
+        }
+
+        .onboarding-clear-btn {
+            background: white;
+            color: #4a5568;
+        }
+
+        .onboarding-clear-btn:hover {
             border-color: var(--ic-danger);
             color: var(--ic-danger);
         }
@@ -1096,6 +1249,45 @@
         .license-expiry.expired { background: #ffebee; color: #c62828; }
         .license-expiry.none { background: #f5f5f5; color: #999; }
 
+        /* Renewal date (avtalsdatum) */
+        .renewal-date {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        .renewal-date.ok { background: #e8f5e9; color: #2e7d32; }
+        .renewal-date.warn { background: #fff3e0; color: #e65100; }
+        .renewal-date.expired { background: #ffebee; color: #c62828; }
+
+        /* Sales metadata badges */
+        .meta-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        .meta-badge.high { background: #e8f5e9; color: #2e7d32; }
+        .meta-badge.medium { background: #fff3e0; color: #e65100; }
+        .meta-badge.low { background: #ffebee; color: #c62828; }
+
+        .leadscore-bar {
+            display: inline-block;
+            width: 50px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        .leadscore-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
         /* Track icons in table */
         .track-cell {
             white-space: nowrap;
@@ -1138,6 +1330,15 @@
         .flag-risk {
             background: #fed7d7;
             color: #c53030;
+        }
+        .flag-risk-low {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .flag-risk-high {
+            background: #c53030;
+            color: #fff;
+            font-weight: 600;
         }
 
 
@@ -1202,6 +1403,8 @@
             display: inline-block;
         }
         .weighted-score.risk { background: #fee2e2; color: #c53030; }
+        .weighted-score.risk-low { background: #fff3e0; color: #e65100; }
+        .weighted-score.risk-high { background: #c53030; color: #fff; }
         .weighted-score.success { background: #d1fae5; color: #276749; }
 
         /* ===== "Newly Classified" Indicator System ===== */
@@ -1832,15 +2035,19 @@
                         </div>
                         <div class="date-info" id="dateInfo"></div>
                         <div class="date-custom-section">
-                            <label>Anpassad period</label>
-                            <div class="date-custom-row">
-                                <input type="date" id="customDateFrom" title="Fr&aring;n">
-                                <span style="color:#a0aec0;font-size:0.85em">—</span>
-                                <input type="date" id="customDateTo" title="Till">
-                            </div>
-                            <button class="date-apply-btn" onclick="applyCustomDates()">Tillämpa</button>
-                            <div class="date-custom-warning" id="dateCustomWarning">
-                                Anpassad period g&ouml;r att resultat inte kan j&auml;mf&ouml;ras med tidigare bed&ouml;mningar.
+                            <button class="date-custom-toggle" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+                                <span class="chevron">&#9654;</span> Anpassad period
+                            </button>
+                            <div class="date-custom-body">
+                                <div class="date-custom-row">
+                                    <input type="date" id="customDateFrom" title="Fr&aring;n">
+                                    <span style="color:#a0aec0;font-size:0.85em">—</span>
+                                    <input type="date" id="customDateTo" title="Till">
+                                </div>
+                                <button class="date-apply-btn" onclick="applyCustomDates()">Tillämpa</button>
+                                <div class="date-custom-warning" id="dateCustomWarning">
+                                    Anpassad period g&ouml;r att resultat inte kan j&auml;mf&ouml;ras med tidigare bed&ouml;mningar.
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1886,6 +2093,54 @@
                         </div>
                         <div class="track-popout-actions">
                             <button class="track-clear-btn" onclick="clearTrackFilter()">Rensa</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk filter button -->
+                <div class="toolbar-popout-wrapper">
+                    <button class="toolbar-icon-btn" id="riskFilterBtn" onclick="toggleRiskFilter()" title="Filtrera riskpo&auml;ng">
+                        <i class="icon-alert"></i>
+                        <span class="filter-badge" id="riskBadge"></span>
+                    </button>
+                    <div class="toolbar-popout risk-popout" id="riskPopout">
+                        <div class="risk-list" id="riskList">
+                            <label>
+                                <input type="checkbox" value="none" onchange="applyRiskFilter()">
+                                <span>Ingen risk</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="0-4" onchange="applyRiskFilter()">
+                                <span>0–4</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="5-10" onchange="applyRiskFilter()">
+                                <span>5–10</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" value="10+" onchange="applyRiskFilter()">
+                                <span>10+</span>
+                            </label>
+                        </div>
+                        <div class="risk-popout-actions">
+                            <button class="risk-clear-btn" onclick="clearRiskFilter()">Rensa</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Onboarding filter button -->
+                <div class="toolbar-popout-wrapper">
+                    <button class="toolbar-icon-btn" id="onboardingFilterBtn" onclick="toggleOnboardingFilter()" title="Filtrera onboarding">
+                        <i class="icon-book-open"></i>
+                        <span class="filter-badge" id="onboardingBadge"></span>
+                    </button>
+                    <div class="toolbar-popout onboarding-popout" id="onboardingPopout">
+                        <div class="onboarding-options">
+                            <button class="onboarding-option-btn" onclick="applyOnboardingFilter(true)">Under onboarding</button>
+                            <button class="onboarding-option-btn" onclick="applyOnboardingFilter(false)">Ej onboarding</button>
+                        </div>
+                        <div class="onboarding-popout-actions">
+                            <button class="onboarding-clear-btn" onclick="clearOnboardingFilter()">Rensa</button>
                         </div>
                     </div>
                 </div>
@@ -2272,6 +2527,8 @@
         let datePreset = 3;      // 1, 3, 6 or null (custom)
         let coachFilter = [];    // Selected coach emails
         let trackFilter = [];    // Selected tracks (map, train, assist) — derived from license_keys
+        let riskFilter = [];     // Selected risk ranges: 'none', '0-4', '5-10', '10+'
+        let onboardingFilter = null; // true, false, or null (no filter)
         let allCoaches = [];     // All unique coaches from data
 
         // Loading overlay helpers
@@ -2310,19 +2567,34 @@
         function syncUrlParams() {
             const from = document.getElementById('dateFrom').value;
             const to = document.getElementById('dateTo').value;
+            const params = {};
+            if (from) params.from = from;
+            if (to) params.to = to;
+            if (activeTab !== 'success') params.tab = activeTab;
+            if (detailCurrentUrl) params.site = detailCurrentUrl;
+
+            // Update iframe URL
             const url = new URL(window.location);
-            if (from) url.searchParams.set('from', from); else url.searchParams.delete('from');
-            if (to) url.searchParams.set('to', to); else url.searchParams.delete('to');
-            if (activeTab !== 'success') url.searchParams.set('tab', activeTab); else url.searchParams.delete('tab');
+            Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
+            ['from','to','tab','site'].forEach(k => { if (!params[k]) url.searchParams.delete(k); });
             history.replaceState(null, '', url);
+
+            // Notify parent dashboard to update its URL
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'UPDATE_URL', moduleParams: params }, window.location.origin);
+            }
         }
 
         // Read URL params on load
+        let pendingSiteParam = null;
+        let detailCurrentUrl = '';
+
         function readUrlParams() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('from')) document.getElementById('dateFrom').value = params.get('from');
             if (params.get('to')) document.getElementById('dateTo').value = params.get('to');
             if (params.get('tab')) activeTab = params.get('tab');
+            if (params.get('site')) pendingSiteParam = params.get('site');
         }
 
         // URL normalization for matching - extracts domain/hostname
@@ -2505,7 +2777,6 @@
             updateDateButtonLabel();
             updateDateInfo();
             document.getElementById('dateCustomWarning').classList.remove('visible');
-            closeAllPopouts();
             loadDataForRange();
         }
 
@@ -2676,6 +2947,75 @@
         }
 
         // ==============================
+        // TOOLBAR: Risk filter
+        // ==============================
+
+        function toggleRiskFilter() {
+            closeAllPopouts('riskPopout');
+            document.getElementById('riskPopout').classList.toggle('show');
+        }
+
+        function applyRiskFilter() {
+            const checkboxes = document.querySelectorAll('#riskList input[type="checkbox"]');
+            riskFilter = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) riskFilter.push(cb.value);
+            });
+
+            const badge = document.getElementById('riskBadge');
+            badge.classList.toggle('visible', riskFilter.length > 0);
+
+            updateResetButtonVisibility();
+            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderTabContent(activeTab);
+        }
+
+        function clearRiskFilter() {
+            riskFilter = [];
+            document.querySelectorAll('#riskList input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('riskBadge').classList.remove('visible');
+            updateResetButtonVisibility();
+            closeAllPopouts();
+            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderTabContent(activeTab);
+        }
+
+        // ==============================
+        // TOOLBAR: Onboarding filter
+        // ==============================
+
+        function toggleOnboardingFilter() {
+            closeAllPopouts('onboardingPopout');
+            document.getElementById('onboardingPopout').classList.toggle('show');
+        }
+
+        function applyOnboardingFilter(val) {
+            onboardingFilter = val;
+            // Update button active states
+            const buttons = document.querySelectorAll('#onboardingPopout .onboarding-option-btn');
+            buttons[0].classList.toggle('active', val === true);
+            buttons[1].classList.toggle('active', val === false);
+
+            const badge = document.getElementById('onboardingBadge');
+            badge.classList.add('visible');
+
+            updateResetButtonVisibility();
+            closeAllPopouts();
+            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderTabContent(activeTab);
+        }
+
+        function clearOnboardingFilter() {
+            onboardingFilter = null;
+            document.querySelectorAll('#onboardingPopout .onboarding-option-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('onboardingBadge').classList.remove('visible');
+            updateResetButtonVisibility();
+            closeAllPopouts();
+            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderTabContent(activeTab);
+        }
+
+        // ==============================
         // TOOLBAR: Reset & download
         // ==============================
 
@@ -2690,6 +3030,14 @@
             trackFilter = [];
             document.querySelectorAll('#trackList input[type="checkbox"]').forEach(cb => cb.checked = false);
             document.getElementById('trackBadge').classList.remove('visible');
+            // Clear risk filter
+            riskFilter = [];
+            document.querySelectorAll('#riskList input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('riskBadge').classList.remove('visible');
+            // Clear onboarding filter
+            onboardingFilter = null;
+            document.querySelectorAll('#onboardingPopout .onboarding-option-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('onboardingBadge').classList.remove('visible');
             // Clear unified search
             closeUnifiedSearch();
             // Clear column filters on all tabs
@@ -2701,9 +3049,11 @@
             const hasDateFilter = datePreset !== 3;
             const hasCoach = coachFilter.length > 0;
             const hasTrack = trackFilter.length > 0;
+            const hasRisk = riskFilter.length > 0;
+            const hasOnboarding = onboardingFilter !== null;
             const hasSearch = document.getElementById('unifiedSearch')?.value.trim().length > 0;
             const btn = document.getElementById('resetFiltersBtn');
-            btn.style.display = (hasDateFilter || hasCoach || hasTrack || hasSearch) ? '' : 'none';
+            btn.style.display = (hasDateFilter || hasCoach || hasTrack || hasRisk || hasOnboarding || hasSearch) ? '' : 'none';
         }
 
         function toggleDownload() {
@@ -2712,7 +3062,7 @@
         }
 
         function closeAllPopouts(except) {
-            ['datePopout', 'coachPopout', 'trackPopout', 'downloadPopout'].forEach(id => {
+            ['datePopout', 'coachPopout', 'trackPopout', 'riskPopout', 'onboardingPopout', 'downloadPopout'].forEach(id => {
                 if (id !== except) document.getElementById(id)?.classList.remove('show');
             });
         }
@@ -2762,6 +3112,15 @@
                     // Update API timestamp
                     const ts = document.getElementById('apiTimestamp');
                     if (ts) ts.textContent = 'API: ' + new Date().toLocaleString('sv-SE');
+                    // Auto-open detail panel if site param in URL
+                    if (pendingSiteParam) {
+                        const siteUrl = pendingSiteParam;
+                        pendingSiteParam = null;
+                        const customer = customerLookup[siteUrl];
+                        if (customer) {
+                            openDetailPanel(siteUrl, customer.name, customer);
+                        }
+                    }
                 })
                 .catch(err => {
                     console.warn('API unavailable, falling back to allstats.json:', err.message);
@@ -3624,6 +3983,27 @@
                 });
             }
 
+            // Apply risk filter
+            if (riskFilter.length > 0) {
+                data = data.filter(c => {
+                    const s = c.riskScore || 0;
+                    return riskFilter.some(r =>
+                        r === 'none' ? s === 0 :
+                        r === '0-4'  ? s > 0 && s <= 4 :
+                        r === '5-10' ? s >= 5 && s <= 10 :
+                        r === '10+'  ? s > 10 : false
+                    );
+                });
+            }
+
+            // Apply onboarding filter
+            if (onboardingFilter !== null) {
+                data = data.filter(c => {
+                    const ob = c.site.isOnboarding === 1 || c.site.isOnboarding === true;
+                    return onboardingFilter ? ob : !ob;
+                });
+            }
+
             // Apply "new only" filter
             if (document.getElementById('filterNewOnly') && document.getElementById('filterNewOnly').checked) {
                 data = data.filter(c => c.isNewlyClassified);
@@ -3942,11 +4322,13 @@
                     flagsHtml += ` <span class="weighted-score success" title="Total viktad succépoäng">${customer.successScore}</span>`;
                 }
             } else if (type === 'risk') {
+                const riskBadgeClass = customer.riskScore >= 10 ? 'flag-risk-high' : customer.riskScore < 5 ? 'flag-risk-low' : 'flag-risk';
                 flagsHtml = customer.riskFlags.map(f =>
-                    `<span class="flag-badge flag-risk" title="${escHtml(f.detail)}"><span class="weight-badge">${f.weight}</span>${escHtml(f.label)}</span>`
+                    `<span class="flag-badge ${riskBadgeClass}" title="${escHtml(f.detail)}"><span class="weight-badge">${f.weight}</span>${escHtml(f.label)}</span>`
                 ).join('');
                 if (customer.riskScore > 0) {
-                    flagsHtml += ` <span class="weighted-score risk" title="Total viktad riskpoäng">${customer.riskScore}</span>`;
+                    const scoreClass = customer.riskScore >= 10 ? 'risk-high' : customer.riskScore < 5 ? 'risk-low' : 'risk';
+                    flagsHtml += ` <span class="weighted-score ${scoreClass}" title="Total viktad riskpoäng">${customer.riskScore}</span>`;
                 }
             }
 
@@ -3955,7 +4337,8 @@
             if (customer.successScore >= criteria.successMinScore && customer.riskScore <= criteria.riskMaxScoreForSuccess) {
                 catLabel = 'Succé'; catClass = 'flag-success';
             } else if (customer.riskFlags.length > 0 && (customer.riskScore > criteria.riskMaxScoreForSuccess || customer.successScore < criteria.successMinScore)) {
-                catLabel = 'Risk'; catClass = 'flag-risk';
+                catLabel = 'Risk';
+                catClass = customer.riskScore >= 10 ? 'flag-risk-high' : customer.riskScore < 5 ? 'flag-risk-low' : 'flag-risk';
             }
 
             let flagsCell;
@@ -4015,7 +4398,7 @@
         let detailChartInstance = null;
         let detailHistoryData = [];
         let detailChartMode = 'week';
-        let detailCurrentUrl = '';
+        // detailCurrentUrl declared earlier (near syncUrlParams)
         let detailCurrentCustomer = null;
         let detailSelectedMetrics = new Set(['publiseringar']); // Default selected metric for chart
 
@@ -4037,6 +4420,7 @@
         function openDetailPanel(url, name, customer) {
             detailCurrentUrl = url;
             detailCurrentCustomer = customer;
+            syncUrlParams();
             const site = customer.site;
 
             // Build header
@@ -4065,6 +4449,27 @@
                     }
                 }
                 metaParts.push(licHtml);
+            }
+            if (site.renewalDate) {
+                const rd = new Date(site.renewalDate);
+                if (!isNaN(rd.getTime())) {
+                    const diff = Math.floor((rd - new Date()) / 86400000);
+                    const cls = diff < 0 ? 'expired' : diff <= 30 ? 'expired' : diff <= 60 ? 'warn' : 'ok';
+                    metaParts.push(`<i class="icon-calendar"></i> Avtalslut: <span class="renewal-date ${cls}">${rd.toLocaleDateString('sv-SE')}</span>`);
+                }
+            }
+            if (site.leadscore != null) {
+                const ls = site.leadscore;
+                const lsColor = ls >= 70 ? '#2e7d32' : ls >= 40 ? '#e65100' : '#c62828';
+                metaParts.push(`Leadscore: <strong>${ls}</strong> <span class="leadscore-bar"><span class="leadscore-bar-fill" style="width:${ls}%;background:${lsColor}"></span></span>`);
+            }
+            if (site.engagement) {
+                const engCls = site.engagement.toLowerCase().startsWith('h') ? 'high' : site.engagement.toLowerCase().startsWith('m') ? 'medium' : 'low';
+                metaParts.push(`Engagemang: <span class="meta-badge ${engCls}">${escHtml(site.engagement)}</span>`);
+            }
+            if (site.upsell) {
+                const upCls = site.upsell.toLowerCase().startsWith('h') ? 'high' : site.upsell.toLowerCase().startsWith('m') ? 'medium' : 'low';
+                metaParts.push(`Merförsäljning: <span class="meta-badge ${upCls}">${escHtml(site.upsell)}</span>`);
             }
             if (site.track) {
                 const tracks = site.track.split(',').map(t => t.trim()).filter(Boolean);
@@ -4109,6 +4514,8 @@
             }
             detailHistoryData = [];
             detailCurrentCustomer = null;
+            detailCurrentUrl = '';
+            syncUrlParams();
         }
 
         // Close on Escape

@@ -262,7 +262,12 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     "    IF(MAX(lkt.map) = 1, 'map', NULL), " +
                     "    IF(MAX(lkt.train) = 1, 'train', NULL), " +
                     "    IF(MAX(lkt.assist) = 1, 'assist', NULL) " +
-                    "  ) FROM license_keys lkt WHERE lkt.server_id = s.id) AS track " +
+                    "  ) FROM license_keys lkt WHERE lkt.server_id = s.id) AS track, " +
+                    "  c.is_onboarding, " +
+                    "  c.renewal_date, " +
+                    "  c.leadscore, " +
+                    "  c.engagement, " +
+                    "  c.upsell " +
                     "FROM servers s " +
                     "LEFT JOIN customers c ON c.id = s.customer_id " +
                     "LEFT JOIN users u_coach ON u_coach.email = c.coach_email AND u_coach.is_active = 1 " +
@@ -296,6 +301,7 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     ") prev_agg ON prev_agg.server_id = s.id " +
                     "WHERE s.is_active = 1 AND s.is_excluded = 0 " +
                     "GROUP BY s.id, s.url, c.company_id, c.company_name, c.coach_email, u_coach.full_name, " +
+                    "  c.is_onboarding, c.renewal_date, c.leadscore, c.engagement, c.upsell, " +
                     "  latest.antal_producenter, latest.antal_administratorer, " +
                     "  latest.totalt_antal_anvandare, latest.antal_aktiva_producenter_6m, " +
                     "  latest.version, " +
@@ -363,7 +369,12 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     "    IF(MAX(lkt.map) = 1, 'map', NULL), " +
                     "    IF(MAX(lkt.train) = 1, 'train', NULL), " +
                     "    IF(MAX(lkt.assist) = 1, 'assist', NULL) " +
-                    "  ) FROM license_keys lkt WHERE lkt.server_id = s.id) AS track " +
+                    "  ) FROM license_keys lkt WHERE lkt.server_id = s.id) AS track, " +
+                    "  c.is_onboarding, " +
+                    "  c.renewal_date, " +
+                    "  c.leadscore, " +
+                    "  c.engagement, " +
+                    "  c.upsell " +
                     "FROM servers s " +
                     "LEFT JOIN customers c ON c.id = s.customer_id " +
                     "LEFT JOIN users u_coach ON u_coach.email = c.coach_email AND u_coach.is_active = 1 " +
@@ -398,6 +409,7 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     ") prev_agg ON prev_agg.server_id = s.id " +
                     "WHERE s.is_active = 1 AND s.is_excluded = 0 " +
                     "GROUP BY s.id, s.url, c.company_id, c.company_name, c.coach_email, u_coach.full_name, " +
+                    "  c.is_onboarding, c.renewal_date, c.leadscore, c.engagement, c.upsell, " +
                     "  latest.antal_producenter, latest.antal_administratorer, " +
                     "  latest.totalt_antal_anvandare, latest.antal_aktiva_producenter_6m, " +
                     "  latest.version, " +
@@ -444,6 +456,12 @@ public class CustomerStatsApiServlet extends HttpServlet {
         String coachEmail = rs.getString("coach_email");
         String coachName = rs.getString("coach_name");
         String track = rs.getString("track");
+        int isOnboarding = rs.getInt("is_onboarding");
+        Date renewalDate = rs.getDate("renewal_date");
+        int leadscore = rs.getInt("leadscore");
+        boolean leadscoreNull = rs.wasNull();
+        String engagement = rs.getString("engagement");
+        String upsell = rs.getString("upsell");
         int licenseCount = rs.getInt("license_count");
         String licenseExpiry = rs.getString("license_nearest_expiry");
         String licenseHolder = rs.getString("license_holder");
@@ -457,6 +475,11 @@ public class CustomerStatsApiServlet extends HttpServlet {
         json.append("\"coachEmail\":").append(JsonUtil.quote(coachEmail)).append(",");
         json.append("\"coachName\":").append(JsonUtil.quote(coachName)).append(",");
         json.append("\"track\":").append(JsonUtil.quote(track)).append(",");
+        json.append("\"isOnboarding\":").append(isOnboarding).append(",");
+        json.append("\"renewalDate\":").append(JsonUtil.quote(renewalDate != null ? renewalDate.toString() : null)).append(",");
+        json.append("\"leadscore\":").append(leadscoreNull ? "null" : leadscore).append(",");
+        json.append("\"engagement\":").append(JsonUtil.quote(engagement)).append(",");
+        json.append("\"upsell\":").append(JsonUtil.quote(upsell)).append(",");
         json.append("\"licenseCount\":").append(licenseCount).append(",");
         json.append("\"licenseExpiry\":").append(JsonUtil.quote(licenseExpiry)).append(",");
         json.append("\"licenseHolder\":").append(JsonUtil.quote(licenseHolder)).append(",");

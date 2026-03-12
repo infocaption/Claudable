@@ -539,6 +539,21 @@
         <url-pattern>/api/mcp/admin/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Tomcat Instance API Servlet (local Tomcat install management) -->
+    <servlet>
+        <servlet-name>TomcatInstanceApiServlet</servlet-name>
+        <servlet-class>com.infocaption.dashboard.servlet.TomcatInstanceApiServlet</servlet-class>
+        <load-on-startup>20</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>TomcatInstanceApiServlet</servlet-name>
+        <url-pattern>/api/tomcat-instances</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>TomcatInstanceApiServlet</servlet-name>
+        <url-pattern>/api/tomcat-instances/*</url-pattern>
+    </servlet-mapping>
+
     <!-- Background Health Check Scheduler -->
     <servlet>
         <servlet-name>HealthCheckScheduler</servlet-name>

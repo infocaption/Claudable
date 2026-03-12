@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomcat Manager</title>
+    <link rel="stylesheet" href="../../shared/ic-styles.css">
+    <link rel="stylesheet" href="../../shared/ic-icons.css">
+    <style>
+        .tm-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        /* ===== Summary cards ===== */
+        .tm-summary { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tm-summary-card {
+            flex: 1; min-width: 120px; background: var(--ic-bg-white);
+            border-radius: var(--ic-radius-md); padding: 16px 20px;
+            box-shadow: var(--ic-shadow-sm); border-left: 4px solid var(--ic-primary);
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .tm-summary-card.ok { border-left-color: var(--ic-success); }
+        .tm-summary-card.warning { border-left-color: var(--ic-warning); }
+        .tm-summary-card.error { border-left-color: var(--ic-danger); }
+        .tm-summary-value { font-size: 1.8em; font-weight: 700; color: var(--ic-text-dark); }
+        .tm-summary-label { font-size: 0.85em; color: var(--ic-text-muted); }
+
+        /* ===== Toolbar ===== */
+        .tm-toolbar {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .tm-search {
+            flex: 1; min-width: 200px; padding: 8px 14px; border: 1px solid #d1d5db;
+            border-radius: var(--ic-radius-sm); font-size: 0.9em; outline: none;
+            transition: border-color 0.2s;
+        }
+        .tm-search:focus { border-color: var(--ic-primary); box-shadow: 0 0 0 3px rgba(84,88,242,0.1); }
+        .tm-btn {
+            padding: 8px 16px; background: var(--ic-primary); color: #fff; border: none;
+            border-radius: var(--ic-radius-sm); cursor: pointer; font-size: 0.9em; white-space: nowrap;
+        }
+        .tm-btn:hover { opacity: 0.9; }
+
+        /* ===== Instance card ===== */
+        .tm-instance {
+            background: var(--ic-bg-white); border-radius: var(--ic-radius-md);
+            box-shadow: var(--ic-shadow-sm); margin-bottom: 12px; overflow: hidden;
+            border-left: 4px solid var(--ic-success); transition: box-shadow 0.2s;
+        }
+        .tm-instance:hover { box-shadow: var(--ic-shadow-md); }
+        .tm-instance.health-warning { border-left-color: var(--ic-warning); }
+        .tm-instance.health-error { border-left-color: var(--ic-danger); }
+        .tm-instance.health-unknown { border-left-color: #9ca3af; }
+        .tm-instance.offline { border-left-color: var(--ic-danger); }
+        .tm-instance.tm-inst-ignored { opacity: 0.45; }
+        .tm-instance.tm-inst-ignored:hover { opacity: 0.7; }
+
+        .tm-instance-header {
+            display: flex; align-items: center; padding: 16px 20px; gap: 16px;
+            cursor: pointer; user-select: none;
+        }
+        .tm-instance-header:hover { background: rgba(0,0,0,0.015); }
+
+        .tm-chevron {
+            font-size: 0.8em; color: var(--ic-text-muted); transition: transform 0.2s;
+            flex-shrink: 0; width: 16px;
+        }
+        .tm-instance.expanded .tm-chevron { transform: rotate(90deg); }
+
+        .tm-instance-info { flex: 1; min-width: 0; }
+        .tm-instance-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .tm-instance-name { font-weight: 700; font-size: 1.05em; color: var(--ic-text-dark); }
+        .tm-instance-path { font-size: 0.82em; color: var(--ic-text-muted); font-family: monospace; overflow: hidden; text-overflow: ellipsis; }
+        .tm-instance-desc { font-size: 0.82em; color: var(--ic-text-muted); margin-top: 2px; }
+
+        .tm-instance-meta {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+            margin-left: auto; font-size: 0.82em; flex-shrink: 0;
+        }
+
+        /* ===== Environment badge ===== */
+        .tm-env-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 10px;
+            font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .tm-env-production { background: #fee2e2; color: #991b1b; }
+        .tm-env-staging { background: #fef3c7; color: #92400e; }
+        .tm-env-test { background: #dbeafe; color: #1e40af; }
+        .tm-env-development { background: #f3f4f6; color: #374151; }
+
+        /* ===== Health badge (inline in header) ===== */
+        .tm-health-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px; border-radius: 12px; font-size: 0.82em;
+            background: var(--ic-bg-light); font-weight: 600;
+        }
+        .tm-health-badge .hb-ok { color: #059669; }
+        .tm-health-badge .hb-warn { color: #d97706; }
+        .tm-health-badge .hb-err { color: #dc2626; }
+        .tm-health-time { color: var(--ic-text-muted); font-size: 0.82em; white-space: nowrap; }
+
+        /* ===== Buttons ===== */
+        .tm-btn-sm {
+            padding: 4px 10px; border: 1px solid #d1d5db; border-radius: var(--ic-radius-sm);
+            background: var(--ic-bg-white); cursor: pointer; font-size: 0.82em; transition: all 0.15s;
+        }
+        .tm-btn-sm:hover { border-color: var(--ic-primary); color: var(--ic-primary); }
+        .tm-btn-sm.danger:hover { border-color: var(--ic-danger); color: var(--ic-danger); }
+
+        /* ===== Detail panel ===== */
+        .tm-detail {
+            display: none; border-top: 1px solid #f0f0f0; padding: 16px 20px; background: #fafbfc;
+        }
+        .tm-instance.expanded .tm-detail { display: block; }
+
+        .tm-section-title {
+            font-weight: 700; font-size: 0.88em; color: var(--ic-text-dark);
+            margin: 16px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb;
+        }
+        .tm-section-title:first-child { margin-top: 0; }
+
+        /* ===== Hosts table ===== */
+        .tm-hosts-table { width: 100%; border-collapse: collapse; font-size: 0.88em; margin-top: 8px; }
+        .tm-hosts-table th {
+            text-align: left; padding: 8px 12px; color: var(--ic-text-muted);
+            font-weight: 600; font-size: 0.85em; text-transform: uppercase;
+            letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;
+        }
+        .tm-hosts-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+        .tm-hosts-table tr:last-child td { border-bottom: none; }
+        .tm-hosts-table tr:hover td { background: rgba(84,88,242,0.03); }
+        .tm-hosts-table .tm-ctx-row td { padding-top: 4px; padding-bottom: 4px; font-size: 0.92em; }
+        .tm-hosts-table .tm-ctx-row td:first-child { padding-left: 28px; }
+        .tm-hosts-table tr.tm-ignored td { opacity: 0.45; }
+        .tm-hosts-table tr.tm-ignored:hover td { opacity: 0.7; }
+        .tm-btn-ignore {
+            padding: 2px 8px; border: 1px solid #d1d5db; border-radius: var(--ic-radius-sm);
+            background: var(--ic-bg-white); cursor: pointer; font-size: 0.78em; transition: all 0.15s;
+        }
+        .tm-btn-ignore:hover { border-color: var(--ic-primary); color: var(--ic-primary); }
+        .tm-btn-ignore.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+
+        /* ===== App/host rows ===== */
+        .tm-app-grid { display: flex; flex-direction: column; gap: 6px; }
+        .tm-app-row {
+            display: flex; align-items: center; gap: 12px; padding: 8px 12px;
+            background: var(--ic-bg-white); border-radius: var(--ic-radius-sm);
+            border: 1px solid #e5e7eb; font-size: 0.88em;
+        }
+        .tm-app-name { font-weight: 600; min-width: 180px; }
+        .tm-app-ctx { color: var(--ic-text-muted); font-family: monospace; font-size: 0.9em; }
+        .tm-app-status { margin-left: auto; }
+
+        /* ===== Health dots ===== */
+        .tm-health-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px;
+        }
+        .tm-health-dot.ok { background: #10b981; }
+        .tm-health-dot.warning { background: #f59e0b; }
+        .tm-health-dot.error { background: #ef4444; }
+        .tm-health-dot.unknown { background: #9ca3af; }
+
+        /* ===== Health status pill ===== */
+        .tm-health-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 3px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 600;
+        }
+        .tm-health-pill.ok { background: #d1fae5; color: #065f46; }
+        .tm-health-pill.warning { background: #fef3c7; color: #92400e; }
+        .tm-health-pill.error { background: #fee2e2; color: #991b1b; }
+
+        /* ===== Connector / User pills ===== */
+        .tm-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tm-pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 12px; font-size: 0.82em;
+            background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb;
+        }
+        .tm-pill.ssl { background: #d1fae5; color: #065f46; border-color: #bbf7d0; }
+
+        .tm-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 8px;
+            font-size: 0.8em; font-weight: 600;
+        }
+        .tm-badge-ok { background: #d1fae5; color: #065f46; }
+        .tm-badge-err { background: #fee2e2; color: #991b1b; }
+        .tm-badge-info { background: #dbeafe; color: #1e40af; }
+        .tm-badge-muted { background: #f3f4f6; color: #374151; }
+
+        /* ===== Modal ===== */
+        .tm-modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .tm-modal-overlay.active { display: flex; }
+        .tm-modal {
+            background: var(--ic-bg-white); border-radius: var(--ic-radius-md);
+            box-shadow: var(--ic-shadow-lg); padding: 24px; width: 500px; max-width: 95vw;
+        }
+        .tm-modal h3 { margin: 0 0 16px; font-size: 1.1em; color: var(--ic-text-dark); }
+        .tm-modal-field { margin-bottom: 12px; }
+        .tm-modal-field label {
+            display: block; font-size: 0.82em; font-weight: 600; color: var(--ic-text-muted);
+            margin-bottom: 4px;
+        }
+        .tm-modal-field input, .tm-modal-field select, .tm-modal-field textarea {
+            width: 100%; padding: 8px 12px; border: 1px solid #d1d5db;
+            border-radius: var(--ic-radius-sm); font-size: 0.9em; outline: none;
+            font-family: inherit; box-sizing: border-box;
+        }
+        .tm-modal-field input:focus, .tm-modal-field select:focus, .tm-modal-field textarea:focus {
+            border-color: var(--ic-primary); box-shadow: 0 0 0 3px rgba(84,88,242,0.1);
+        }
+        .tm-modal-row { display: flex; gap: 12px; }
+        .tm-modal-row .tm-modal-field { flex: 1; }
+        .tm-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+        .tm-modal-actions .tm-btn-cancel {
+            padding: 8px 16px; border: 1px solid #d1d5db; border-radius: var(--ic-radius-sm);
+            background: var(--ic-bg-white); cursor: pointer; font-size: 0.9em;
+        }
+
+        /* ===== Loading / Empty ===== */
+        .tm-loading {
+            display: flex; align-items: center; justify-content: center;
+            padding: 60px; color: var(--ic-text-muted); font-size: 1.1em; gap: 12px;
+        }
+        .tm-empty { text-align: center; padding: 60px; color: var(--ic-text-muted); }
+
+        @media (max-width: 768px) {
+            .tm-summary { flex-direction: column; }
+            .tm-instance-header { flex-wrap: wrap; }
+            .tm-instance-meta { margin-left: 0; margin-top: 8px; }
+            .tm-toolbar { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tm-container">
+        <div class="ic-header" style="margin-bottom: 20px;">
+            <h1 class="ic-title">Tomcat Manager</h1>
+            <p class="ic-subtitle">Lokala Tomcat-installationer och h&auml;lsostatus</p>
+        </div>
+
+        <div id="summaryArea"></div>
+
+        <div class="tm-toolbar">
+            <input type="text" class="tm-search" id="searchInput" placeholder="S&ouml;k namn, maskin, milj&ouml;, s&ouml;kv&auml;g...">
+            <button class="tm-btn" id="btnAdd">+ L&auml;gg till</button>
+        </div>
+
+        <div id="instanceList">
+            <div class="tm-loading"><div class="ic-spinner"></div> Laddar...</div>
+        </div>
+    </div>
+
+    <!-- Add/Edit modal -->
+    <div class="tm-modal-overlay" id="modalOverlay">
+        <div class="tm-modal">
+            <h3 id="modalTitle">L&auml;gg till Tomcat-instans</h3>
+            <input type="hidden" id="modalId" value="">
+            <div class="tm-modal-field">
+                <label>Namn *</label>
+                <input type="text" id="modalName" placeholder="T.ex. IC Produktion">
+            </div>
+            <div class="tm-modal-field">
+                <label>S&ouml;kv&auml;g till Tomcat *</label>
+                <input type="text" id="modalPath" placeholder="C:\Program Files\Apache Software Foundation\Tomcat 9.0">
+            </div>
+            <div class="tm-modal-field">
+                <label>Maskinnamn</label>
+                <input type="text" id="modalMachine" placeholder="T.ex. SRV-PROD-01">
+            </div>
+            <div class="tm-modal-field">
+                <label>Milj&ouml;</label>
+                <select id="modalEnv">
+                    <option value="production">Production</option>
+                    <option value="staging">Staging</option>
+                    <option value="test">Test</option>
+                    <option value="development">Development</option>
+                </select>
+            </div>
+            <div class="tm-modal-row">
+                <div class="tm-modal-field">
+                    <label>HTTP-port (override)</label>
+                    <input type="number" id="modalHttpPort" placeholder="T.ex. 80 (tomt = fr&aring;n server.xml)">
+                </div>
+                <div class="tm-modal-field">
+                    <label>HTTPS-port (override)</label>
+                    <input type="number" id="modalHttpsPort" placeholder="T.ex. 443 (tomt = fr&aring;n server.xml)">
+                </div>
+            </div>
+            <div class="tm-modal-field">
+                <label>Beskrivning</label>
+                <textarea id="modalDesc" rows="2" placeholder="Valfri beskrivning..."></textarea>
+            </div>
+            <div class="tm-modal-actions">
+                <button class="tm-btn-cancel" id="btnModalCancel">Avbryt</button>
+                <button class="tm-btn" id="btnModalSave">Spara</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../shared/ic-utils.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        var API = '../../api/tomcat-instances';
+        var instances = [];
+        var summary = null;
+        var expandedIds = {};  // id -> true (data comes from list response)
+        var searchTerm = '';
+        var refreshTimer = null;
+
+        // ===== INIT =====
+        async function init() {
+            await Promise.all([loadInstances(), loadSummary()]);
+            renderSummary();
+            render();
+
+            // Auto-refresh summary every 60s
+            refreshTimer = setInterval(async function() {
+                await loadSummary();
+                renderSummary();
+                // Reload instances to get updated health badges
+                await loadInstances();
+                render();
+            }, 60000);
+
+            ICUtils.notifyReady('tomcat-manager');
+        }
+
+        async function loadInstances() {
+            try {
+                var resp = await fetch(API);
+                instances = await resp.json();
+            } catch (e) {
+                document.getElementById('instanceList').innerHTML =
+                    '<div class="tm-empty">Kunde inte ladda: ' + esc(e.message) + '</div>';
+            }
+        }
+
+        async function loadSummary() {
+            try {
+                var resp = await fetch(API + '/health-summary');
+                summary = await resp.json();
+            } catch (e) {
+                summary = null;
+            }
+        }
+
+        // ===== RENDER SUMMARY =====
+        function renderSummary() {
+            var el = document.getElementById('summaryArea');
+            if (!summary) { el.innerHTML = ''; return; }
+            var wc = summary.totalWarn || 0;
+            var ec = summary.totalError || 0;
+            el.innerHTML =
+                '<div class="tm-summary">' +
+                    sCard(summary.instances || 0, 'Instanser', '') +
+                    sCard(summary.totalApps || 0, 'Appar', '') +
+                    sCard(summary.totalOk || 0, 'OK', 'ok') +
+                    sCard(wc, 'Varning', wc > 0 ? 'warning' : 'ok') +
+                    sCard(ec, 'Fel', ec > 0 ? 'error' : 'ok') +
+                '</div>';
+        }
+
+        function sCard(val, label, cls) {
+            return '<div class="tm-summary-card ' + cls + '">' +
+                '<div class="tm-summary-value">' + val + '</div>' +
+                '<div class="tm-summary-label">' + label + '</div></div>';
+        }
+
+        // ===== RENDER INSTANCES =====
+        function render() {
+            var el = document.getElementById('instanceList');
+            var filtered = instances.filter(function(inst) {
+                if (!searchTerm) return true;
+                var s = searchTerm.toLowerCase();
+                return (inst.name && inst.name.toLowerCase().includes(s)) ||
+                    (inst.machineName && inst.machineName.toLowerCase().includes(s)) ||
+                    (inst.installPath && inst.installPath.toLowerCase().includes(s)) ||
+                    (inst.environment && inst.environment.toLowerCase().includes(s)) ||
+                    (inst.description && inst.description.toLowerCase().includes(s));
+            });
+
+            if (filtered.length === 0 && instances.length === 0) {
+                el.innerHTML = '<div class="tm-empty">Inga Tomcat-installationer tillagda. Klicka "+ L\u00e4gg till" ovan.</div>';
+                return;
+            }
+            if (filtered.length === 0) {
+                el.innerHTML = '<div class="tm-loading">Inga instanser matchar s\u00f6kningen</div>';
+                return;
+            }
+
+            // Sort: errors first, then warnings, then ok, ignored last
+            filtered.sort(function(a, b) {
+                if (a.ignored !== b.ignored) return a.ignored ? 1 : -1;
+                var aPri = !a.pathExists ? 0 : (a.healthError > 0 ? 1 : (a.healthWarn > 0 ? 2 : 3));
+                var bPri = !b.pathExists ? 0 : (b.healthError > 0 ? 1 : (b.healthWarn > 0 ? 2 : 3));
+                if (aPri !== bPri) return aPri - bPri;
+                return (a.name || '').localeCompare(b.name || '');
+            });
+
+            var html = '';
+            filtered.forEach(function(inst) {
+                var isExpanded = !!expandedIds[inst.id];
+                var healthClass = getHealthClass(inst);
+                var cls = !inst.pathExists ? ' offline' : '';
+                if (inst.ignored) cls += ' tm-inst-ignored';
+
+                html += '<div class="tm-instance' + cls + ' ' + healthClass + (isExpanded ? ' expanded' : '') + '" data-id="' + inst.id + '">';
+
+                // Header
+                html += '<div class="tm-instance-header" data-action="toggle" data-id="' + inst.id + '">';
+                html += '<span class="tm-chevron">&#9654;</span>';
+
+                // Info block
+                html += '<div class="tm-instance-info">';
+                html += '<div class="tm-instance-name-row">';
+                html += '<span class="tm-instance-name">' + esc(inst.name) + '</span>';
+                if (inst.environment) {
+                    html += '<span class="tm-env-badge tm-env-' + inst.environment + '">' + esc(inst.environment) + '</span>';
+                }
+                if (inst.machineName) {
+                    html += '<span style="font-size:0.82em;color:var(--ic-text-muted);">' + esc(inst.machineName) + '</span>';
+                }
+                if (inst.httpPortOverride || inst.httpsPortOverride) {
+                    var ports = [];
+                    if (inst.httpPortOverride) ports.push(':' + inst.httpPortOverride);
+                    if (inst.httpsPortOverride) ports.push(':' + inst.httpsPortOverride + ' SSL');
+                    html += '<span class="tm-badge tm-badge-muted">Apache ' + esc(ports.join(', ')) + '</span>';
+                }
+                html += '</div>';
+                html += '<div class="tm-instance-path">' + esc(inst.installPath) + '</div>';
+                if (inst.description) {
+                    html += '<div class="tm-instance-desc">' + esc(inst.description) + '</div>';
+                }
+                html += '</div>';
+
+                // Meta right side
+                html += '<div class="tm-instance-meta">';
+                if (!inst.pathExists) {
+                    html += '<span class="tm-badge tm-badge-err">S\u00f6kv\u00e4g saknas</span>';
+                }
+
+                // Host count pill (max 20 per Tomcat)
+                var hostCount = inst.hosts ? inst.hosts.length : 0;
+                if (hostCount > 0) {
+                    var hostCls = hostCount >= 20 ? 'error' : (hostCount >= 18 ? 'warning' : 'ok');
+                    html += '<span class="tm-health-pill ' + hostCls + '">' + hostCount + ' hosts</span>';
+                }
+
+                // Health summary badge
+                var totalHealth = (inst.healthOk || 0) + (inst.healthWarn || 0) + (inst.healthError || 0);
+                if (totalHealth > 0) {
+                    html += '<span class="tm-health-badge">';
+                    html += totalHealth + ' appar';
+                    if (inst.healthOk > 0) html += ' <span class="hb-ok">' + inst.healthOk + ' ok</span>';
+                    if (inst.healthWarn > 0) html += ' <span class="hb-warn">' + inst.healthWarn + ' warn</span>';
+                    if (inst.healthError > 0) html += ' <span class="hb-err">' + inst.healthError + ' fel</span>';
+                    html += '</span>';
+                }
+
+                if (inst.lastHealthAt) {
+                    html += '<span class="tm-health-time">Kontrollerad ' + formatTime(inst.lastHealthAt) + '</span>';
+                }
+
+                html += '<button class="tm-btn-ignore' + (inst.ignored ? ' active' : '') + '" data-action="toggle-ignore-inst" data-id="' + inst.id + '" title="' + (inst.ignored ? 'Sluta ignorera' : 'Ignorera instans') + '">' + (inst.ignored ? 'Ignorerad' : 'Ignorera') + '</button>';
+                html += '<button class="tm-btn-sm" data-action="scan" data-id="' + inst.id + '" title="Scanna server.xml + webapps">Scanna</button>';
+                html += '<button class="tm-btn-sm" data-action="health" data-id="' + inst.id + '" title="K\u00f6r h\u00e4lsokontroll">H\u00e4lsokontroll</button>';
+                html += '<button class="tm-btn-sm" data-action="edit" data-id="' + inst.id + '" title="Redigera">Redigera</button>';
+                html += '<button class="tm-btn-sm danger" data-action="delete" data-id="' + inst.id + '" title="Ta bort">Ta bort</button>';
+                html += '</div>';
+                html += '</div>';
+
+                // Detail panel
+                html += '<div class="tm-detail">';
+                if (isExpanded) {
+                    html += renderDetail(inst);
+                }
+                html += '</div>';
+
+                html += '</div>';
+            });
+
+            el.innerHTML = html;
+        }
+
+        function getHealthClass(inst) {
+            if (inst.ignored) return 'health-unknown';
+            if (!inst.pathExists) return 'health-error';
+            if (inst.healthError > 0) return 'health-error';
+            if (inst.healthWarn > 0) return 'health-warning';
+            var total = (inst.healthOk || 0) + (inst.healthWarn || 0) + (inst.healthError || 0);
+            if (total === 0) return 'health-unknown';
+            return '';
+        }
+
+        // ===== RENDER DETAIL =====
+        function renderDetail(inst) {
+            var hasScanData = (inst.connectors && inst.connectors.length > 0) ||
+                (inst.hosts && inst.hosts.length > 0) ||
+                (inst.apps && inst.apps.length > 0) ||
+                (inst.users && inst.users.length > 0);
+
+            if (!hasScanData) {
+                return '<div style="color:var(--ic-text-muted);font-size:0.9em;padding:8px 0;">Ingen scan-data \u00e4nnu. Klicka "Scanna" f\u00f6r att l\u00e4sa server.xml och webapps/.</div>';
+            }
+
+            // Build health lookup: key = "host|contextPath" -> health result
+            var healthMap = {};
+            var healthByHost = {};
+            if (inst.healthResults) {
+                inst.healthResults.forEach(function(h) {
+                    healthMap[h.host + '|' + h.contextPath] = h;
+                    if (!healthByHost[h.host]) healthByHost[h.host] = [];
+                    healthByHost[h.host].push(h);
+                });
+            }
+
+            var html = '';
+
+            // Connectors
+            if (inst.connectors && inst.connectors.length > 0) {
+                html += '<div class="tm-section-title">Connectors</div>';
+                html += '<div class="tm-pills">';
+                inst.connectors.forEach(function(c) {
+                    html += '<span class="tm-pill' + (c.ssl ? ' ssl' : '') + '">Port ' + c.port + (c.ssl ? ' (SSL)' : '') + '</span>';
+                });
+                html += '</div>';
+            }
+
+            // Hosts (with health status as column) — sort: errors first, ignored last
+            if (inst.hosts && inst.hosts.length > 0) {
+                var sortedHosts = inst.hosts.slice().sort(function(a, b) {
+                    if (a.ignored !== b.ignored) return a.ignored ? 1 : -1;
+                    var aHealth = healthByHost[a.name] || [];
+                    var bHealth = healthByHost[b.name] || [];
+                    var aErr = aHealth.some(function(h) { return h.status === 'error'; });
+                    var bErr = bHealth.some(function(h) { return h.status === 'error'; });
+                    if (aErr !== bErr) return aErr ? -1 : 1;
+                    var aWarn = aHealth.some(function(h) { return h.status === 'warning'; });
+                    var bWarn = bHealth.some(function(h) { return h.status === 'warning'; });
+                    if (aWarn !== bWarn) return aWarn ? -1 : 1;
+                    return (a.name || '').localeCompare(b.name || '');
+                });
+                html += '<div class="tm-section-title">Hosts (' + inst.hosts.length + ')</div>';
+                html += '<table class="tm-hosts-table"><thead><tr>';
+                html += '<th>Host</th><th>Kund</th><th>appBase</th><th>Alias</th><th>Status</th><th></th>';
+                html += '</tr></thead><tbody>';
+
+                sortedHosts.forEach(function(h) {
+                    // Aggregate health for this host
+                    var hostHealth = healthByHost[h.name] || [];
+                    var statusHtml = renderHostHealthSummary(hostHealth);
+                    var rowCls = h.ignored ? ' tm-ignored' : '';
+
+                    html += '<tr class="' + rowCls + '">';
+
+                    // Host name — linked to server URL if available
+                    html += '<td>';
+                    if (h.serverUrl) {
+                        var configUrl = h.serverUrl + 'LoginCoreManual?returnURL=/config';
+                        html += '<a href="' + esc(configUrl) + '" target="_blank" style="font-weight:700;">' + esc(h.name) + '</a>';
+                    } else {
+                        html += '<strong>' + esc(h.name) + '</strong>';
+                    }
+                    html += '</td>';
+
+                    // Customer name — linked to SuperOffice CRM if available
+                    html += '<td>';
+                    if (h.companyName && h.companyId) {
+                        var crmUrl = 'https://online2.superoffice.com/Cust16404/default.aspx?contact.main.detaljkortet.minimonth?contact_id=' + encodeURIComponent(h.companyId);
+                        html += '<a href="' + esc(crmUrl) + '" target="_blank" title="SuperOffice CRM">' + esc(h.companyName) + '</a>';
+                    } else if (h.companyName) {
+                        html += esc(h.companyName);
+                    } else {
+                        html += '<span style="color:var(--ic-text-muted);">\u2014</span>';
+                    }
+                    html += '</td>';
+
+                    html += '<td><code style="font-size:0.9em;">' + esc(h.appBase) + '</code></td>';
+                    html += '<td>';
+                    if (h.aliases && h.aliases.length > 0) {
+                        html += h.aliases.map(function(a) { return '<span class="tm-badge tm-badge-info">' + esc(a) + '</span>'; }).join(' ');
+                    } else {
+                        html += '<span style="color:var(--ic-text-muted);">\u2014</span>';
+                    }
+                    html += '</td>';
+                    html += '<td>' + statusHtml + '</td>';
+                    html += '<td><button class="tm-btn-ignore' + (h.ignored ? ' active' : '') + '" data-action="toggle-ignore" data-host-id="' + h.id + '" title="' + (h.ignored ? 'Visa i sammanfattning' : 'Ignorera i sammanfattning') + '">' + (h.ignored ? 'Ignorerad' : 'Ignorera') + '</button></td>';
+                    html += '</tr>';
+
+                    // Context sub-rows with individual health
+                    if (h.contexts && h.contexts.length > 0) {
+                        h.contexts.forEach(function(ctx) {
+                            var ctxPath = ctx.path || '/';
+                            var ctxHealth = healthMap[h.name + '|' + ctxPath];
+                            html += '<tr class="tm-ctx-row' + rowCls + '">';
+                            html += '<td>' + esc(ctxPath) + ' <span style="color:var(--ic-text-muted);">\u2192</span> ' + esc(ctx.docBase) + '</td>';
+                            html += '<td></td><td></td><td></td>';
+                            html += '<td>' + renderSingleHealth(ctxHealth) + '</td>';
+                            html += '<td></td>';
+                            html += '</tr>';
+                        });
+                    }
+                });
+                html += '</tbody></table>';
+            }
+
+            // Deployed apps (localhost webapps) with health status column
+            if (inst.apps) {
+                html += '<div class="tm-section-title">Deployade appar (' + inst.apps.length + ')</div>';
+                if (inst.apps.length > 0) {
+                    html += '<table class="tm-hosts-table"><thead><tr>';
+                    html += '<th>App</th><th>Context</th><th>Info</th><th>Status</th>';
+                    html += '</tr></thead><tbody>';
+                    inst.apps.forEach(function(app) {
+                        var appHealth = healthMap['localhost|' + app.contextPath];
+                        html += '<tr>';
+                        html += '<td><strong>' + esc(app.name) + '</strong></td>';
+                        html += '<td><code style="font-size:0.9em;">' + esc(app.contextPath) + '</code></td>';
+                        html += '<td>';
+                        if (app.version) {
+                            html += '<span class="tm-badge tm-badge-info">' + esc(app.version) + '</span> ';
+                        }
+                        if (!app.hasWebInf) {
+                            html += '<span class="tm-badge tm-badge-muted">Ingen WEB-INF</span>';
+                        }
+                        html += '</td>';
+                        html += '<td>' + renderSingleHealth(appHealth) + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table>';
+                } else {
+                    html += '<div style="color:var(--ic-text-muted);font-size:0.9em;">Inga appar i webapps/</div>';
+                }
+            }
+
+            // Tomcat users
+            if (inst.users && inst.users.length > 0) {
+                html += '<div class="tm-section-title">Tomcat-anv\u00e4ndare (tomcat-users.xml)</div>';
+                html += '<div class="tm-pills">';
+                inst.users.forEach(function(u) {
+                    var isManager = u.roles && (u.roles.indexOf('manager') >= 0);
+                    html += '<span class="tm-pill' + (isManager ? ' ssl' : '') + '">' + esc(u.username) + ' (' + esc(u.roles) + ')</span>';
+                });
+                html += '</div>';
+            }
+
+            return html;
+        }
+
+        function renderHostHealthSummary(healthResults) {
+            if (!healthResults || healthResults.length === 0) {
+                return '<span style="color:var(--ic-text-muted);">\u2014</span>';
+            }
+            if (healthResults.length === 1) {
+                return renderSingleHealth(healthResults[0]);
+            }
+            // Multiple targets: show aggregated counts
+            var ok = 0, warn = 0, err = 0;
+            healthResults.forEach(function(h) {
+                if (h.status === 'ok') ok++;
+                else if (h.status === 'warning') warn++;
+                else err++;
+            });
+            var parts = [];
+            if (ok > 0) parts.push('<span class="hb-ok">' + ok + ' ok</span>');
+            if (warn > 0) parts.push('<span class="hb-warn">' + warn + ' warn</span>');
+            if (err > 0) parts.push('<span class="hb-err">' + err + ' fel</span>');
+            return '<span class="tm-health-badge">' + parts.join(' ') + '</span>';
+        }
+
+        function renderSingleHealth(h) {
+            if (!h) return '<span style="color:var(--ic-text-muted);">\u2014</span>';
+            var label = '';
+            var tooltip = '';
+            if (h.statusCode > 0) {
+                label = 'HTTP ' + h.statusCode;
+            } else if (h.error) {
+                tooltip = h.error;
+                label = truncate(h.error, 30);
+            }
+            var timeHtml = '';
+            if (h.responseTimeMs != null && h.responseTimeMs >= 0) {
+                var timeCls = h.responseTimeMs >= 500 ? 'error' : (h.responseTimeMs >= 200 ? 'warning' : 'ok');
+                timeHtml = ' <span class="tm-health-pill ' + timeCls + '">' + h.responseTimeMs + ' ms</span>';
+            }
+            return '<span class="tm-health-pill ' + h.status + '"' +
+                (tooltip ? ' title="' + esc(tooltip) + '"' : '') + '>' +
+                '<span class="tm-health-dot ' + h.status + '"></span> ' + esc(label) +
+                '</span>' + timeHtml;
+        }
+
+        // ===== ACTIONS =====
+        function toggleInstance(instId) {
+            if (expandedIds[instId]) {
+                delete expandedIds[instId];
+            } else {
+                expandedIds[instId] = true;
+            }
+            render();
+        }
+
+        async function toggleInstanceIgnore(instId) {
+            try {
+                await fetch(API + '/' + instId + '/ignore', { method: 'PUT' });
+                await Promise.all([loadInstances(), loadSummary()]);
+                renderSummary();
+                render();
+            } catch (e) {
+                alert('Fel: ' + e.message);
+            }
+        }
+
+        async function toggleHostIgnore(hostId) {
+            try {
+                await fetch(API + '/host/' + hostId + '/ignore', { method: 'PUT' });
+                await Promise.all([loadInstances(), loadSummary()]);
+                renderSummary();
+                render();
+            } catch (e) {
+                alert('Fel: ' + e.message);
+            }
+        }
+
+        async function scanInstance(instId) {
+            try {
+                await fetch(API + '/' + instId + '/scan');
+                // Reload instances to get updated scan data from DB
+                await loadInstances();
+                render();
+            } catch (e) {
+                alert('Scan misslyckades: ' + e.message);
+            }
+        }
+
+        async function healthCheck(instId) {
+            try {
+                await fetch(API + '/' + instId + '/health');
+                // Reload to get updated health data
+                await Promise.all([loadInstances(), loadSummary()]);
+                renderSummary();
+            } catch (e) { /* ignore */ }
+            render();
+        }
+
+        async function deleteInstance(instId) {
+            if (!confirm('Ta bort denna Tomcat-instans?')) return;
+            try {
+                await fetch(API + '/' + instId, { method: 'DELETE' });
+                delete expandedIds[instId];
+                await Promise.all([loadInstances(), loadSummary()]);
+                renderSummary();
+                render();
+            } catch (e) {
+                alert('Fel: ' + e.message);
+            }
+        }
+
+        // ===== MODAL =====
+        function openModal(editInst) {
+            document.getElementById('modalOverlay').classList.add('active');
+            if (editInst) {
+                document.getElementById('modalTitle').textContent = 'Redigera instans';
+                document.getElementById('modalId').value = editInst.id;
+                document.getElementById('modalName').value = editInst.name || '';
+                document.getElementById('modalPath').value = editInst.installPath || '';
+                document.getElementById('modalPath').disabled = true;
+                document.getElementById('modalMachine').value = editInst.machineName || '';
+                document.getElementById('modalEnv').value = editInst.environment || 'production';
+                document.getElementById('modalHttpPort').value = editInst.httpPortOverride || '';
+                document.getElementById('modalHttpsPort').value = editInst.httpsPortOverride || '';
+                document.getElementById('modalDesc').value = editInst.description || '';
+            } else {
+                document.getElementById('modalTitle').textContent = 'L\u00e4gg till Tomcat-instans';
+                document.getElementById('modalId').value = '';
+                document.getElementById('modalName').value = '';
+                document.getElementById('modalPath').value = '';
+                document.getElementById('modalPath').disabled = false;
+                document.getElementById('modalMachine').value = '';
+                document.getElementById('modalEnv').value = 'production';
+                document.getElementById('modalHttpPort').value = '';
+                document.getElementById('modalHttpsPort').value = '';
+                document.getElementById('modalDesc').value = '';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        async function saveModal() {
+            var id = document.getElementById('modalId').value;
+            var httpPort = document.getElementById('modalHttpPort').value.trim();
+            var httpsPort = document.getElementById('modalHttpsPort').value.trim();
+            var data = {
+                name: document.getElementById('modalName').value.trim(),
+                installPath: document.getElementById('modalPath').value.trim(),
+                machineName: document.getElementById('modalMachine').value.trim(),
+                environment: document.getElementById('modalEnv').value,
+                httpPortOverride: httpPort ? parseInt(httpPort, 10) : 0,
+                httpsPortOverride: httpsPort ? parseInt(httpsPort, 10) : 0,
+                description: document.getElementById('modalDesc').value.trim()
+            };
+
+            if (!data.name) { alert('Namn \u00e4r obligatoriskt'); return; }
+            if (!id && !data.installPath) { alert('S\u00f6kv\u00e4g \u00e4r obligatorisk'); return; }
+
+            try {
+                var resp;
+                if (id) {
+                    // PUT update
+                    resp = await fetch(API + '/' + id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // POST create
+                    resp = await fetch(API, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+                var result = await resp.json();
+                if (resp.ok && (result.success || result.id)) {
+                    closeModal();
+                    await Promise.all([loadInstances(), loadSummary()]);
+                    renderSummary();
+                    render();
+                } else {
+                    alert(result.error || 'Kunde inte spara');
+                }
+            } catch (e) {
+                alert('Fel: ' + e.message);
+            }
+        }
+
+        // ===== HELPERS =====
+        function esc(s) {
+            if (s == null) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+        }
+
+        function truncate(s, maxLen) {
+            if (!s || s.length <= maxLen) return s;
+            return s.substring(0, maxLen) + '...';
+        }
+
+        function formatTime(ts) {
+            if (!ts) return '';
+            try {
+                var d = new Date(ts.replace(' ', 'T'));
+                var h = String(d.getHours()).padStart(2, '0');
+                var m = String(d.getMinutes()).padStart(2, '0');
+                return h + ':' + m;
+            } catch (e) {
+                return ts;
+            }
+        }
+
+        // ===== EVENTS =====
+        document.addEventListener('click', function(e) {
+            var ignoreInst = e.target.closest('[data-action="toggle-ignore-inst"]');
+            if (ignoreInst) { e.stopPropagation(); toggleInstanceIgnore(parseInt(ignoreInst.dataset.id, 10)); return; }
+
+            var ignore = e.target.closest('[data-action="toggle-ignore"]');
+            if (ignore) { e.stopPropagation(); toggleHostIgnore(parseInt(ignore.dataset.hostId, 10)); return; }
+
+            var scan = e.target.closest('[data-action="scan"]');
+            if (scan) { e.stopPropagation(); scanInstance(parseInt(scan.dataset.id, 10)); return; }
+
+            var health = e.target.closest('[data-action="health"]');
+            if (health) { e.stopPropagation(); healthCheck(parseInt(health.dataset.id, 10)); return; }
+
+            var edit = e.target.closest('[data-action="edit"]');
+            if (edit) {
+                e.stopPropagation();
+                var inst = instances.find(function(i) { return i.id === parseInt(edit.dataset.id, 10); });
+                if (inst) openModal(inst);
+                return;
+            }
+
+            var del = e.target.closest('[data-action="delete"]');
+            if (del) { e.stopPropagation(); deleteInstance(parseInt(del.dataset.id, 10)); return; }
+
+            var toggle = e.target.closest('[data-action="toggle"]');
+            if (toggle) { toggleInstance(parseInt(toggle.dataset.id, 10)); return; }
+        });
+
+        document.getElementById('btnAdd').addEventListener('click', function() { openModal(null); });
+        document.getElementById('btnModalCancel').addEventListener('click', closeModal);
+        document.getElementById('btnModalSave').addEventListener('click', saveModal);
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.getElementById('searchInput').addEventListener('input',
+            ICUtils.debounce(function(e) {
+                searchTerm = e.target.value.trim();
+                render();
+            }, 200)
+        );
+
+        document.addEventListener('DOMContentLoaded', init);
+    })();
+    </script>
+</body>
+</html>

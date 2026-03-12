@@ -64,6 +64,12 @@ paths:
 | `/api/mcp` | McpGatewayServlet | Token | MCP Gateway proxy |
 | `/api/mcp/admin/*` | McpAdminServlet | Admin | MCP server management |
 | `/api/admin/kb/*` | KbAdminServlet | Admin | Knowledge base admin |
+| `/api/tomcat-instances` | TomcatInstanceApiServlet | Admin | Tomcat instance CRUD + scan + health |
+| `/api/tomcat-instances/{id}/scan` | TomcatInstanceApiServlet | Admin | Scan server.xml + webapps |
+| `/api/tomcat-instances/{id}/health` | TomcatInstanceApiServlet | Admin | Health check all apps/hosts |
+| `/api/tomcat-instances/{id}/ignore` | TomcatInstanceApiServlet | Admin | Toggle instance ignore (PUT) |
+| `/api/tomcat-instances/host/{id}/ignore` | TomcatInstanceApiServlet | Admin | Toggle host ignore (PUT) |
+| `/api/tomcat-instances/health-summary` | TomcatInstanceApiServlet | Admin | Aggregated health summary |
 
 ## Servlet Development Patterns
 

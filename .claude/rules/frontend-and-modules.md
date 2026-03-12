@@ -51,6 +51,7 @@ Group filtering via `module_groups` table applies equally to all module types:
 | Guideplanering | `guide-planner/index.html` | Project planning and task management |
 | Jira | `jira/index.html` | Jira integration, issue tracking |
 | Incidenter | `incidents/index.html` | Incident management and severity tracking |
+| Tomcat Manager | `tomcat-manager/index.html` | Local Tomcat instance management, scan, health checks |
 
 ### Customer Stats Module (Advanced)
 - **CDN libs**: SheetJS, Chart.js 4.4.7, chartjs-adapter-date-fns 3.0.0
@@ -85,6 +86,20 @@ Group filtering via `module_groups` table applies equally to all module types:
 ### SQL Builder Module
 - Sidebar with category tree + custom queries (localStorage)
 - **Visual Query Builder**: Flex sibling to sidebar (not overlay). Drag-drop from DB structure into SELECT/FROM/JOIN/WHERE/ORDER BY/LIMIT zones.
+
+### Tomcat Manager Module
+- **Admin only** — all endpoints guarded by `AdminUtil.requireAdmin()`
+- **Instance management**: Add/edit/delete Tomcat installations with name, path, machine, environment, port overrides
+- **Scan**: Parses `server.xml` (connectors, hosts, aliases, contexts) + `webapps/` + `tomcat-users.xml`. Saves to DB (`tomcat_scan_hosts`, `tomcat_connectors`, `tomcat_apps`, `tomcat_users`)
+- **Health checks**: Background scheduled (every N min via `ScheduledExecutorService`) + manual per instance. Probe fallback chain: `.version.xml` → `ping.txt` → `/` before reporting 404. Response time measured in ms.
+- **Path check timeout**: `Files.isDirectory()` hangs on unreachable network paths (VPN down). Fixed: parallel path checks with 3s timeout per instance in list API
+- **Ignore**: Both instances and individual hosts can be ignored. Ignored instances skip background health checks. Ignored hosts excluded from health summary counts. Both dimmed in UI (45% opacity)
+- **Sorting**: Instances sorted errors first → warnings → ok → ignored last. Hosts within each instance sorted the same way.
+- **Customer linking**: Hosts matched to `servers.url_normalized` (exact match) → `customers.company_name` + SuperOffice CRM link
+- **Host URLs**: Linked as `{serverUrl}LoginCoreManual?returnURL=/config`
+- **Health pills**: Color-coded status (ok/warning/error) + response time pill (green <200ms, orange 200-499ms, red 500+ms) + host count pill (green <18, orange 18-19, red 20+)
+- **Two-phase query pattern**: handleList collects instance rows first (closes RS), then runs nested append queries to avoid MySQL Connector/J nested ResultSet issues
+- **File I/O**: All `Files.exists()`/`Files.isDirectory()` replaced with `toFile().exists()`/`toFile().isDirectory()` for faster Windows path resolution. Background health checks run each instance with timeout (max 120s).
 
 ## Widget System
 - `widgets` DB table, group-filtered via `widget_groups`

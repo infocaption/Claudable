@@ -31,6 +31,14 @@ paths:
 - **license_keys**: id, server_id (FK), license_key_id (unique, SuperOffice x_licensekeyid), filename, server_url, server_version, license_holder, expiration_date (VARCHAR 50), created_at, updated_at. 1:N per server. Auto-created by CustomerStatsApiServlet.init(). In SyncExecutor ALLOWED_TABLES whitelist.
 - **widgets**: id, name, icon, description, render_key (unique), custom_html, custom_js, refresh_seconds, is_active, created_by, created_at
 - **widget_groups**: widget_id + group_id (composite PK, CASCADE both)
+- **tomcat_instances**: id, name, machine_name, environment (enum), description, install_path (unique), is_active, last_scan_at, last_health_at, health_ok/warn/error (INT), http_port_override, https_port_override, is_ignored, created_at, updated_at
+- **tomcat_connectors**: id, instance_id (FK CASCADE), port, is_ssl
+- **tomcat_scan_hosts**: id, instance_id (FK CASCADE), hostname, app_base, is_ignored
+- **tomcat_scan_host_aliases**: id, host_id (FK CASCADE to tomcat_scan_hosts), alias
+- **tomcat_scan_host_contexts**: id, host_id (FK CASCADE to tomcat_scan_hosts), path, doc_base
+- **tomcat_apps**: id, instance_id (FK CASCADE), name, context_path, has_web_inf, version
+- **tomcat_users**: id, instance_id (FK CASCADE), username, roles
+- **tomcat_health_results**: id, instance_id (FK CASCADE), target_name, target_host, target_url, context_path, doc_base, status (enum ok/warning/error), status_code, response_time_ms, error_message, checked_at
 
 ## Migrations (sql/)
 
@@ -70,9 +78,17 @@ paths:
 | `030_crypto_config.sql` | Encrypted config support |
 | `031_audit_log.sql` | audit_logs table |
 | `032_knowledge_base.sql` | kb_documents, kb_collections, kb_collection_documents |
+| `033_customer_onboarding.sql` | is_onboarding flag on customers |
+| `034_customer_renewal_date.sql` | renewal_date on customers |
+| `035_customer_sales_fields.sql` | leadscore, engagement, upsell on customers |
+| `036_tomcat_manager_configs.sql` | Tomcat Manager module registration + app_config keys |
+| `037_tomcat_instances.sql` | tomcat_instances table |
+| `038_tomcat_health_results.sql` | tomcat_health_results table |
+| `039_tomcat_port_overrides.sql` | http/https port override columns |
+| `040_tomcat_scan_data.sql` | tomcat_connectors, tomcat_scan_hosts, tomcat_scan_host_aliases, tomcat_scan_host_contexts, tomcat_apps, tomcat_users |
 | `v1.0_baseline.sql` | Full baseline schema for fresh installs |
 
-All applied (35 files total). Several tables also auto-created by servlet `init()` methods.
+All applied (43 files total). Several tables also auto-created by servlet `init()` methods.
 
 ## External DB (smartassic)
 

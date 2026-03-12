@@ -22,16 +22,16 @@ claudable/
 ├── icDashBoard/
 │   ├── src/main/java/com/infocaption/dashboard/
 │   │   ├── filter/          # 7 filters (Auth, CSRF, Encoding, SecurityHeader, RateLimit, BodySizeLimit, ContentTypeValidation)
-│   │   ├── servlet/         # 39 servlets (Login, SAML, Admin, Modules, Drift, Email, Sync, MCP, etc.)
+│   │   ├── servlet/         # 40 servlets (Login, SAML, Admin, Modules, Drift, Email, Sync, MCP, TomcatInstance, etc.)
 │   │   ├── model/           # User, Module, Group POJOs
 │   │   └── util/            # 22 utilities (AppConfig, DBUtil, SyncExecutor, CryptoUtil, etc.)
 │   ├── src/main/webapp/
 │   │   ├── WEB-INF/         # web.xml, saml.properties, lib/ (12 JARs)
 │   │   ├── shared/          # ic-styles.css, ic-utils.js, ic-icons.css
-│   │   ├── modules/         # 16 built-in modules (customer-stats, drift-monitor, utskick, jira, etc.)
+│   │   ├── modules/         # 17 built-in modules (customer-stats, drift-monitor, utskick, jira, tomcat-manager, etc.)
 │   │   └── *.jsp            # login, register, dashboard, admin, create-module, manage-*
 │   ├── docs/                # GETTING_STARTED, API-GUIDE, MODULE-SPEC/GUIDE, SAML-SETUP, KNOWLEDGE-BASE, security audits
-│   ├── sql/                 # 35 migration scripts (001-032 + baseline)
+│   ├── sql/                 # 43 migration scripts (001-040 + baseline)
 │   └── build/               # Compiled classes
 ├── Ny mapp/                 # PowerShell scripts for stats collection, cert scanning
 ├── apache-tomcat-9.0.100/   # Embedded Tomcat

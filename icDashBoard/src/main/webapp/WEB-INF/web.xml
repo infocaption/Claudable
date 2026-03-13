@@ -597,8 +597,8 @@
     <!-- Force HTTPS on all requests.
          ONLY enable this if Tomcat handles SSL directly (port 8443 with keystore).
          When running behind a reverse proxy (Apache/Nginx) that handles SSL,
-         leave this DISABLED — otherwise Tomcat will redirect to :8443. -->
-    
+         leave this DISABLED — otherwise Tomcat will redirect to :8443.
+
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>All</web-resource-name>
@@ -608,6 +608,7 @@
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>
     </security-constraint>
+    -->
     
 
     <!-- Custom Error Pages -->

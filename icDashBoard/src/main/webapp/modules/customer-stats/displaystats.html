@@ -164,6 +164,155 @@
             display: block;
         }
 
+        /* Overview tab */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .kpi-row {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .kpi-card {
+            background: var(--ic-bg-white);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .kpi-card .kpi-label {
+            font-size: 0.82em;
+            color: var(--ic-text-muted);
+            font-weight: 500;
+        }
+
+        .kpi-card .kpi-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--ic-text-dark);
+            line-height: 1.1;
+        }
+
+        .kpi-card .kpi-trend {
+            font-size: 0.8em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-trend.up { color: var(--ic-success); }
+        .kpi-trend.down { color: var(--ic-danger); }
+        .kpi-trend.neutral { color: var(--ic-text-muted); }
+
+        .overview-panel {
+            background: var(--ic-bg-white);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            padding: 20px;
+        }
+
+        .overview-panel h3 {
+            font-size: 0.95em;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: var(--ic-text-dark);
+        }
+
+        .overview-donut-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .overview-donut-wrap canvas {
+            max-width: 260px;
+            max-height: 260px;
+        }
+
+        .overview-top-list {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88em;
+        }
+
+        .overview-top-list th {
+            text-align: left;
+            font-weight: 600;
+            color: var(--ic-text-muted);
+            font-size: 0.85em;
+            padding: 6px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .overview-top-list th:last-child {
+            text-align: right;
+        }
+
+        .overview-top-list td {
+            padding: 7px 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .overview-top-list td:first-child {
+            color: var(--ic-text-muted);
+            width: 28px;
+        }
+
+        .overview-top-list td:last-child {
+            text-align: right;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .totals-bar {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .total-card {
+            background: var(--ic-bg-light);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--ic-radius-md);
+            padding: 16px 20px;
+            text-align: center;
+        }
+
+        .total-card .total-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--ic-text-dark);
+        }
+
+        .total-card .total-label {
+            font-size: 0.82em;
+            color: var(--ic-text-muted);
+            margin-top: 2px;
+        }
+
+        @media (max-width: 900px) {
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+            .kpi-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .totals-bar {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Loading overlay */
         .loading-overlay {
             position: fixed;
@@ -1778,6 +1927,32 @@
             padding: 24px 28px;
         }
 
+        /* Static gauge bar (point-in-time counts from servers table) */
+        .detail-static-gauges {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .detail-gauge-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--ic-bg-light);
+            border-radius: var(--ic-radius-sm);
+            border: 1px solid #edf2f7;
+            font-size: 0.88em;
+        }
+        .detail-gauge-item .gauge-label {
+            color: var(--ic-text-muted);
+            font-weight: 500;
+        }
+        .detail-gauge-item .gauge-value {
+            font-weight: 700;
+            color: var(--ic-text-dark);
+            font-size: 1.1em;
+        }
+
         /* Metrics grid */
         .detail-metrics-grid {
             display: flex;
@@ -2184,7 +2359,11 @@
         <!-- Tab bar: summary counts as tab buttons + action buttons on right -->
         <div class="tab-bar">
             <div class="tab-buttons" id="tabButtons">
-                <button class="tab-btn active" data-tab="alla" onclick="switchTab('alla', this)">
+                <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview', this)">
+                    <span class="tab-icon"><i class="icon-chart-pie"></i></span>
+                    <span class="tab-label">Översikt</span>
+                </button>
+                <button class="tab-btn" data-tab="alla" onclick="switchTab('alla', this)">
                     <span class="tab-icon"><i class="icon-trending-up"></i></span>
                     <span class="tab-label">Alla</span>
                     <span class="tab-count" id="allaCount">0</span>
@@ -2215,7 +2394,71 @@
         </div>
 
         <!-- Tab panels -->
-        <div class="tab-panel active" id="allaSection">
+        <div class="tab-panel active" id="overviewSection">
+            <div class="overview-grid">
+                <div class="kpi-row">
+                    <div class="kpi-card">
+                        <span class="kpi-label">Kunder</span>
+                        <span class="kpi-value" id="kpiCustomers">0</span>
+                        <span class="kpi-trend neutral" id="kpiCustomersTrend"></span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-label">Visningar</span>
+                        <span class="kpi-value" id="kpiViews">0</span>
+                        <span class="kpi-trend neutral" id="kpiViewsTrend"></span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-label">Publiceringar</span>
+                        <span class="kpi-value" id="kpiPublications">0</span>
+                        <span class="kpi-trend neutral" id="kpiPublicationsTrend"></span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-label">Skapade guider</span>
+                        <span class="kpi-value" id="kpiGuides">0</span>
+                        <span class="kpi-trend neutral" id="kpiGuidesTrend"></span>
+                    </div>
+                </div>
+                <div class="overview-panel">
+                    <h3>Kundfördelning</h3>
+                    <div class="overview-donut-wrap">
+                        <canvas id="overviewDonut"></canvas>
+                    </div>
+                </div>
+                <div class="overview-panel">
+                    <h3>Top 5 mest aktiva</h3>
+                    <table class="overview-top-list" id="topActiveList">
+                        <thead><tr><th>#</th><th>Kund</th><th>Visningar</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                    <h3 style="margin-top:20px">Top 5 mest aktiva producenter</h3>
+                    <table class="overview-top-list" id="topProducersList">
+                        <thead><tr><th>#</th><th>Kund</th><th>Publiceringar</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                    <h3 style="margin-top:20px">Top 5 störst nedgång</h3>
+                    <table class="overview-top-list" id="topDeclineList">
+                        <thead><tr><th>#</th><th>Kund</th><th>Förändring</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="totals-bar">
+                    <div class="total-card">
+                        <div class="total-value" id="totalProducers">0</div>
+                        <div class="total-label">Producenter</div>
+                    </div>
+                    <div class="total-card">
+                        <div class="total-value" id="totalAdmins">0</div>
+                        <div class="total-label">Administratörer</div>
+                    </div>
+                    <div class="total-card">
+                        <div class="total-value" id="totalUsers">0</div>
+                        <div class="total-label">Användare</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="allaSection">
             <div class="table-wrapper" id="allaTableWrapper">
                 <table id="allaTable">
                     <thead>
@@ -2298,6 +2541,7 @@
                 <button class="detail-close-btn" onclick="closeDetailPanel()">&times;</button>
             </div>
             <div class="detail-body">
+                <div class="detail-static-gauges" id="detailStaticGauges"></div>
                 <div class="detail-metrics-grid" id="detailMetricsGrid"></div>
                 <div class="detail-chart-section">
                     <div class="detail-chart-controls">
@@ -2518,8 +2762,9 @@
         let dataSource = 'file'; // 'api' or 'file' — tracks where data came from
         let currentDateRange = { from: null, to: null }; // Current selected date range
         let currentDayCount = 30; // Days in selected range (for dynamic column labels)
-        let activeTab = 'alla'; // Currently active tab
-        let renderedTabs = { success: false, risk: false, other: false, alla: false }; // Lazy render tracking
+        let activeTab = 'overview'; // Currently active tab
+        let renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false }; // Lazy render tracking
+        let overviewDonutInstance = null;
         let unifiedSearchIndex = -1; // Keyboard nav index in unified search dropdown
         let lastSearchResults = { companies: [], urls: [] }; // Last unified search results
 
@@ -2570,7 +2815,7 @@
             const params = {};
             if (from) params.from = from;
             if (to) params.to = to;
-            if (activeTab !== 'success') params.tab = activeTab;
+            if (activeTab !== 'overview') params.tab = activeTab;
             if (detailCurrentUrl) params.site = detailCurrentUrl;
 
             // Update iframe URL
@@ -2713,7 +2958,7 @@
             displaySummary(statsData, analysis);
             setupFilters();
             // Lazy render: only render the active tab now, others on switchTab()
-            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
             renderTabContent(activeTab);
             setupSorting();
         }
@@ -2722,7 +2967,124 @@
         function renderTabContent(tab) {
             if (renderedTabs[tab]) return;
             renderedTabs[tab] = true;
-            renderTable(tab);
+            if (tab === 'overview') {
+                renderOverview();
+            } else {
+                renderTable(tab);
+            }
+        }
+
+        function renderOverview() {
+            const alla = globalData.alla || [];
+
+            // KPI: Totals for current and previous period
+            let views = 0, viewsPrev = 0, pubs = 0, pubsPrev = 0, guides = 0, guidesPrev = 0;
+            let producers = 0, admins = 0, users = 0;
+            alla.forEach(c => {
+                const s = c.site;
+                views += s.Visningar_7d || 0;
+                viewsPrev += s.Visningar_7_14d || 0;
+                pubs += s.Publiseringar_7d || 0;
+                pubsPrev += s.Publiseringar_7_14d || 0;
+                guides += s.Skapade_Guider_7d || 0;
+                guidesPrev += s.Skapade_Guider_7_14d || 0;
+                producers += s.Antal_Producenter || 0;
+                admins += s.Antal_Administratorer || 0;
+                users += s.Totalt_Antal_Anvandare || 0;
+            });
+
+            function fmt(n) { return n.toLocaleString('sv-SE'); }
+            function trendHtml(curr, prev) {
+                if (prev === 0) return '<span class="kpi-trend neutral">—</span>';
+                const pct = ((curr - prev) / prev * 100).toFixed(1);
+                if (pct > 0) return '<span class="kpi-trend up">&#9650; +' + pct + '%</span>';
+                if (pct < 0) return '<span class="kpi-trend down">&#9660; ' + pct + '%</span>';
+                return '<span class="kpi-trend neutral">&#9644; 0%</span>';
+            }
+
+            document.getElementById('kpiCustomers').textContent = fmt(alla.length);
+            document.getElementById('kpiCustomersTrend').innerHTML = '';
+            document.getElementById('kpiViews').textContent = fmt(views);
+            document.getElementById('kpiViewsTrend').innerHTML = trendHtml(views, viewsPrev);
+            document.getElementById('kpiPublications').textContent = fmt(pubs);
+            document.getElementById('kpiPublicationsTrend').innerHTML = trendHtml(pubs, pubsPrev);
+            document.getElementById('kpiGuides').textContent = fmt(guides);
+            document.getElementById('kpiGuidesTrend').innerHTML = trendHtml(guides, guidesPrev);
+
+            // Donut chart
+            const successCount = (globalData.success || []).length;
+            const riskCount = (globalData.risk || []).length;
+            const otherCount = (globalData.other || []).length;
+
+            if (overviewDonutInstance) { overviewDonutInstance.destroy(); overviewDonutInstance = null; }
+            const ctx = document.getElementById('overviewDonut');
+            if (ctx && typeof Chart !== 'undefined') {
+                overviewDonutInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Succé', 'Risk', 'Övriga'],
+                        datasets: [{
+                            data: [successCount, riskCount, otherCount],
+                            backgroundColor: ['#10b981', '#ef4444', '#94a3b8'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        cutout: '55%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, font: { size: 13 } } }
+                        }
+                    }
+                });
+            }
+
+            // Top 5 most active (by views)
+            const sorted = [...alla].sort((a, b) => (b.site.Visningar_7d || 0) - (a.site.Visningar_7d || 0));
+            const top5 = sorted.slice(0, 5);
+            document.querySelector('#topActiveList tbody').innerHTML = top5.map((c, i) => {
+                const ci = getCompanyInfo(c.site.url, c.site);
+                const compName = ci ? escHtml(ci.companyName) : '';
+                const siteUrl = escHtml(normalizeUrl(c.site.url) || c.name || '-');
+                const label = compName ? compName + ' <span style="color:#a0aec0;font-size:0.85em">' + siteUrl + '</span>' : siteUrl;
+                return '<tr><td>' + (i + 1) + '</td><td>' + label + '</td><td>' + fmt(c.site.Visningar_7d || 0) + '</td></tr>';
+            }).join('') || '<tr><td colspan="3" style="color:#a0aec0">Ingen data</td></tr>';
+
+            // Top 5 most active producers (by publications)
+            const sortedProd = [...alla].sort((a, b) => (b.site.Publiseringar_7d || 0) - (a.site.Publiseringar_7d || 0));
+            const top5Prod = sortedProd.slice(0, 5);
+            document.querySelector('#topProducersList tbody').innerHTML = top5Prod.map((c, i) => {
+                const ci = getCompanyInfo(c.site.url, c.site);
+                const compName = ci ? escHtml(ci.companyName) : '';
+                const siteUrl = escHtml(normalizeUrl(c.site.url) || c.name || '-');
+                const label = compName ? compName + ' <span style="color:#a0aec0;font-size:0.85em">' + siteUrl + '</span>' : siteUrl;
+                return '<tr><td>' + (i + 1) + '</td><td>' + label + '</td><td>' + fmt(c.site.Publiseringar_7d || 0) + '</td></tr>';
+            }).join('') || '<tr><td colspan="3" style="color:#a0aec0">Ingen data</td></tr>';
+
+            // Top 5 biggest decline
+            const withPrev = alla.filter(c => (c.site.Visningar_7_14d || 0) > 0);
+            const declined = withPrev.map(c => {
+                const curr = c.site.Visningar_7d || 0;
+                const prev = c.site.Visningar_7_14d || 0;
+                const pct = ((curr - prev) / prev * 100);
+                return { customer: c, pct };
+            }).sort((a, b) => a.pct - b.pct).slice(0, 5);
+
+            document.querySelector('#topDeclineList tbody').innerHTML = declined.map((d, i) => {
+                const ci = getCompanyInfo(d.customer.site.url, d.customer.site);
+                const compName = ci ? escHtml(ci.companyName) : '';
+                const siteUrl = escHtml(normalizeUrl(d.customer.site.url) || d.customer.name || '-');
+                const label = compName ? compName + ' <span style="color:#a0aec0;font-size:0.85em">' + siteUrl + '</span>' : siteUrl;
+                const sign = d.pct > 0 ? '+' : '';
+                return '<tr><td>' + (i + 1) + '</td><td>' + label + '</td><td>' + sign + d.pct.toFixed(1) + '%</td></tr>';
+            }).join('') || '<tr><td colspan="3" style="color:#a0aec0">Ingen data</td></tr>';
+
+            // Totals
+            document.getElementById('totalProducers').textContent = fmt(producers);
+            document.getElementById('totalAdmins').textContent = fmt(admins);
+            document.getElementById('totalUsers').textContent = fmt(users);
         }
 
         // HTML escape utility to prevent XSS in dynamically rendered content
@@ -2897,7 +3259,7 @@
             updateResetButtonVisibility();
             closeAllPopouts();
             // Re-render all tabs
-            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
             renderTabContent(activeTab);
         }
 
@@ -2907,7 +3269,7 @@
             document.getElementById('coachBadge').classList.remove('visible');
             updateResetButtonVisibility();
             closeAllPopouts();
-            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
             renderTabContent(activeTab);
         }
 
@@ -2932,7 +3294,7 @@
 
             updateResetButtonVisibility();
             // Don't close popout — let user toggle multiple tracks
-            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
             renderTabContent(activeTab);
         }
 
@@ -2942,7 +3304,7 @@
             document.getElementById('trackBadge').classList.remove('visible');
             updateResetButtonVisibility();
             closeAllPopouts();
-            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
             renderTabContent(activeTab);
         }
 
@@ -2966,7 +3328,7 @@
             badge.classList.toggle('visible', riskFilter.length > 0);
 
             updateResetButtonVisibility();
-            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
             renderTabContent(activeTab);
         }
 
@@ -2976,7 +3338,7 @@
             document.getElementById('riskBadge').classList.remove('visible');
             updateResetButtonVisibility();
             closeAllPopouts();
-            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
             renderTabContent(activeTab);
         }
 
@@ -3001,7 +3363,7 @@
 
             updateResetButtonVisibility();
             closeAllPopouts();
-            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
             renderTabContent(activeTab);
         }
 
@@ -3011,7 +3373,7 @@
             document.getElementById('onboardingBadge').classList.remove('visible');
             updateResetButtonVisibility();
             closeAllPopouts();
-            renderedTabs = { success: false, risk: false, other: false, alla: false };
+            renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
             renderTabContent(activeTab);
         }
 
@@ -3389,7 +3751,7 @@
                 displaySummary(globalData.all, analysis);
                 setupFilters();
                 // Invalidate all tabs and re-render only the active one
-                renderedTabs = { success: false, risk: false, other: false, alla: false };
+                renderedTabs = { overview: false, success: false, risk: false, other: false, alla: false };
                 renderTabContent(activeTab);
                 hideLoading();
             });
@@ -3411,8 +3773,8 @@
             }
             // Show/hide panels
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
-            const sectionMap = { alla: 'allaSection', success: 'successSection', risk: 'riskSection', other: 'otherSection' };
-            const sectionId = sectionMap[tab] || 'successSection';
+            const sectionMap = { overview: 'overviewSection', alla: 'allaSection', success: 'successSection', risk: 'riskSection', other: 'otherSection' };
+            const sectionId = sectionMap[tab] || 'overviewSection';
             const panel = document.getElementById(sectionId);
             if (panel) panel.classList.add('active');
             // Lazy render: render tab content on first switch
@@ -3423,8 +3785,8 @@
 
         // Keep legacy scrollToSection as alias for tab switching
         function scrollToSection(sectionId) {
-            const map = { allaSection: 'alla', successSection: 'success', riskSection: 'risk', otherSection: 'other' };
-            switchTab(map[sectionId] || 'success');
+            const map = { overviewSection: 'overview', allaSection: 'alla', successSection: 'success', riskSection: 'risk', otherSection: 'other' };
+            switchTab(map[sectionId] || 'overview');
         }
 
         function exportToExcel() {
@@ -3486,14 +3848,14 @@
                         site.Version || '',
                         site.track || '',
                         flags,
-                        site.Publiseringar_Sista_30_Dagar || 0,
-                        site.Publiseringar_30_60_Dagar || 0,
-                        site.Skapade_Guider_Sista_30_Dagar || 0,
-                        site.Skapade_Guider_30_60_Dagar || 0,
-                        site.Visningar_Sista_30_Dagar || 0,
-                        site.Visningar_30_60_Dagar || 0,
-                        site.Processvisningar_Sista_30_Dagar || 0,
-                        site.Processer_Skapade_Sista_30_Dagar || 0,
+                        site.Publiseringar_7d || 0,
+                        site.Publiseringar_7_14d || 0,
+                        site.Skapade_Guider_7d || 0,
+                        site.Skapade_Guider_7_14d || 0,
+                        site.Visningar_7d || 0,
+                        site.Visningar_7_14d || 0,
+                        site.Processvisningar_7d || 0,
+                        site.Processer_Skapade_7d || 0,
                         site.Antal_Producenter || 0,
                         site.Antal_Aktiva_Producenter_Sista_6_Manader || 0,
                         site.Antal_Administratorer || 0,
@@ -4072,17 +4434,17 @@
                 const hasEnoughProducers = (site.Antal_Producenter || 0) >= criteria.minProducers;
 
                 // Percentage changes for trends
-                const viewChange = site.Visningar_30_60_Dagar > 0
-                    ? ((site.Visningar_Sista_30_Dagar - site.Visningar_30_60_Dagar) / site.Visningar_30_60_Dagar) * 100
-                    : (site.Visningar_Sista_30_Dagar > 0 ? 100 : 0);
+                const viewChange = site.Visningar_7_14d > 0
+                    ? ((site.Visningar_7d - site.Visningar_7_14d) / site.Visningar_7_14d) * 100
+                    : (site.Visningar_7d > 0 ? 100 : 0);
 
-                const guideChange = site.Skapade_Guider_30_60_Dagar > 0
-                    ? ((site.Skapade_Guider_Sista_30_Dagar - site.Skapade_Guider_30_60_Dagar) / site.Skapade_Guider_30_60_Dagar) * 100
-                    : (site.Skapade_Guider_Sista_30_Dagar > 0 ? 100 : 0);
+                const guideChange = site.Skapade_Guider_7_14d > 0
+                    ? ((site.Skapade_Guider_7d - site.Skapade_Guider_7_14d) / site.Skapade_Guider_7_14d) * 100
+                    : (site.Skapade_Guider_7d > 0 ? 100 : 0);
 
-                const processChange = site.Processer_Skapade_30_60_Dagar > 0
-                    ? ((site.Processer_Skapade_Sista_30_Dagar - site.Processer_Skapade_30_60_Dagar) / site.Processer_Skapade_30_60_Dagar) * 100
-                    : (site.Processer_Skapade_Sista_30_Dagar > 0 ? 100 : 0);
+                const processChange = site.Processer_Skapade_7_14d > 0
+                    ? ((site.Processer_Skapade_7d - site.Processer_Skapade_7_14d) / site.Processer_Skapade_7_14d) * 100
+                    : (site.Processer_Skapade_7d > 0 ? 100 : 0);
 
                 // Login change (prod/admin)
                 const logins = site.Antal_Inloggningar_Prod_Admin || 0;
@@ -4105,8 +4467,8 @@
                     // ---- RISK FLAGS (weighted) ----
 
                     // Risk #1 (weight 6): Views decrease
-                    if (site.Visningar_30_60_Dagar > 0 && viewChange <= criteria.riskViewDecreaseThreshold) {
-                        riskFlags.push({ weight: 6, label: `Visningar ${Math.round(viewChange)}%`, detail: `${site.Visningar_30_60_Dagar} → ${site.Visningar_Sista_30_Dagar}` });
+                    if (site.Visningar_7_14d > 0 && viewChange <= criteria.riskViewDecreaseThreshold) {
+                        riskFlags.push({ weight: 6, label: `Visningar ${Math.round(viewChange)}%`, detail: `${site.Visningar_7_14d} → ${site.Visningar_7d}` });
                     }
 
                     // Risk #2 (weight 5): Low logins (prod/admin) — only if login data is collected
@@ -4120,26 +4482,26 @@
                     }
 
                     // Risk #4 (weight 3): Guide decrease
-                    if (site.Skapade_Guider_30_60_Dagar > 0 && guideChange <= criteria.riskGuideDecreaseThreshold) {
-                        riskFlags.push({ weight: 3, label: `Guider ${Math.round(guideChange)}%`, detail: `${site.Skapade_Guider_30_60_Dagar} → ${site.Skapade_Guider_Sista_30_Dagar}` });
+                    if (site.Skapade_Guider_7_14d > 0 && guideChange <= criteria.riskGuideDecreaseThreshold) {
+                        riskFlags.push({ weight: 3, label: `Guider ${Math.round(guideChange)}%`, detail: `${site.Skapade_Guider_7_14d} → ${site.Skapade_Guider_7d}` });
                     }
 
                     // Risk #5 (weight 2): Low publications (only if enough producers)
-                    if ((site.Publiseringar_Sista_30_Dagar || 0) < criteria.riskMinPublications) {
-                        riskFlags.push({ weight: 2, label: `Publ < ${criteria.riskMinPublications}`, detail: `${site.Publiseringar_Sista_30_Dagar || 0} publiceringar` });
+                    if ((site.Publiseringar_7d || 0) < criteria.riskMinPublications) {
+                        riskFlags.push({ weight: 2, label: `Publ < ${criteria.riskMinPublications}`, detail: `${site.Publiseringar_7d || 0} publiceringar` });
                     }
 
                     // Risk #6 (weight 1): Process decrease — only if customer has Map license
                     const hasMapLicense = (site.track || '').toLowerCase().includes('map');
-                    if (hasMapLicense && site.Processer_Skapade_30_60_Dagar > 0 && processChange <= criteria.riskProcessDecreaseThreshold) {
-                        riskFlags.push({ weight: 1, label: `Processer ${Math.round(processChange)}%`, detail: `${site.Processer_Skapade_30_60_Dagar} → ${site.Processer_Skapade_Sista_30_Dagar}` });
+                    if (hasMapLicense && site.Processer_Skapade_7_14d > 0 && processChange <= criteria.riskProcessDecreaseThreshold) {
+                        riskFlags.push({ weight: 1, label: `Processer ${Math.round(processChange)}%`, detail: `${site.Processer_Skapade_7_14d} → ${site.Processer_Skapade_7d}` });
                     }
 
                     // ---- SUCCESS FLAGS (weighted) ----
 
                     // Success #1 (weight 6): Views increase
-                    if (site.Visningar_30_60_Dagar > 0 && viewChange >= criteria.successViewIncreaseThreshold) {
-                        successFlags.push({ weight: 6, label: `Visningar +${Math.round(viewChange)}%`, detail: `${site.Visningar_30_60_Dagar} → ${site.Visningar_Sista_30_Dagar}` });
+                    if (site.Visningar_7_14d > 0 && viewChange >= criteria.successViewIncreaseThreshold) {
+                        successFlags.push({ weight: 6, label: `Visningar +${Math.round(viewChange)}%`, detail: `${site.Visningar_7_14d} → ${site.Visningar_7d}` });
                     }
 
                     // Success #2 (weight 5): High logins
@@ -4148,8 +4510,8 @@
                     }
 
                     // Success #3 (weight 4): Guide increase
-                    if (site.Skapade_Guider_30_60_Dagar > 0 && guideChange >= criteria.successGuideIncreaseThreshold) {
-                        successFlags.push({ weight: 4, label: `Guider +${Math.round(guideChange)}%`, detail: `${site.Skapade_Guider_30_60_Dagar} → ${site.Skapade_Guider_Sista_30_Dagar}` });
+                    if (site.Skapade_Guider_7_14d > 0 && guideChange >= criteria.successGuideIncreaseThreshold) {
+                        successFlags.push({ weight: 4, label: `Guider +${Math.round(guideChange)}%`, detail: `${site.Skapade_Guider_7_14d} → ${site.Skapade_Guider_7d}` });
                     }
 
                     // Success #4 (weight 3): Unique publishers increase
@@ -4158,13 +4520,13 @@
                     }
 
                     // Success #5 (weight 2): High publications
-                    if ((site.Publiseringar_Sista_30_Dagar || 0) > criteria.successMinPublications) {
-                        successFlags.push({ weight: 2, label: `${site.Publiseringar_Sista_30_Dagar} publ`, detail: `Över ${criteria.successMinPublications} publiceringar` });
+                    if ((site.Publiseringar_7d || 0) > criteria.successMinPublications) {
+                        successFlags.push({ weight: 2, label: `${site.Publiseringar_7d} publ`, detail: `Över ${criteria.successMinPublications} publiceringar` });
                     }
 
                     // Success #6 (weight 1): Process increase — only if customer has Map license
-                    if (hasMapLicense && site.Processer_Skapade_30_60_Dagar > 0 && processChange >= criteria.successProcessIncreaseThreshold) {
-                        successFlags.push({ weight: 1, label: `Processer +${Math.round(processChange)}%`, detail: `${site.Processer_Skapade_30_60_Dagar} → ${site.Processer_Skapade_Sista_30_Dagar}` });
+                    if (hasMapLicense && site.Processer_Skapade_7_14d > 0 && processChange >= criteria.successProcessIncreaseThreshold) {
+                        successFlags.push({ weight: 1, label: `Processer +${Math.round(processChange)}%`, detail: `${site.Processer_Skapade_7_14d} → ${site.Processer_Skapade_7d}` });
                     }
                 }
 
@@ -4203,21 +4565,21 @@
             return {
                 ...site,
                 // Shift previous → current (activity metrics)
-                Publiseringar_Sista_30_Dagar:     site.Publiseringar_30_60_Dagar || 0,
-                Skapade_Guider_Sista_30_Dagar:    site.Skapade_Guider_30_60_Dagar || 0,
-                Visningar_Sista_30_Dagar:         site.Visningar_30_60_Dagar || 0,
-                Processvisningar_Sista_30_Dagar:  site.Processvisningar_30_60_Dagar || 0,
-                Processer_Skapade_Sista_30_Dagar: site.Processer_Skapade_30_60_Dagar || 0,
+                Publiseringar_7d:     site.Publiseringar_7_14d || 0,
+                Skapade_Guider_7d:    site.Skapade_Guider_7_14d || 0,
+                Visningar_7d:         site.Visningar_7_14d || 0,
+                Processvisningar_7d:  site.Processvisningar_7_14d || 0,
+                Processer_Skapade_7d: site.Processer_Skapade_7_14d || 0,
                 // Shift login/publisher prev → current
                 Antal_Inloggningar_Prod_Admin:    site.Inloggningar_Prod_Admin_Prev || 0,
                 Antal_Unika_Publicerande_Prod:    site.Unika_Publicerande_Prod_Prev || 0,
                 Antal_Unika_Inloggade_Prod_Admin: site.Unika_Inloggade_Prod_Admin_Prev || 0,
                 // Zero out previous period (no 60-90d data available)
-                Publiseringar_30_60_Dagar:        0,
-                Skapade_Guider_30_60_Dagar:       0,
-                Visningar_30_60_Dagar:            0,
-                Processvisningar_30_60_Dagar:     0,
-                Processer_Skapade_30_60_Dagar:    0,
+                Publiseringar_7_14d:        0,
+                Skapade_Guider_7_14d:       0,
+                Visningar_7_14d:            0,
+                Processvisningar_7_14d:     0,
+                Processer_Skapade_7_14d:    0,
                 Inloggningar_Prod_Admin_Prev:     0,
                 Unika_Publicerande_Prod_Prev:     0,
                 Unika_Inloggade_Prod_Admin_Prev:  0
@@ -4404,17 +4766,15 @@
 
         // All metrics with display info
         const detailMetrics = [
-            { key: 'publiseringar',           siteKey30: 'Publiseringar_Sista_30_Dagar',                  siteKey3060: 'Publiseringar_30_60_Dagar',                  label: 'Publiceringar',      type: 'sum',   color: '#5458F2' },
-            { key: 'guider',                  siteKey30: 'Skapade_Guider_Sista_30_Dagar',                 siteKey3060: 'Skapade_Guider_30_60_Dagar',                 label: 'Skapade guider',     type: 'sum',   color: '#10b981' },
-            { key: 'visningar',               siteKey30: 'Visningar_Sista_30_Dagar',                      siteKey3060: 'Visningar_30_60_Dagar',                      label: 'Visningar',          type: 'sum',   color: '#f59e0b' },
-            { key: 'processvisningar',        siteKey30: 'Processvisningar_Sista_30_Dagar',               siteKey3060: 'Processvisningar_30_60_Dagar',               label: 'Processvisningar',   type: 'sum',   color: '#8b5cf6' },
-            { key: 'processer',               siteKey30: 'Processer_Sista_30_Dagar',                      siteKey3060: 'Processer_30_60_Dagar',                      label: 'Processer',          type: 'sum',   color: '#ec4899' },
-            { key: 'producenter',             siteKey30: 'Antal_Producenter',                             siteKey3060: null,                                         label: 'Producenter',        type: 'gauge', color: '#06b6d4' },
-            { key: 'aktivaProducenter',       siteKey30: 'Antal_Aktiva_Producenter_Sista_6_Manader',      siteKey3060: null,                                         label: 'Aktiva prod. (6m)',  type: 'gauge', color: '#14b8a6' },
-            { key: 'anvandare',               siteKey30: 'Totalt_Antal_Anvandare',                        siteKey3060: null,                                         label: 'Användare',          type: 'gauge', color: '#6366f1' },
-            { key: 'inloggningarProdAdmin',   siteKey30: 'Inloggningar_ProdAdmin_Sista_30_Dagar',         siteKey3060: 'Inloggningar_ProdAdmin_30_60_Dagar',         label: 'Inloggningar',       type: 'sum',   color: '#f97316' },
-            { key: 'unikaInloggadeProdAdmin', siteKey30: 'Unika_Inloggade_ProdAdmin_Sista_30_Dagar',     siteKey3060: 'Unika_Inloggade_ProdAdmin_30_60_Dagar',      label: 'Unika inloggade',    type: 'sum',   color: '#84cc16' },
-            { key: 'unikaPublicerandeProd',   siteKey30: 'Unika_Publicerande_Prod_Sista_30_Dagar',       siteKey3060: 'Unika_Publicerande_Prod_30_60_Dagar',        label: 'Unika publicerande', type: 'sum',   color: '#a855f7' }
+            { key: 'publiseringar',           siteKey7d: 'Publiseringar_7d',                    siteKey7_14d: 'Publiseringar_7_14d',                    label: 'Publiceringar',      type: 'sum',   color: '#5458F2' },
+            { key: 'guider',                  siteKey7d: 'Skapade_Guider_7d',                   siteKey7_14d: 'Skapade_Guider_7_14d',                   label: 'Skapade guider',     type: 'sum',   color: '#10b981' },
+            { key: 'visningar',               siteKey7d: 'Visningar_7d',                        siteKey7_14d: 'Visningar_7_14d',                        label: 'Visningar',          type: 'sum',   color: '#f59e0b' },
+            { key: 'processvisningar',        siteKey7d: 'Processvisningar_7d',                 siteKey7_14d: 'Processvisningar_7_14d',                 label: 'Processvisningar',   type: 'sum',   color: '#8b5cf6' },
+            { key: 'processer',               siteKey7d: 'Processer_Skapade_7d',                siteKey7_14d: 'Processer_Skapade_7_14d',                label: 'Processer',          type: 'sum',   color: '#ec4899' },
+            { key: 'aktivaProducenter',       siteKey7d: 'Antal_Aktiva_Producenter_Sista_6_Manader', siteKey7_14d: null,                                label: 'Aktiva prod. (6m)',  type: 'gauge', color: '#14b8a6' },
+            { key: 'inloggningarProdAdmin',   siteKey7d: 'Antal_Inloggningar_Prod_Admin',       siteKey7_14d: 'Inloggningar_Prod_Admin_Prev',           label: 'Inloggningar',       type: 'sum',   color: '#f97316' },
+            { key: 'unikaInloggadeProdAdmin', siteKey7d: 'Antal_Unika_Inloggade_Prod_Admin',   siteKey7_14d: 'Unika_Inloggade_Prod_Admin_Prev',        label: 'Unika inloggade',    type: 'sum',   color: '#84cc16' },
+            { key: 'unikaPublicerandeProd',   siteKey7d: 'Antal_Unika_Publicerande_Prod',      siteKey7_14d: 'Unika_Publicerande_Prod_Prev',           label: 'Unika publicerande', type: 'sum',   color: '#a855f7' }
         ];
 
         function openDetailPanel(url, name, customer) {
@@ -4479,6 +4839,13 @@
             }
             document.getElementById('detailMeta').innerHTML = metaParts.join(' <span style="color:#cbd5e0">|</span> ');
 
+            // Show static gauge values (point-in-time counts from servers table)
+            document.getElementById('detailStaticGauges').innerHTML = [
+                { label: 'Producenter', value: site.Antal_Producenter || 0 },
+                { label: 'Administratörer', value: site.Antal_Administratorer || 0 },
+                { label: 'Användare', value: site.Totalt_Antal_Anvandare || 0 }
+            ].map(g => `<div class="detail-gauge-item"><span class="gauge-label">${g.label}</span><span class="gauge-value">${formatNumber(g.value)}</span></div>`).join('');
+
             // Build 30d metrics immediately from site data
             buildMetricsGrid(site);
 
@@ -4530,24 +4897,15 @@
             const periods = ['30 dagar', '90 dagar', '365 dagar'];
 
             grid.innerHTML = detailMetrics.map(m => {
-                // 30d values from site data
-                const val30 = site[m.siteKey30] || 0;
-                let change30Html = '';
-                if (m.siteKey3060 && m.type === 'sum') {
-                    const prev30 = site[m.siteKey3060] || 0;
-                    change30Html = formatChange(val30, prev30);
-                }
-
                 const isSelected = detailSelectedMetrics.has(m.key);
                 const styleAttr = isSelected ? `style="--metric-color:${m.color}"` : '';
 
                 return `
                     <div class="detail-metric-row">
                         <div class="detail-metric-label">${escHtml(m.label)}</div>
-                        <div class="detail-metric-card ${isSelected ? 'selected' : ''}" data-metric="${m.key}" ${styleAttr} onclick="toggleDetailMetric('${m.key}', this)">
+                        <div class="detail-metric-card ${isSelected ? 'selected' : ''}" data-metric="${m.key}" data-period="30" ${styleAttr} onclick="toggleDetailMetric('${m.key}', this)">
                             <div class="detail-metric-period">${periods[0]}</div>
-                            <div class="detail-metric-value">${formatNumber(val30)}</div>
-                            ${change30Html}
+                            <div class="detail-metric-value loading">...</div>
                         </div>
                         <div class="detail-metric-card" data-metric="${m.key}" data-period="90" onclick="toggleDetailMetric('${m.key}', this)">
                             <div class="detail-metric-period">${periods[1]}</div>
@@ -4644,7 +5002,7 @@
                     detailHistoryData = data.reverse();
 
                     // Update 90d and 365d metric cards
-                    update90d365dMetrics();
+                    updateAllDetailMetrics();
 
                     // Show chart
                     document.getElementById('detailChartLoading').style.display = 'none';
@@ -4681,6 +5039,8 @@
 
             let currentVal, prevVal;
             if (metricDef.type === 'sum') {
+                // Each snapshot covers exactly 7 non-overlapping days, so summing
+                // gives the correct total for the window (e.g. ~4 snapshots = 28d ≈ 30d).
                 currentVal = currentEntries.reduce((s, d) => s + (d[metricDef.key] || 0), 0);
                 prevVal = prevEntries.reduce((s, d) => s + (d[metricDef.key] || 0), 0);
             } else {
@@ -4692,9 +5052,9 @@
             return { value: currentVal, prev: prevVal };
         }
 
-        function update90d365dMetrics() {
+        function updateAllDetailMetrics() {
             detailMetrics.forEach(m => {
-                [90, 365].forEach(days => {
+                [30, 90, 365].forEach(days => {
                     const card = document.querySelector(`.detail-metric-card[data-metric="${m.key}"][data-period="${days}"]`);
                     if (!card) return;
 
@@ -4952,16 +5312,16 @@
                     site.Version || '',
                     `"${(site.track || '').replace(/"/g, '""')}"`,
                     `"${flags}"`,
-                    site.Publiseringar_Sista_30_Dagar || 0,
-                    site.Skapade_Guider_Sista_30_Dagar || 0,
-                    site.Visningar_Sista_30_Dagar || 0,
-                    site.Processvisningar_Sista_30_Dagar || 0,
+                    site.Publiseringar_7d || 0,
+                    site.Skapade_Guider_7d || 0,
+                    site.Visningar_7d || 0,
+                    site.Processvisningar_7d || 0,
                     site.Antal_Producenter || 0,
                     site.Antal_Aktiva_Producenter_Sista_6_Manader || 0,
                     site.Totalt_Antal_Anvandare || 0,
-                    site.Publiseringar_30_60_Dagar || 0,
-                    site.Skapade_Guider_30_60_Dagar || 0,
-                    site.Visningar_30_60_Dagar || 0,
+                    site.Publiseringar_7_14d || 0,
+                    site.Skapade_Guider_7_14d || 0,
+                    site.Visningar_7_14d || 0,
                     site.Antal_Inloggningar_Prod_Admin || 0,
                     site.Antal_Unika_Inloggade_Prod_Admin || 0,
                     site.Antal_Unika_Publicerande_Prod || 0,

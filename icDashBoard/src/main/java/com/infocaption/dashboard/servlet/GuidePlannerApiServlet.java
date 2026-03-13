@@ -1128,7 +1128,4 @@ public class GuidePlannerApiServlet extends HttpServlet {
         return objects;
     }
 
-    private void log(String message) {
-        log.info(message);
-    }
 }

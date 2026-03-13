@@ -25,13 +25,19 @@ import java.time.temporal.ChronoUnit;
 /**
  * Customer Statistics API Servlet.
  *
- * GET  /api/customer-stats          — List all customers with stats for a date range
- *      ?from=yyyy-MM-dd&to=yyyy-MM-dd  (optional, defaults to latest snapshot)
+ * GET  /api/customer-stats               — List all customers with stats for a date range
+ *      ?from=yyyy-MM-dd&to=yyyy-MM-dd     (optional, defaults to latest snapshot)
  *
- * GET  /api/customer-stats/history  — Historical snapshots for one customer
+ * GET  /api/customer-stats/history       — Historical snapshots for one customer
  *      ?url=X&from=yyyy-MM-dd&to=yyyy-MM-dd&limit=365
  *
- * POST /api/customer-stats/import   — Bulk import (JSON array), authenticated via X-API-Key header
+ * GET  /api/customer-stats/servers       — List all servers with exclusion status (admin)
+ * POST /api/customer-stats/servers/exclude — Toggle server exclusion (admin)
+ *
+ * GET  /api/customer-stats/organizations       — List all organizations with exclusion status (admin)
+ * POST /api/customer-stats/organizations/exclude — Toggle organization exclusion (admin)
+ *
+ * POST /api/customer-stats/import        — Bulk import (JSON array), authenticated via X-API-Key header
  */
 public class CustomerStatsApiServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -69,6 +75,9 @@ public class CustomerStatsApiServlet extends HttpServlet {
                 "  first_seen      DATE         NOT NULL," +
                 "  last_seen       DATE         NOT NULL," +
                 "  is_active       TINYINT(1)   NOT NULL DEFAULT 1," +
+                "  antal_producenter INT NOT NULL DEFAULT 0," +
+                "  antal_administratorer INT NOT NULL DEFAULT 0," +
+                "  totalt_antal_anvandare INT NOT NULL DEFAULT 0," +
                 "  is_excluded     TINYINT(1)   NOT NULL DEFAULT 0," +
                 "  created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP," +
                 "  updated_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
@@ -86,19 +95,11 @@ public class CustomerStatsApiServlet extends HttpServlet {
                 "  id                          BIGINT AUTO_INCREMENT PRIMARY KEY," +
                 "  server_id                   INT         NOT NULL," +
                 "  snapshot_date               DATE        NOT NULL," +
-                "  publiseringar_30d           INT         NOT NULL DEFAULT 0," +
-                "  publiseringar_30_60d        INT         NOT NULL DEFAULT 0," +
-                "  skapade_guider_30d          INT         NOT NULL DEFAULT 0," +
-                "  skapade_guider_30_60d       INT         NOT NULL DEFAULT 0," +
-                "  visningar_30d               INT         NOT NULL DEFAULT 0," +
-                "  visningar_30_60d            INT         NOT NULL DEFAULT 0," +
-                "  processvisningar_30d        INT         NOT NULL DEFAULT 0," +
-                "  processvisningar_30_60d     INT         NOT NULL DEFAULT 0," +
-                "  processer_skapade_30d       INT         NOT NULL DEFAULT 0," +
-                "  processer_skapade_30_60d    INT         NOT NULL DEFAULT 0," +
-                "  antal_producenter           INT         NOT NULL DEFAULT 0," +
-                "  antal_administratorer       INT         NOT NULL DEFAULT 0," +
-                "  totalt_antal_anvandare      INT         NOT NULL DEFAULT 0," +
+                "  publiseringar_7d           INT         NOT NULL DEFAULT 0," +
+                "  skapade_guider_7d          INT         NOT NULL DEFAULT 0," +
+                "  visningar_7d               INT         NOT NULL DEFAULT 0," +
+                "  processvisningar_7d        INT         NOT NULL DEFAULT 0," +
+                "  processer_skapade_7d       INT         NOT NULL DEFAULT 0," +
                 "  antal_aktiva_producenter_6m INT         NOT NULL DEFAULT 0," +
                 "  version                     VARCHAR(20) NULL," +
                 "  created_at                  TIMESTAMP   DEFAULT CURRENT_TIMESTAMP," +
@@ -161,6 +162,8 @@ public class CustomerStatsApiServlet extends HttpServlet {
             handleHistory(req, resp);
         } else if (pathInfo.equals("/servers")) {
             handleListServers(req, resp);
+        } else if (pathInfo.equals("/organizations")) {
+            handleListOrganizations(req, resp);
         } else {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             resp.getWriter().write("{\"error\":\"Not found\"}");
@@ -176,6 +179,8 @@ public class CustomerStatsApiServlet extends HttpServlet {
             handleImport(req, resp);
         } else if (pathInfo != null && pathInfo.equals("/servers/exclude")) {
             handleToggleExclude(req, resp);
+        } else if (pathInfo != null && pathInfo.equals("/organizations/exclude")) {
+            handleToggleOrgExclude(req, resp);
         } else {
             resp.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
             resp.setContentType("application/json; charset=UTF-8");
@@ -232,17 +237,17 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     "SELECT " +
                     "  s.id, s.url, c.company_id, c.company_name, c.coach_email, u_coach.full_name AS coach_name, " +
                     "  MAX(curr.snapshot_date) AS current_snapshot_date, " +
-                    "  SUM(curr.publiseringar_30d) AS publiseringar_30d, " +
-                    "  SUM(curr.skapade_guider_30d) AS skapade_guider_30d, " +
-                    "  SUM(curr.visningar_30d) AS visningar_30d, " +
-                    "  SUM(curr.processvisningar_30d) AS processvisningar_30d, " +
-                    "  SUM(curr.processer_skapade_30d) AS processer_skapade_30d, " +
+                    "  SUM(curr.publiseringar_7d) AS publiseringar_7d, " +
+                    "  SUM(curr.skapade_guider_7d) AS skapade_guider_7d, " +
+                    "  SUM(curr.visningar_7d) AS visningar_7d, " +
+                    "  SUM(curr.processvisningar_7d) AS processvisningar_7d, " +
+                    "  SUM(curr.processer_skapade_7d) AS processer_skapade_7d, " +
                     "  SUM(curr.antal_inloggningar_prod_admin) AS antal_inloggningar_prod_admin, " +
                     "  SUM(curr.antal_unika_inloggade_prod_admin) AS antal_unika_inloggade_prod_admin, " +
                     "  SUM(curr.antal_unika_publicerande_prod) AS antal_unika_publicerande_prod, " +
-                    "  latest.antal_producenter, " +
-                    "  latest.antal_administratorer, " +
-                    "  latest.totalt_antal_anvandare, " +
+                    "  s.antal_producenter, " +
+                    "  s.antal_administratorer, " +
+                    "  s.totalt_antal_anvandare, " +
                     "  latest.antal_aktiva_producenter_6m, " +
                     "  latest.version, " +
                     "  IFNULL(prev_agg.prev_publiseringar, 0) AS prev_publiseringar, " +
@@ -287,11 +292,11 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     // Previous period aggregated
                     "LEFT JOIN ( " +
                     "  SELECT server_id, " +
-                    "    SUM(publiseringar_30d) AS prev_publiseringar, " +
-                    "    SUM(skapade_guider_30d) AS prev_guider, " +
-                    "    SUM(visningar_30d) AS prev_visningar, " +
-                    "    SUM(processvisningar_30d) AS prev_processvisningar, " +
-                    "    SUM(processer_skapade_30d) AS prev_processer, " +
+                    "    SUM(publiseringar_7d) AS prev_publiseringar, " +
+                    "    SUM(skapade_guider_7d) AS prev_guider, " +
+                    "    SUM(visningar_7d) AS prev_visningar, " +
+                    "    SUM(processvisningar_7d) AS prev_processvisningar, " +
+                    "    SUM(processer_skapade_7d) AS prev_processer, " +
                     "    SUM(antal_inloggningar_prod_admin) AS prev_inloggningar, " +
                     "    SUM(antal_unika_inloggade_prod_admin) AS prev_unika_inloggade, " +
                     "    SUM(antal_unika_publicerande_prod) AS prev_unika_publicerande " +
@@ -300,10 +305,11 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     "  GROUP BY server_id " +
                     ") prev_agg ON prev_agg.server_id = s.id " +
                     "WHERE s.is_active = 1 AND s.is_excluded = 0 " +
+                    "  AND (s.customer_id IS NULL OR c.is_excluded = 0) " +
                     "GROUP BY s.id, s.url, c.company_id, c.company_name, c.coach_email, u_coach.full_name, " +
                     "  c.is_onboarding, c.renewal_date, c.leadscore, c.engagement, c.upsell, " +
-                    "  latest.antal_producenter, latest.antal_administratorer, " +
-                    "  latest.totalt_antal_anvandare, latest.antal_aktiva_producenter_6m, " +
+                    "  s.antal_producenter, s.antal_administratorer, " +
+                    "  s.totalt_antal_anvandare, latest.antal_aktiva_producenter_6m, " +
                     "  latest.version, " +
                     "  prev_agg.prev_publiseringar, prev_agg.prev_guider, " +
                     "  prev_agg.prev_visningar, prev_agg.prev_processvisningar, " +
@@ -339,17 +345,17 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     "SELECT " +
                     "  s.id, s.url, c.company_id, c.company_name, c.coach_email, u_coach.full_name AS coach_name, " +
                     "  MAX(curr.snapshot_date) AS current_snapshot_date, " +
-                    "  SUM(curr.publiseringar_30d) AS publiseringar_30d, " +
-                    "  SUM(curr.skapade_guider_30d) AS skapade_guider_30d, " +
-                    "  SUM(curr.visningar_30d) AS visningar_30d, " +
-                    "  SUM(curr.processvisningar_30d) AS processvisningar_30d, " +
-                    "  SUM(curr.processer_skapade_30d) AS processer_skapade_30d, " +
+                    "  SUM(curr.publiseringar_7d) AS publiseringar_7d, " +
+                    "  SUM(curr.skapade_guider_7d) AS skapade_guider_7d, " +
+                    "  SUM(curr.visningar_7d) AS visningar_7d, " +
+                    "  SUM(curr.processvisningar_7d) AS processvisningar_7d, " +
+                    "  SUM(curr.processer_skapade_7d) AS processer_skapade_7d, " +
                     "  SUM(curr.antal_inloggningar_prod_admin) AS antal_inloggningar_prod_admin, " +
                     "  SUM(curr.antal_unika_inloggade_prod_admin) AS antal_unika_inloggade_prod_admin, " +
                     "  SUM(curr.antal_unika_publicerande_prod) AS antal_unika_publicerande_prod, " +
-                    "  latest.antal_producenter, " +
-                    "  latest.antal_administratorer, " +
-                    "  latest.totalt_antal_anvandare, " +
+                    "  s.antal_producenter, " +
+                    "  s.antal_administratorer, " +
+                    "  s.totalt_antal_anvandare, " +
                     "  latest.antal_aktiva_producenter_6m, " +
                     "  latest.version, " +
                     "  IFNULL(prev_agg.prev_publiseringar, 0) AS prev_publiseringar, " +
@@ -394,11 +400,11 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     // Previous period (day 31-60) aggregated
                     "LEFT JOIN ( " +
                     "  SELECT server_id, " +
-                    "    SUM(publiseringar_30d) AS prev_publiseringar, " +
-                    "    SUM(skapade_guider_30d) AS prev_guider, " +
-                    "    SUM(visningar_30d) AS prev_visningar, " +
-                    "    SUM(processvisningar_30d) AS prev_processvisningar, " +
-                    "    SUM(processer_skapade_30d) AS prev_processer, " +
+                    "    SUM(publiseringar_7d) AS prev_publiseringar, " +
+                    "    SUM(skapade_guider_7d) AS prev_guider, " +
+                    "    SUM(visningar_7d) AS prev_visningar, " +
+                    "    SUM(processvisningar_7d) AS prev_processvisningar, " +
+                    "    SUM(processer_skapade_7d) AS prev_processer, " +
                     "    SUM(antal_inloggningar_prod_admin) AS prev_inloggningar, " +
                     "    SUM(antal_unika_inloggade_prod_admin) AS prev_unika_inloggade, " +
                     "    SUM(antal_unika_publicerande_prod) AS prev_unika_publicerande " +
@@ -408,10 +414,11 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     "  GROUP BY server_id " +
                     ") prev_agg ON prev_agg.server_id = s.id " +
                     "WHERE s.is_active = 1 AND s.is_excluded = 0 " +
+                    "  AND (s.customer_id IS NULL OR c.is_excluded = 0) " +
                     "GROUP BY s.id, s.url, c.company_id, c.company_name, c.coach_email, u_coach.full_name, " +
                     "  c.is_onboarding, c.renewal_date, c.leadscore, c.engagement, c.upsell, " +
-                    "  latest.antal_producenter, latest.antal_administratorer, " +
-                    "  latest.totalt_antal_anvandare, latest.antal_aktiva_producenter_6m, " +
+                    "  s.antal_producenter, s.antal_administratorer, " +
+                    "  s.totalt_antal_anvandare, latest.antal_aktiva_producenter_6m, " +
                     "  latest.version, " +
                     "  prev_agg.prev_publiseringar, prev_agg.prev_guider, " +
                     "  prev_agg.prev_visningar, prev_agg.prev_processvisningar, " +
@@ -486,19 +493,19 @@ public class CustomerStatsApiServlet extends HttpServlet {
         json.append("\"Version\":").append(JsonUtil.quote(version)).append(",");
         json.append("\"snapshotDate\":").append(JsonUtil.quote(snapshotDate != null ? snapshotDate.toString() : null)).append(",");
 
-        // Current period data → _Sista_30_Dagar fields
-        json.append("\"Publiseringar_Sista_30_Dagar\":").append(rs.getInt("publiseringar_30d")).append(",");
-        json.append("\"Skapade_Guider_Sista_30_Dagar\":").append(rs.getInt("skapade_guider_30d")).append(",");
-        json.append("\"Visningar_Sista_30_Dagar\":").append(rs.getInt("visningar_30d")).append(",");
-        json.append("\"Processvisningar_Sista_30_Dagar\":").append(rs.getInt("processvisningar_30d")).append(",");
-        json.append("\"Processer_Skapade_Sista_30_Dagar\":").append(rs.getInt("processer_skapade_30d")).append(",");
+        // Current period data (7-day snapshots, summed across period)
+        json.append("\"Publiseringar_7d\":").append(rs.getInt("publiseringar_7d")).append(",");
+        json.append("\"Skapade_Guider_7d\":").append(rs.getInt("skapade_guider_7d")).append(",");
+        json.append("\"Visningar_7d\":").append(rs.getInt("visningar_7d")).append(",");
+        json.append("\"Processvisningar_7d\":").append(rs.getInt("processvisningar_7d")).append(",");
+        json.append("\"Processer_Skapade_7d\":").append(rs.getInt("processer_skapade_7d")).append(",");
 
-        // Previous period data → _30_60_Dagar fields
-        json.append("\"Publiseringar_30_60_Dagar\":").append(rs.getInt("prev_publiseringar")).append(",");
-        json.append("\"Skapade_Guider_30_60_Dagar\":").append(rs.getInt("prev_guider")).append(",");
-        json.append("\"Visningar_30_60_Dagar\":").append(rs.getInt("prev_visningar")).append(",");
-        json.append("\"Processvisningar_30_60_Dagar\":").append(rs.getInt("prev_processvisningar")).append(",");
-        json.append("\"Processer_Skapade_30_60_Dagar\":").append(rs.getInt("prev_processer")).append(",");
+        // Previous period data (equally long window before current)
+        json.append("\"Publiseringar_7_14d\":").append(rs.getInt("prev_publiseringar")).append(",");
+        json.append("\"Skapade_Guider_7_14d\":").append(rs.getInt("prev_guider")).append(",");
+        json.append("\"Visningar_7_14d\":").append(rs.getInt("prev_visningar")).append(",");
+        json.append("\"Processvisningar_7_14d\":").append(rs.getInt("prev_processvisningar")).append(",");
+        json.append("\"Processer_Skapade_7_14d\":").append(rs.getInt("prev_processer")).append(",");
 
         // New login/publishing metrics (current period, SUMmed)
         json.append("\"Antal_Inloggningar_Prod_Admin\":").append(rs.getInt("antal_inloggningar_prod_admin")).append(",");
@@ -548,9 +555,8 @@ public class CustomerStatsApiServlet extends HttpServlet {
         }
 
         String sql =
-            "SELECT csd.snapshot_date, csd.publiseringar_30d, csd.skapade_guider_30d, " +
-            "  csd.visningar_30d, csd.processvisningar_30d, csd.processer_skapade_30d, " +
-            "  csd.antal_producenter, csd.antal_administratorer, csd.totalt_antal_anvandare, " +
+            "SELECT csd.snapshot_date, csd.publiseringar_7d, csd.skapade_guider_7d, " +
+            "  csd.visningar_7d, csd.processvisningar_7d, csd.processer_skapade_7d, " +
             "  csd.antal_aktiva_producenter_6m, " +
             "  csd.antal_inloggningar_prod_admin, csd.antal_unika_inloggade_prod_admin, " +
             "  csd.antal_unika_publicerande_prod, csd.version " +
@@ -579,14 +585,11 @@ public class CustomerStatsApiServlet extends HttpServlet {
 
                 json.append("{");
                 json.append("\"snapshotDate\":").append(JsonUtil.quote(rs.getDate("snapshot_date").toString())).append(",");
-                json.append("\"publiseringar\":").append(rs.getInt("publiseringar_30d")).append(",");
-                json.append("\"guider\":").append(rs.getInt("skapade_guider_30d")).append(",");
-                json.append("\"visningar\":").append(rs.getInt("visningar_30d")).append(",");
-                json.append("\"processvisningar\":").append(rs.getInt("processvisningar_30d")).append(",");
-                json.append("\"processer\":").append(rs.getInt("processer_skapade_30d")).append(",");
-                json.append("\"producenter\":").append(rs.getInt("antal_producenter")).append(",");
-                json.append("\"administratorer\":").append(rs.getInt("antal_administratorer")).append(",");
-                json.append("\"anvandare\":").append(rs.getInt("totalt_antal_anvandare")).append(",");
+                json.append("\"publiseringar\":").append(rs.getInt("publiseringar_7d")).append(",");
+                json.append("\"guider\":").append(rs.getInt("skapade_guider_7d")).append(",");
+                json.append("\"visningar\":").append(rs.getInt("visningar_7d")).append(",");
+                json.append("\"processvisningar\":").append(rs.getInt("processvisningar_7d")).append(",");
+                json.append("\"processer\":").append(rs.getInt("processer_skapade_7d")).append(",");
                 json.append("\"aktivaProducenter\":").append(rs.getInt("antal_aktiva_producenter_6m")).append(",");
                 json.append("\"inloggningarProdAdmin\":").append(rs.getInt("antal_inloggningar_prod_admin")).append(",");
                 json.append("\"unikaInloggadeProdAdmin\":").append(rs.getInt("antal_unika_inloggade_prod_admin")).append(",");
@@ -652,40 +655,34 @@ public class CustomerStatsApiServlet extends HttpServlet {
         String insertStatsSql =
             "INSERT INTO customer_stats_daily (" +
             "  server_id, snapshot_date, " +
-            "  publiseringar_30d, publiseringar_30_60d, " +
-            "  skapade_guider_30d, skapade_guider_30_60d, " +
-            "  visningar_30d, visningar_30_60d, " +
-            "  processvisningar_30d, processvisningar_30_60d, " +
-            "  processer_skapade_30d, processer_skapade_30_60d, " +
-            "  antal_producenter, antal_administratorer, " +
-            "  totalt_antal_anvandare, antal_aktiva_producenter_6m, " +
+            "  publiseringar_7d, skapade_guider_7d, " +
+            "  visningar_7d, processvisningar_7d, " +
+            "  processer_skapade_7d, " +
+            "  antal_aktiva_producenter_6m, " +
             "  antal_inloggningar_prod_admin, antal_unika_inloggade_prod_admin, " +
             "  antal_unika_publicerande_prod, version" +
-            ") VALUES (?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            ") VALUES (?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
             "ON DUPLICATE KEY UPDATE " +
-            "  publiseringar_30d = VALUES(publiseringar_30d), " +
-            "  publiseringar_30_60d = VALUES(publiseringar_30_60d), " +
-            "  skapade_guider_30d = VALUES(skapade_guider_30d), " +
-            "  skapade_guider_30_60d = VALUES(skapade_guider_30_60d), " +
-            "  visningar_30d = VALUES(visningar_30d), " +
-            "  visningar_30_60d = VALUES(visningar_30_60d), " +
-            "  processvisningar_30d = VALUES(processvisningar_30d), " +
-            "  processvisningar_30_60d = VALUES(processvisningar_30_60d), " +
-            "  processer_skapade_30d = VALUES(processer_skapade_30d), " +
-            "  processer_skapade_30_60d = VALUES(processer_skapade_30_60d), " +
-            "  antal_producenter = VALUES(antal_producenter), " +
-            "  antal_administratorer = VALUES(antal_administratorer), " +
-            "  totalt_antal_anvandare = VALUES(totalt_antal_anvandare), " +
+            "  publiseringar_7d = VALUES(publiseringar_7d), " +
+            "  skapade_guider_7d = VALUES(skapade_guider_7d), " +
+            "  visningar_7d = VALUES(visningar_7d), " +
+            "  processvisningar_7d = VALUES(processvisningar_7d), " +
+            "  processer_skapade_7d = VALUES(processer_skapade_7d), " +
             "  antal_aktiva_producenter_6m = VALUES(antal_aktiva_producenter_6m), " +
             "  antal_inloggningar_prod_admin = VALUES(antal_inloggningar_prod_admin), " +
             "  antal_unika_inloggade_prod_admin = VALUES(antal_unika_inloggade_prod_admin), " +
             "  antal_unika_publicerande_prod = VALUES(antal_unika_publicerande_prod), " +
             "  version = VALUES(version)";
 
+        String updateServerGaugeSql =
+            "UPDATE servers SET antal_producenter = ?, antal_administratorer = ?, " +
+            "totalt_antal_anvandare = ? WHERE url_normalized = ?";
+
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement psUpsert = conn.prepareStatement(upsertServerSql);
              PreparedStatement psGetId = conn.prepareStatement(getServerIdSql);
-             PreparedStatement psInsert = conn.prepareStatement(insertStatsSql)) {
+             PreparedStatement psInsert = conn.prepareStatement(insertStatsSql);
+             PreparedStatement psGauge = conn.prepareStatement(updateServerGaugeSql)) {
 
             // Parse each JSON object from the array
             // Simple approach: split by },{ pattern
@@ -708,7 +705,7 @@ public class CustomerStatsApiServlet extends HttpServlet {
                     if (depth == 0 && start >= 0) {
                         String objStr = inner.substring(start, i + 1);
                         try {
-                            importSingleRecord(objStr, psUpsert, psGetId, psInsert);
+                            importSingleRecord(objStr, psUpsert, psGetId, psInsert, psGauge);
                             imported++;
                         } catch (Exception e) {
                             errors++;
@@ -733,7 +730,8 @@ public class CustomerStatsApiServlet extends HttpServlet {
      * Upserts into servers table and inserts daily stats snapshot.
      */
     private void importSingleRecord(String jsonObj, PreparedStatement psUpsert,
-                                     PreparedStatement psGetId, PreparedStatement psInsert)
+                                     PreparedStatement psGetId, PreparedStatement psInsert,
+                                     PreparedStatement psGauge)
             throws SQLException {
 
         String url = JsonUtil.extractJsonString(jsonObj, "url");
@@ -748,6 +746,13 @@ public class CustomerStatsApiServlet extends HttpServlet {
         psUpsert.setString(3, version);
         psUpsert.executeUpdate();
 
+        // Update gauge fields on servers table
+        psGauge.setInt(1, JsonUtil.extractJsonInt(jsonObj, "Antal_Producenter"));
+        psGauge.setInt(2, JsonUtil.extractJsonInt(jsonObj, "Antal_Administratorer"));
+        psGauge.setInt(3, JsonUtil.extractJsonInt(jsonObj, "Totalt_Antal_Anvandare"));
+        psGauge.setString(4, normalizedUrl);
+        psGauge.executeUpdate();
+
         // Get server ID
         psGetId.setString(1, normalizedUrl);
         int serverId;
@@ -756,26 +761,18 @@ public class CustomerStatsApiServlet extends HttpServlet {
             serverId = rs.getInt(1);
         }
 
-        // Insert stats
+        // Insert stats (activity metrics only, no gauge fields)
         psInsert.setInt(1, serverId);
-        psInsert.setInt(2, JsonUtil.extractJsonInt(jsonObj, "Publiseringar_Sista_30_Dagar"));
-        psInsert.setInt(3, JsonUtil.extractJsonInt(jsonObj, "Publiseringar_30_60_Dagar"));
-        psInsert.setInt(4, JsonUtil.extractJsonInt(jsonObj, "Skapade_Guider_Sista_30_Dagar"));
-        psInsert.setInt(5, JsonUtil.extractJsonInt(jsonObj, "Skapade_Guider_30_60_Dagar"));
-        psInsert.setInt(6, JsonUtil.extractJsonInt(jsonObj, "Visningar_Sista_30_Dagar"));
-        psInsert.setInt(7, JsonUtil.extractJsonInt(jsonObj, "Visningar_30_60_Dagar"));
-        psInsert.setInt(8, JsonUtil.extractJsonInt(jsonObj, "Processvisningar_Sista_30_Dagar"));
-        psInsert.setInt(9, JsonUtil.extractJsonInt(jsonObj, "Processvisningar_30_60_Dagar"));
-        psInsert.setInt(10, JsonUtil.extractJsonInt(jsonObj, "Processer_Skapade_Sista_30_Dagar"));
-        psInsert.setInt(11, JsonUtil.extractJsonInt(jsonObj, "Processer_Skapade_30_60_Dagar"));
-        psInsert.setInt(12, JsonUtil.extractJsonInt(jsonObj, "Antal_Producenter"));
-        psInsert.setInt(13, JsonUtil.extractJsonInt(jsonObj, "Antal_Administratorer"));
-        psInsert.setInt(14, JsonUtil.extractJsonInt(jsonObj, "Totalt_Antal_Anvandare"));
-        psInsert.setInt(15, JsonUtil.extractJsonInt(jsonObj, "Antal_Aktiva_Producenter_Sista_6_Manader"));
-        psInsert.setInt(16, JsonUtil.extractJsonInt(jsonObj, "Antal_Inloggningar_Prod_Admin"));
-        psInsert.setInt(17, JsonUtil.extractJsonInt(jsonObj, "Antal_Unika_Inloggade_Prod_Admin"));
-        psInsert.setInt(18, JsonUtil.extractJsonInt(jsonObj, "Antal_Unika_Publicerande_Prod"));
-        psInsert.setString(19, version);
+        psInsert.setInt(2, JsonUtil.extractJsonInt(jsonObj, "Publiseringar_7d"));
+        psInsert.setInt(3, JsonUtil.extractJsonInt(jsonObj, "Skapade_Guider_7d"));
+        psInsert.setInt(4, JsonUtil.extractJsonInt(jsonObj, "Visningar_7d"));
+        psInsert.setInt(5, JsonUtil.extractJsonInt(jsonObj, "Processvisningar_7d"));
+        psInsert.setInt(6, JsonUtil.extractJsonInt(jsonObj, "Processer_Skapade_7d"));
+        psInsert.setInt(7, JsonUtil.extractJsonInt(jsonObj, "Antal_Aktiva_Producenter_Sista_6_Manader"));
+        psInsert.setInt(8, JsonUtil.extractJsonInt(jsonObj, "Antal_Inloggningar_Prod_Admin"));
+        psInsert.setInt(9, JsonUtil.extractJsonInt(jsonObj, "Antal_Unika_Inloggade_Prod_Admin"));
+        psInsert.setInt(10, JsonUtil.extractJsonInt(jsonObj, "Antal_Unika_Publicerande_Prod"));
+        psInsert.setString(11, version);
         psInsert.executeUpdate();
     }
 
@@ -864,6 +861,94 @@ public class CustomerStatsApiServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             log.error("Failed to toggle server exclusion", e);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("{\"error\":\"Database error\"}");
+        }
+    }
+
+    /**
+     * GET /api/customer-stats/organizations — List all customers with exclusion status.
+     * Admin-only.
+     */
+    private void handleListOrganizations(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        User admin = AdminUtil.requireAdmin(req, resp);
+        if (admin == null) return;
+
+        resp.setContentType("application/json; charset=UTF-8");
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "SELECT c.id, c.company_name, c.company_id, c.is_excluded, " +
+                 "  (SELECT COUNT(*) FROM servers s WHERE s.customer_id = c.id) AS server_count " +
+                 "FROM customers c ORDER BY c.company_name")) {
+
+            StringBuilder json = new StringBuilder("[");
+            boolean first = true;
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (!first) json.append(",");
+                    first = false;
+                    json.append("{");
+                    json.append("\"id\":").append(rs.getInt("id")).append(",");
+                    json.append("\"companyName\":").append(JsonUtil.quote(rs.getString("company_name"))).append(",");
+                    json.append("\"companyId\":").append(JsonUtil.quote(rs.getString("company_id"))).append(",");
+                    json.append("\"isExcluded\":").append(rs.getBoolean("is_excluded")).append(",");
+                    json.append("\"serverCount\":").append(rs.getInt("server_count"));
+                    json.append("}");
+                }
+            }
+            json.append("]");
+            resp.getWriter().write(json.toString());
+
+        } catch (SQLException e) {
+            log.error("Failed to list organizations", e);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("{\"error\":\"Database error\"}");
+        }
+    }
+
+    /**
+     * POST /api/customer-stats/organizations/exclude — Toggle organization exclusion.
+     * Admin-only. Body: {"customerId":N,"excluded":true/false}
+     */
+    private void handleToggleOrgExclude(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        User admin = AdminUtil.requireAdmin(req, resp);
+        if (admin == null) return;
+
+        resp.setContentType("application/json; charset=UTF-8");
+
+        StringBuilder body = new StringBuilder();
+        try (BufferedReader reader = req.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) body.append(line);
+        }
+        String jsonBody = body.toString();
+
+        int customerId = JsonUtil.extractJsonInt(jsonBody, "customerId");
+        boolean excluded = jsonBody.matches("(?s).*\"excluded\"\\s*:\\s*true.*");
+
+        if (customerId <= 0) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{\"error\":\"Missing customerId\"}");
+            return;
+        }
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "UPDATE customers SET is_excluded = ? WHERE id = ?")) {
+            ps.setBoolean(1, excluded);
+            ps.setInt(2, customerId);
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                log.info("Customer {} exclusion set to {} by admin {}", customerId, excluded, admin.getEmail());
+                resp.getWriter().write("{\"ok\":true}");
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write("{\"error\":\"Customer not found\"}");
+            }
+        } catch (SQLException e) {
+            log.error("Failed to toggle customer exclusion", e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write("{\"error\":\"Database error\"}");
         }

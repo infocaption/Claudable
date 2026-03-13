@@ -476,6 +476,28 @@
                 <tr><td colspan="4" class="empty-state">Laddar servrar...</td></tr>
             </tbody>
         </table>
+
+        <h3 style="margin-top:32px;font-size:1em">Organisationer</h3>
+        <p style="color:var(--ic-text-muted);font-size:0.85em;margin:0 0 12px">
+            Exkluderade organisationer döljs helt från kundstatistik. Alla servrar kopplade till organisationen filtreras bort.
+        </p>
+        <div class="toolbar" style="margin-bottom:8px">
+            <input type="text" class="search-input" id="orgSearch" placeholder="Sök organisation...">
+            <span id="orgCount" style="color:var(--ic-text-muted);font-size:0.85em"></span>
+        </div>
+        <table class="history-table" id="orgTable">
+            <thead>
+                <tr>
+                    <th>Företag</th>
+                    <th>SuperOffice ID</th>
+                    <th style="text-align:center">Antal servrar</th>
+                    <th style="text-align:center">Exkluderad</th>
+                </tr>
+            </thead>
+            <tbody id="orgTableBody">
+                <tr><td colspan="4" class="empty-state">Laddar organisationer...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <!-- ============ MCP TAB ============ -->
@@ -920,6 +942,8 @@ let allMcpServers = [];
 let mcpLoaded = false;
 let allStatServers = [];
 let serversLoaded = false;
+let allStatOrgs = [];
+let orgsLoaded = false;
 
 // ========== TAB SWITCHING ==========
 function switchTab(tab) {
@@ -936,6 +960,7 @@ function switchTab(tab) {
     if (tab === 'groups' && !groupsLoaded) { loadGroups(); groupsLoaded = true; }
     if (tab === 'modules' && !modulesLoaded) { loadAdminModules(); modulesLoaded = true; }
     if (tab === 'servers' && !serversLoaded) { loadStatServers(); serversLoaded = true; }
+    if (tab === 'servers' && !orgsLoaded) { loadStatOrganizations(); orgsLoaded = true; }
     if (tab === 'mcp' && !mcpLoaded) { loadMcpServers(); loadMcpAudit(); mcpLoaded = true; }
     if (tab === 'kb' && !kbLoaded) { loadKbDocs(); loadKbColls(); kbLoaded = true; }
 }
@@ -2423,6 +2448,62 @@ async function toggleServerExclude(serverId, excluded) {
 }
 
 document.getElementById('serverSearch').addEventListener('input', renderStatServers);
+
+// ========== ORGANIZATIONS (CUSTOMER STATS) ==========
+async function loadStatOrganizations() {
+    try {
+        const resp = await fetch(CTX + '/api/customer-stats/organizations');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        allStatOrgs = await resp.json();
+        renderStatOrganizations();
+    } catch (e) {
+        document.getElementById('orgTableBody').innerHTML =
+            '<tr><td colspan="4" class="empty-state" style="color:#ef4444">Kunde inte ladda organisationer: ' + e.message + '</td></tr>';
+    }
+}
+
+function renderStatOrganizations() {
+    const query = (document.getElementById('orgSearch').value || '').toLowerCase();
+    const filtered = allStatOrgs.filter(o =>
+        (o.companyName || '').toLowerCase().includes(query) || (o.companyId || '').toLowerCase().includes(query)
+    );
+    document.getElementById('orgCount').textContent = filtered.length + ' / ' + allStatOrgs.length + ' organisationer';
+
+    const tbody = document.getElementById('orgTableBody');
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Inga organisationer hittades</td></tr>';
+        return;
+    }
+    tbody.innerHTML = filtered.map(o =>
+        '<tr style="' + (o.isExcluded ? 'opacity:0.5;' : '') + '">' +
+        '<td>' + escHtml(o.companyName) + '</td>' +
+        '<td>' + escHtml(o.companyId || '-') + '</td>' +
+        '<td style="text-align:center">' + o.serverCount + '</td>' +
+        '<td style="text-align:center">' +
+        '<label style="cursor:pointer"><input type="checkbox" ' + (o.isExcluded ? 'checked' : '') +
+        ' onchange="toggleOrgExclude(' + o.id + ', this.checked)"> Exkludera</label></td>' +
+        '</tr>'
+    ).join('');
+}
+
+async function toggleOrgExclude(customerId, excluded) {
+    try {
+        const resp = await fetch(CTX + '/api/customer-stats/organizations/exclude', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customerId, excluded })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const org = allStatOrgs.find(o => o.id === customerId);
+        if (org) org.isExcluded = excluded;
+        renderStatOrganizations();
+    } catch (e) {
+        alert('Kunde inte uppdatera: ' + e.message);
+        loadStatOrganizations();
+    }
+}
+
+document.getElementById('orgSearch').addEventListener('input', renderStatOrganizations);
 
 // ========== MCP TAB ==========
 function escHtml(s) { if (!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

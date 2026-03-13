@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>icDashBoard — Project Overview</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a1a;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent-1: #667eea;
+    --accent-2: #764ba2;
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.12);
+    --radius: 16px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── Animated background ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: -1;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(102,126,234,0.12), transparent),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(118,75,162,0.10), transparent);
+  }
+
+  .container { max-width: 1300px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 80px 0 48px;
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+  .hero p { color: var(--text-dim); font-size: 1.15rem; max-width: 640px; margin: 0 auto 32px; }
+
+  .stats-row {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+  }
+  .stat-pill {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    padding: 10px 24px;
+    backdrop-filter: blur(12px);
+    font-size: 0.95rem;
+    transition: transform 0.2s;
+  }
+  .stat-pill:hover { transform: translateY(-2px); }
+  .stat-pill strong {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 1.2rem;
+    margin-right: 4px;
+  }
+
+  /* ── Sections ── */
+  section {
+    margin-bottom: 64px;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  section.visible { opacity: 1; transform: translateY(0); }
+
+  h2 {
+    font-size: 1.6rem; font-weight: 700; margin-bottom: 24px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--glass-border);
+  }
+  h2 span {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ── Glass card ── */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(16px);
+    padding: 28px;
+    overflow-x: auto;
+  }
+
+  /* ── Module cards grid ── */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .module-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 18px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s, border-color 0.3s;
+    cursor: default;
+  }
+  .module-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-1);
+  }
+  .module-card h3 {
+    font-size: 0.95rem; font-weight: 600; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .module-card .desc { font-size: 0.82rem; color: var(--text-dim); }
+
+  .badge {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px;
+    display: inline-block; line-height: 1.5;
+  }
+  .badge-high { background: rgba(239,68,68,0.2); color: #f87171; }
+  .badge-mid  { background: rgba(251,191,36,0.2); color: #fbbf24; }
+  .badge-low  { background: rgba(52,211,153,0.2); color: #34d399; }
+
+  /* ── Servlet group list ── */
+  .servlet-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .servlet-group {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    backdrop-filter: blur(12px);
+  }
+  .servlet-group h3 {
+    font-size: 0.9rem; font-weight: 600; margin-bottom: 8px;
+    color: var(--accent-1);
+  }
+  .servlet-group ul { list-style: none; }
+  .servlet-group li {
+    font-size: 0.8rem; color: var(--text-dim); padding: 2px 0;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+  }
+
+  /* ── Mermaid ── */
+  .mermaid {
+    display: flex; justify-content: center;
+  }
+  .mermaid svg { max-width: 100%; height: auto; }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .container { padding: 0 12px; }
+    .glass { padding: 16px; }
+    .hero { padding: 48px 0 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ════ HERO ════ -->
+  <header class="hero">
+    <h1>icDashBoard</h1>
+    <p>Java Servlet/JSP dashboard-plattform för InfoCaption-supportorganisationer. Modulbaserad, databasdriven, med SSO, gruppstyrning och centraliserad konfiguration.</p>
+    <div class="stats-row">
+      <div class="stat-pill"><strong>40</strong> Servlets</div>
+      <div class="stat-pill"><strong>17</strong> Moduler</div>
+      <div class="stat-pill"><strong>7</strong> Filters</div>
+      <div class="stat-pill"><strong>22</strong> Utilities</div>
+      <div class="stat-pill"><strong>43</strong> SQL-migrationer</div>
+      <div class="stat-pill"><strong>Java 21</strong> + Tomcat 9</div>
+    </div>
+  </header>
+
+  <!-- ════ 1. REQUEST FLOW ════ -->
+  <section>
+    <h2><span>Request Flow</span></h2>
+    <div class="glass">
+      <pre class="mermaid">
+flowchart LR
+    Browser["🌐 Browser"] --> Tomcat["Apache Tomcat 9"]
+    Tomcat --> F1["RateLimitFilter"]
+    F1 --> F2["BodySizeLimitFilter"]
+    F2 --> F3["ContentTypeValidation"]
+    F3 --> F4["EncodingFilter"]
+    F4 --> F5["SecurityHeaderFilter\n(CSP nonce)"]
+    F5 --> F6["CsrfFilter"]
+    F6 --> F7["AuthFilter"]
+    F7 --> Servlets["40 Servlets"]
+    Servlets --> DB["DBUtil → MySQL 5.7"]
+    Servlets --> JSP["JSP Views"]
+    Servlets --> Modules["Module iframes"]
+
+    style Browser fill:#667eea,stroke:#667eea,color:#fff
+    style Tomcat fill:#764ba2,stroke:#764ba2,color:#fff
+    style DB fill:#34d399,stroke:#34d399,color:#000
+    style F1 fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style F2 fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style F3 fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style F4 fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style F5 fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style F6 fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style F7 fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style Servlets fill:#667eea,stroke:#667eea,color:#fff
+    style JSP fill:#764ba2,stroke:#764ba2,color:#fff
+    style Modules fill:#764ba2,stroke:#764ba2,color:#fff
+      </pre>
+    </div>
+  </section>
+
+  <!-- ════ 2. MODULE ARCHITECTURE ════ -->
+  <section>
+    <h2><span>Module Architecture</span></h2>
+    <div class="glass">
+      <pre class="mermaid">
+flowchart TB
+    Dashboard["dashboard.jsp"] --> IFrame["iframe src=/modules/dir/entry"]
+    IFrame --> Shared["ic-styles.css + ic-utils.js\n(shared design system)"]
+    IFrame --> PM["postMessage ↔ parent"]
+    PM --> Toast["SHOW_TOAST"]
+    PM --> Load["LOAD_MODULE"]
+    PM --> CSRF["GET_CSRF_TOKEN"]
+    IFrame --> API["fetch ../../api/*\n(servlet endpoints)"]
+    API --> Backend["Servlet → DB"]
+
+    style Dashboard fill:#667eea,stroke:#667eea,color:#fff
+    style IFrame fill:#764ba2,stroke:#764ba2,color:#fff
+    style Shared fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style PM fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style Toast fill:#0f172a,stroke:#334155,color:#94a3b8
+    style Load fill:#0f172a,stroke:#334155,color:#94a3b8
+    style CSRF fill:#0f172a,stroke:#334155,color:#94a3b8
+    style API fill:#34d399,stroke:#34d399,color:#000
+    style Backend fill:#34d399,stroke:#34d399,color:#000
+      </pre>
+    </div>
+  </section>
+
+  <!-- ════ 3. MODULE CARDS ════ -->
+  <section>
+    <h2><span>17 Moduler</span></h2>
+    <div class="module-grid">
+      <div class="module-card">
+        <h3>customer-stats <span class="badge badge-high">Hög</span></h3>
+        <div class="desc">Kundstatistik, licenser, kontaktinfo, synk med SuperOffice</div>
+      </div>
+      <div class="module-card">
+        <h3>drift-monitor <span class="badge badge-high">Hög</span></h3>
+        <div class="desc">Serverövervakning, hälsokontroller, notifieringar</div>
+      </div>
+      <div class="module-card">
+        <h3>drift-ops <span class="badge badge-mid">Med</span></h3>
+        <div class="desc">Driftoperationer och incidenthantering</div>
+      </div>
+      <div class="module-card">
+        <h3>tomcat-manager <span class="badge badge-high">Hög</span></h3>
+        <div class="desc">Hantera 15 Tomcat-instanser, scan, hälsokoll, ignoreringar</div>
+      </div>
+      <div class="module-card">
+        <h3>utskick <span class="badge badge-mid">Med</span></h3>
+        <div class="desc">E-postutskick med mallar och kontaktlistor</div>
+      </div>
+      <div class="module-card">
+        <h3>jira <span class="badge badge-mid">Med</span></h3>
+        <div class="desc">Jira-integration, ärenden och projekt</div>
+      </div>
+      <div class="module-card">
+        <h3>certificates <span class="badge badge-mid">Med</span></h3>
+        <div class="desc">SSL-certifikatövervakning och utgångsdatum</div>
+      </div>
+      <div class="module-card">
+        <h3>incidents <span class="badge badge-mid">Med</span></h3>
+        <div class="desc">Incidentrapportering och uppföljning</div>
+      </div>
+      <div class="module-card">
+        <h3>cloudguard-monitor <span class="badge badge-mid">Med</span></h3>
+        <div class="desc">CloudGuard-övervakning och säkerhet</div>
+      </div>
+      <div class="module-card">
+        <h3>guide-planner <span class="badge badge-mid">Med</span></h3>
+        <div class="desc">Planering och hantering av guider</div>
+      </div>
+      <div class="module-card">
+        <h3>server-list <span class="badge badge-low">Låg</span></h3>
+        <div class="desc">Serverlista med maskiner och konfiguration</div>
+      </div>
+      <div class="module-card">
+        <h3>backup-status <span class="badge badge-low">Låg</span></h3>
+        <div class="desc">Övervaka backupstatus och scheman</div>
+      </div>
+      <div class="module-card">
+        <h3>sql-builder <span class="badge badge-mid">Med</span></h3>
+        <div class="desc">Visuell SQL-frågebyggare</div>
+      </div>
+      <div class="module-card">
+        <h3>trigger-builder <span class="badge badge-mid">Med</span></h3>
+        <div class="desc">Skapa och hantera databas-triggers</div>
+      </div>
+      <div class="module-card">
+        <h3>toolbox <span class="badge badge-low">Låg</span></h3>
+        <div class="desc">Verktygssamling med hjälpfunktioner</div>
+      </div>
+      <div class="module-card">
+        <h3>docs <span class="badge badge-low">Låg</span></h3>
+        <div class="desc">Dokumentation och kunskapsbas</div>
+      </div>
+      <div class="module-card">
+        <h3>pong <span class="badge badge-low">Låg</span></h3>
+        <div class="desc">Easter egg — klassiskt Pong-spel</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 4. SERVLET GROUPS ════ -->
+  <section>
+    <h2><span>40 Servlets — Grupperade</span></h2>
+    <div class="servlet-groups">
+      <div class="servlet-group">
+        <h3>Auth &amp; Users (7)</h3>
+        <ul>
+          <li>LoginServlet</li>
+          <li>LogoutServlet</li>
+          <li>RegisterServlet</li>
+          <li>SamlLoginServlet</li>
+          <li>SamlAcsServlet</li>
+          <li>SamlMetadataServlet</li>
+          <li>UserSettingsServlet</li>
+        </ul>
+      </div>
+      <div class="servlet-group">
+        <h3>Admin (6)</h3>
+        <ul>
+          <li>AdminApiServlet</li>
+          <li>UserManageServlet</li>
+          <li>GroupManageServlet</li>
+          <li>GroupApiServlet</li>
+          <li>ApiTokenServlet</li>
+          <li>KbAdminServlet</li>
+        </ul>
+      </div>
+      <div class="servlet-group">
+        <h3>Modules (5)</h3>
+        <ul>
+          <li>ModuleApiServlet</li>
+          <li>ModuleCreateServlet</li>
+          <li>ModuleManageServlet</li>
+          <li>ModuleFileApiServlet</li>
+          <li>ModuleSpecServlet</li>
+        </ul>
+      </div>
+      <div class="servlet-group">
+        <h3>Drift &amp; Monitoring (5)</h3>
+        <ul>
+          <li>DriftMonitorApiServlet</li>
+          <li>IncidentApiServlet</li>
+          <li>CloudGuardApiServlet</li>
+          <li>BackupStatusApiServlet</li>
+          <li>HealthCheckScheduler</li>
+        </ul>
+      </div>
+      <div class="servlet-group">
+        <h3>Data &amp; Sync (4)</h3>
+        <ul>
+          <li>CustomerStatsApiServlet</li>
+          <li>SyncConfigServlet</li>
+          <li>SyncSchedulerServlet</li>
+          <li>ServerListApiServlet</li>
+        </ul>
+      </div>
+      <div class="servlet-group">
+        <h3>Email &amp; Notifications (3)</h3>
+        <ul>
+          <li>EmailApiServlet</li>
+          <li>ContactListServlet</li>
+          <li>NotificationServlet</li>
+        </ul>
+      </div>
+      <div class="servlet-group">
+        <h3>Certificates &amp; Tomcat (3)</h3>
+        <ul>
+          <li>CertificateApiServlet</li>
+          <li>TomcatInstanceApiServlet</li>
+          <li>VersionServlet</li>
+        </ul>
+      </div>
+      <div class="servlet-group">
+        <h3>MCP &amp; Övrigt (7)</h3>
+        <ul>
+          <li>McpGatewayServlet</li>
+          <li>McpAdminServlet</li>
+          <li>GuidePlannerApiServlet</li>
+          <li>JiraApiServlet</li>
+          <li>WidgetApiServlet</li>
+          <li>UserPreferencesApiServlet</li>
+          <li>AvatarUploadServlet</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 5. DATABASE SCHEMA ════ -->
+  <section>
+    <h2><span>Database Schema</span></h2>
+    <div class="glass">
+      <pre class="mermaid">
+erDiagram
+    users {
+        int id PK
+        varchar email
+        varchar password_hash
+        boolean is_admin
+        varchar sso_provider
+        varchar profile_picture
+        datetime created_at
+    }
+    modules {
+        int id PK
+        varchar name
+        varchar directory
+        varchar entry_file
+        int visibility
+        int sort_order
+    }
+    groups {
+        int id PK
+        varchar name
+        varchar description
+    }
+    group_members {
+        int group_id FK
+        int user_id FK
+    }
+    module_groups {
+        int module_id FK
+        int group_id FK
+    }
+    customers {
+        int id PK
+        varchar name
+        varchar organization
+        varchar license_key
+        date onboarding_date
+        date renewal_date
+        varchar sales_rep
+    }
+    customer_stats {
+        int id PK
+        int customer_id FK
+        int guide_count
+        int user_count
+        datetime collected_at
+    }
+    app_config {
+        int id PK
+        varchar config_key
+        text config_value
+    }
+    audit_log {
+        int id PK
+        int user_id FK
+        varchar action
+        text details
+        datetime created_at
+    }
+    sso_group_mapping {
+        int id PK
+        varchar sso_group
+        int group_id FK
+    }
+
+    users ||--o{ group_members : "belongs to"
+    groups ||--o{ group_members : "has"
+    modules ||--o{ module_groups : "visible to"
+    groups ||--o{ module_groups : "sees"
+    customers ||--o{ customer_stats : "has stats"
+    users ||--o{ audit_log : "performed"
+    groups ||--o{ sso_group_mapping : "mapped from SSO"
+      </pre>
+    </div>
+  </section>
+
+  <!-- ════ 6. SECURITY LAYERS ════ -->
+  <section>
+    <h2><span>Security Layers</span></h2>
+    <div class="glass">
+      <pre class="mermaid">
+flowchart TB
+    Req["Incoming Request"] --> RL["RateLimitFilter\n(brute-force protection)"]
+    RL --> BS["BodySizeLimitFilter\n(max payload)"]
+    BS --> CT["ContentTypeValidation\n(whitelist MIME types)"]
+    CT --> ENC["EncodingFilter\n(UTF-8 enforce)"]
+    ENC --> SH["SecurityHeaderFilter\n(CSP, HSTS, X-Frame, nonce)"]
+    SH --> CSRF["CsrfFilter\n(token per session)"]
+    CSRF --> Auth["AuthFilter\n(session check)"]
+
+    Auth --> PW["BCrypt\n(work factor 12)"]
+    Auth --> SSO["SAML2 SSO\n(Microsoft Entra ID)"]
+
+    Auth --> Secrets["SecretsConfig\n(app-secrets.properties)"]
+    Auth --> Crypto["CryptoUtil\n(AES-256-GCM)"]
+
+    style Req fill:#667eea,stroke:#667eea,color:#fff
+    style RL fill:#dc2626,stroke:#dc2626,color:#fff
+    style BS fill:#dc2626,stroke:#dc2626,color:#fff
+    style CT fill:#dc2626,stroke:#dc2626,color:#fff
+    style ENC fill:#ea580c,stroke:#ea580c,color:#fff
+    style SH fill:#ea580c,stroke:#ea580c,color:#fff
+    style CSRF fill:#ca8a04,stroke:#ca8a04,color:#fff
+    style Auth fill:#16a34a,stroke:#16a34a,color:#fff
+    style PW fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style SSO fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style Secrets fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style Crypto fill:#1e293b,stroke:#475569,color:#e2e8f0
+      </pre>
+    </div>
+  </section>
+
+  <!-- ════ 7. DEPLOY PIPELINE ════ -->
+  <section>
+    <h2><span>Deploy Pipeline</span></h2>
+    <div class="glass">
+      <pre class="mermaid">
+flowchart LR
+    Eclipse["Eclipse IDE\n(auto-compile)"] --> PS["package-installer.ps1"]
+    PS --> WAR["icDashBoard.war"]
+    WAR --> Install["install.ps1"]
+    Install --> Servers["15 Tomcat Servers\n(10.201.21.x)"]
+    Install --> SQL["SQL Migrations\n(43 scripts)"]
+
+    subgraph Stats Collection
+      AllStats["allstats.ps1"] --> GetStats["getstats.ps1"]
+      GetStats --> MySQL["MySQL\n(customer_stats)"]
+    end
+
+    Servers --> Stats Collection
+
+    style Eclipse fill:#667eea,stroke:#667eea,color:#fff
+    style PS fill:#764ba2,stroke:#764ba2,color:#fff
+    style WAR fill:#764ba2,stroke:#764ba2,color:#fff
+    style Install fill:#764ba2,stroke:#764ba2,color:#fff
+    style Servers fill:#34d399,stroke:#34d399,color:#000
+    style SQL fill:#34d399,stroke:#34d399,color:#000
+    style AllStats fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style GetStats fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style MySQL fill:#34d399,stroke:#34d399,color:#000
+      </pre>
+    </div>
+  </section>
+
+  <!-- ════ 8. TECH STACK ════ -->
+  <section>
+    <h2><span>Tech Stack</span></h2>
+    <div class="glass">
+      <pre class="mermaid">
+flowchart TB
+    subgraph Backend
+      Java["Java 21"] --> Servlets2["40 Servlets"]
+      Java --> Filters["7 Filters"]
+      Java --> Utils["22 Utilities"]
+      Tomcat2["Tomcat 9.0.100"] --> Java
+    end
+
+    subgraph Frontend
+      JSP2["JSP + JSTL"] --> CSS["ic-styles.css\n(design system)"]
+      JSP2 --> JS["ic-utils.js\n(shared JS)"]
+      JSP2 --> Icons["ic-icons\n(icon font)"]
+    end
+
+    subgraph Database
+      MySQL2["MySQL 5.7"] --> UTF["utf8mb4_unicode_ci"]
+      MySQL2 --> Migrations["43 Migrations"]
+    end
+
+    subgraph Auth
+      BCrypt2["BCrypt (wf 12)"]
+      SAML["OneLogin SAML 2.9"]
+      Entra["Microsoft Entra ID"]
+      SAML --> Entra
+    end
+
+    subgraph Deploy
+      PS2["PowerShell 5.1"]
+      WAR2["WAR Packaging"]
+      Servers2["15 Servers"]
+    end
+
+    Backend --> Frontend
+    Backend --> Database
+    Backend --> Auth
+
+    style Java fill:#667eea,stroke:#667eea,color:#fff
+    style Tomcat2 fill:#764ba2,stroke:#764ba2,color:#fff
+    style MySQL2 fill:#34d399,stroke:#34d399,color:#000
+    style BCrypt2 fill:#dc2626,stroke:#dc2626,color:#fff
+    style SAML fill:#dc2626,stroke:#dc2626,color:#fff
+    style PS2 fill:#1e293b,stroke:#475569,color:#e2e8f0
+      </pre>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // ── Mermaid init ──
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#0a0a1a',
+      primaryColor: '#667eea',
+      primaryTextColor: '#e2e8f0',
+      lineColor: '#475569',
+      fontSize: '14px'
+    },
+    flowchart: { curve: 'basis', padding: 16 },
+    er: { fontSize: 12 }
+  });
+
+  // ── Scroll animations ──
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('section').forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

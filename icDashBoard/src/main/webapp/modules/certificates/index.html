@@ -365,7 +365,7 @@
 
             // Notify parent dashboard
             if (window.parent && window.parent !== window) {
-                window.parent.postMessage({ type: 'moduleReady', moduleId: 'certificates' }, '*');
+                window.parent.postMessage({ type: 'moduleReady', moduleId: 'certificates' }, window.location.origin);
             }
         })();
 

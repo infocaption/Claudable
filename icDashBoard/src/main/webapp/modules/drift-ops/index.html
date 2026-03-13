@@ -139,7 +139,7 @@
 
         // Notify parent dashboard that module is ready
         if (window.parent !== window) {
-            window.parent.postMessage({ type: 'module-ready', module: 'drift-ops' }, '*');
+            window.parent.postMessage({ type: 'module-ready', module: 'drift-ops' }, window.location.origin);
         }
     })();
     </script>

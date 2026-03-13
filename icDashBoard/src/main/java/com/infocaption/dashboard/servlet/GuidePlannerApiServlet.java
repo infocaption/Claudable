@@ -103,11 +103,11 @@ public class GuidePlannerApiServlet extends HttpServlet {
             );
 
             // Seed default project if none exist
-            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM guide_projects");
-            if (rs.next() && rs.getInt(1) == 0) {
-                stmt.executeUpdate("INSERT INTO guide_projects (name) VALUES ('Projekt 1')");
+            try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM guide_projects")) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    stmt.executeUpdate("INSERT INTO guide_projects (name) VALUES ('Projekt 1')");
+                }
             }
-            rs.close();
 
             log.info("Guide planner tables verified/created successfully");
         } catch (SQLException e) {
@@ -268,9 +268,10 @@ public class GuidePlannerApiServlet extends HttpServlet {
             ps.setInt(2, user.getId());
             ps.executeUpdate();
 
-            ResultSet rs = ps.getGeneratedKeys();
             int id = 0;
-            if (rs.next()) id = rs.getInt(1);
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) id = rs.getInt(1);
+            }
 
             resp.getWriter().write("{\"id\":" + id + ",\"name\":" + JsonUtil.quote(name.trim()) + "}");
         } catch (SQLException e) {
@@ -322,11 +323,12 @@ public class GuidePlannerApiServlet extends HttpServlet {
         // Prevent deleting the last project
         try (Connection conn = DBUtil.getConnection()) {
             try (PreparedStatement countPs = conn.prepareStatement("SELECT COUNT(*) FROM guide_projects")) {
-                ResultSet rs = countPs.executeQuery();
-                if (rs.next() && rs.getInt(1) <= 1) {
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    resp.getWriter().write("{\"error\":\"Cannot delete the last project\"}");
-                    return;
+                try (ResultSet rs = countPs.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) <= 1) {
+                        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        resp.getWriter().write("{\"error\":\"Cannot delete the last project\"}");
+                        return;
+                    }
                 }
             }
             try (PreparedStatement ps = conn.prepareStatement("DELETE FROM guide_projects WHERE id = ?")) {
@@ -366,17 +368,18 @@ public class GuidePlannerApiServlet extends HttpServlet {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, projectId);
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            StringBuilder json = new StringBuilder("[");
-            boolean first = true;
-            while (rs.next()) {
-                if (!first) json.append(",");
-                first = false;
-                appendTaskJson(json, rs);
+                StringBuilder json = new StringBuilder("[");
+                boolean first = true;
+                while (rs.next()) {
+                    if (!first) json.append(",");
+                    first = false;
+                    appendTaskJson(json, rs);
+                }
+                json.append("]");
+                resp.getWriter().write(json.toString());
             }
-            json.append("]");
-            resp.getWriter().write(json.toString());
 
         } catch (SQLException e) {
             log.error("Failed to list tasks for project {}", projectId, e);
@@ -432,9 +435,10 @@ public class GuidePlannerApiServlet extends HttpServlet {
             ps.setInt(11, sortOrder);
             ps.executeUpdate();
 
-            ResultSet rs = ps.getGeneratedKeys();
             int id = 0;
-            if (rs.next()) id = rs.getInt(1);
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) id = rs.getInt(1);
+            }
 
             // Auto-add assignee to project assignees if not empty
             if (!assignee.isEmpty()) {
@@ -524,9 +528,10 @@ public class GuidePlannerApiServlet extends HttpServlet {
                 try (PreparedStatement lookup = conn.prepareStatement(
                         "SELECT project_id FROM guide_tasks WHERE id = ?")) {
                     lookup.setInt(1, id);
-                    ResultSet rs = lookup.executeQuery();
-                    if (rs.next()) {
-                        addAssigneeIfMissing(conn, rs.getInt("project_id"), assignee);
+                    try (ResultSet rs = lookup.executeQuery()) {
+                        if (rs.next()) {
+                            addAssigneeIfMissing(conn, rs.getInt("project_id"), assignee);
+                        }
                     }
                 }
             }
@@ -636,9 +641,10 @@ public class GuidePlannerApiServlet extends HttpServlet {
                     try (PreparedStatement lookup = conn.prepareStatement(
                             "SELECT DISTINCT project_id FROM guide_tasks WHERE id = ?")) {
                         lookup.setInt(1, ids.get(0));
-                        ResultSet rs = lookup.executeQuery();
-                        if (rs.next()) {
-                            addAssigneeIfMissing(conn, rs.getInt("project_id"), assignee);
+                        try (ResultSet rs = lookup.executeQuery()) {
+                            if (rs.next()) {
+                                addAssigneeIfMissing(conn, rs.getInt("project_id"), assignee);
+                            }
                         }
                     }
                 }
@@ -674,8 +680,9 @@ public class GuidePlannerApiServlet extends HttpServlet {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1, projectId);
                     ps.setString(2, guideId);
-                    ResultSet rs = ps.executeQuery();
-                    while (rs.next()) orderedIds.add(rs.getInt("id"));
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) orderedIds.add(rs.getInt("id"));
+                    }
                 }
 
                 // Remove and re-insert at new position
@@ -748,8 +755,9 @@ public class GuidePlannerApiServlet extends HttpServlet {
                 try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT COALESCE(MAX(sort_order), -1) FROM guide_tasks WHERE project_id = ?")) {
                     ps.setInt(1, projectId);
-                    ResultSet rs = ps.executeQuery();
-                    if (rs.next()) maxSort = rs.getInt(1);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) maxSort = rs.getInt(1);
+                    }
                 }
 
                 for (String taskJson : taskObjects) {
@@ -774,24 +782,25 @@ public class GuidePlannerApiServlet extends HttpServlet {
                                 "SELECT id FROM guide_tasks WHERE project_id = ? AND sv_id = ?")) {
                             check.setInt(1, projectId);
                             check.setString(2, svId);
-                            ResultSet rs = check.executeQuery();
-                            if (rs.next()) {
-                                // Update existing
-                                int existingId = rs.getInt("id");
-                                try (PreparedStatement upd = conn.prepareStatement(
-                                        "UPDATE guide_tasks SET namn = ?, description = ?, en_id = ?, " +
-                                        "no_id = ?, task_type = ?, assignee = ? WHERE id = ?")) {
-                                    upd.setString(1, namn.isEmpty() ? null : namn);
-                                    upd.setString(2, description);
-                                    upd.setString(3, enId);
-                                    upd.setString(4, noId);
-                                    upd.setString(5, taskType);
-                                    upd.setString(6, assignee);
-                                    upd.setInt(7, existingId);
-                                    upd.executeUpdate();
+                            try (ResultSet rs = check.executeQuery()) {
+                                if (rs.next()) {
+                                    // Update existing
+                                    int existingId = rs.getInt("id");
+                                    try (PreparedStatement upd = conn.prepareStatement(
+                                            "UPDATE guide_tasks SET namn = ?, description = ?, en_id = ?, " +
+                                            "no_id = ?, task_type = ?, assignee = ? WHERE id = ?")) {
+                                        upd.setString(1, namn.isEmpty() ? null : namn);
+                                        upd.setString(2, description);
+                                        upd.setString(3, enId);
+                                        upd.setString(4, noId);
+                                        upd.setString(5, taskType);
+                                        upd.setString(6, assignee);
+                                        upd.setInt(7, existingId);
+                                        upd.executeUpdate();
+                                    }
+                                    imported++;
+                                    continue;
                                 }
-                                imported++;
-                                continue;
                             }
                         }
                     }
@@ -853,17 +862,18 @@ public class GuidePlannerApiServlet extends HttpServlet {
              PreparedStatement ps = conn.prepareStatement(
                  "SELECT assignee_name FROM guide_project_assignees WHERE project_id = ? ORDER BY assignee_name")) {
             ps.setInt(1, projectId);
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            StringBuilder json = new StringBuilder("[");
-            boolean first = true;
-            while (rs.next()) {
-                if (!first) json.append(",");
-                first = false;
-                json.append(JsonUtil.quote(rs.getString("assignee_name")));
+                StringBuilder json = new StringBuilder("[");
+                boolean first = true;
+                while (rs.next()) {
+                    if (!first) json.append(",");
+                    first = false;
+                    json.append(JsonUtil.quote(rs.getString("assignee_name")));
+                }
+                json.append("]");
+                resp.getWriter().write(json.toString());
             }
-            json.append("]");
-            resp.getWriter().write(json.toString());
         } catch (SQLException e) {
             log.error("Failed to list assignees", e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

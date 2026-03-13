@@ -67,8 +67,8 @@ public class UserManageServlet extends HttpServlet {
         String sql = "SELECT id, username, full_name, email, profile_picture_url, last_login, created_at " +
                      "FROM users WHERE is_active = 1 ORDER BY full_name, username";
 
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Map<String, String> u = new HashMap<>();
                 u.put("id", String.valueOf(rs.getInt("id")));
@@ -95,8 +95,8 @@ public class UserManageServlet extends HttpServlet {
                      "JOIN `groups` g ON ug.group_id = g.id " +
                      "ORDER BY g.name";
 
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 int userId = rs.getInt("user_id");
                 String groupName = rs.getString("name");

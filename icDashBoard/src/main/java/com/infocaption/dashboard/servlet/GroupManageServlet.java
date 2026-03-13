@@ -54,36 +54,37 @@ public class GroupManageServlet extends HttpServlet {
                          "FROM `groups` g ORDER BY g.name";
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    Group g = new Group();
-                    g.setId(rs.getInt("id"));
-                    g.setName(rs.getString("name"));
-                    g.setIcon(rs.getString("icon"));
-                    g.setDescription(rs.getString("description"));
-                    g.setHidden(rs.getBoolean("is_hidden"));
-                    g.setCreatedBy(rs.getObject("created_by") != null ? rs.getInt("created_by") : null);
-                    g.setCreatedAt(rs.getTimestamp("created_at"));
-                    g.setMemberCount(rs.getInt("member_count"));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Group g = new Group();
+                        g.setId(rs.getInt("id"));
+                        g.setName(rs.getString("name"));
+                        g.setIcon(rs.getString("icon"));
+                        g.setDescription(rs.getString("description"));
+                        g.setHidden(rs.getBoolean("is_hidden"));
+                        g.setCreatedBy(rs.getObject("created_by") != null ? rs.getInt("created_by") : null);
+                        g.setCreatedAt(rs.getTimestamp("created_at"));
+                        g.setMemberCount(rs.getInt("member_count"));
 
-                    boolean isMember = userGroupIds.contains(g.getId());
-                    boolean isDefault = (g.getId() == allaGroupId);
+                        boolean isMember = userGroupIds.contains(g.getId());
+                        boolean isDefault = (g.getId() == allaGroupId);
 
-                    if (isDefault) {
-                        isMember = true;
-                    }
+                        if (isDefault) {
+                            isMember = true;
+                        }
 
-                    g.setMember(isMember);
+                        g.setMember(isMember);
 
-                    // Hidden groups only visible to members
-                    if (g.isHidden() && !isMember) {
-                        continue;
-                    }
+                        // Hidden groups only visible to members
+                        if (g.isHidden() && !isMember) {
+                            continue;
+                        }
 
-                    if (isMember) {
-                        myGroups.add(g);
-                    } else {
-                        visibleGroups.add(g);
+                        if (isMember) {
+                            myGroups.add(g);
+                        } else {
+                            visibleGroups.add(g);
+                        }
                     }
                 }
             }
@@ -247,14 +248,15 @@ public class GroupManageServlet extends HttpServlet {
                      "FROM user_groups ug JOIN users u ON ug.user_id = u.id " +
                      "WHERE u.is_active = 1 ORDER BY u.full_name";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int groupId = rs.getInt("group_id");
-                Map<String, String> member = new HashMap<>();
-                member.put("id", String.valueOf(rs.getInt("id")));
-                member.put("fullName", rs.getString("full_name"));
-                member.put("email", rs.getString("email"));
-                map.computeIfAbsent(groupId, k -> new ArrayList<>()).add(member);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int groupId = rs.getInt("group_id");
+                    Map<String, String> member = new HashMap<>();
+                    member.put("id", String.valueOf(rs.getInt("id")));
+                    member.put("fullName", rs.getString("full_name"));
+                    member.put("email", rs.getString("email"));
+                    map.computeIfAbsent(groupId, k -> new ArrayList<>()).add(member);
+                }
             }
         }
         return map;
@@ -264,13 +266,14 @@ public class GroupManageServlet extends HttpServlet {
         List<Map<String, String>> users = new ArrayList<>();
         String sql = "SELECT id, full_name, email FROM users WHERE is_active = 1 ORDER BY full_name";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Map<String, String> u = new HashMap<>();
-                u.put("id", String.valueOf(rs.getInt("id")));
-                u.put("fullName", rs.getString("full_name"));
-                u.put("email", rs.getString("email"));
-                users.add(u);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, String> u = new HashMap<>();
+                    u.put("id", String.valueOf(rs.getInt("id")));
+                    u.put("fullName", rs.getString("full_name"));
+                    u.put("email", rs.getString("email"));
+                    users.add(u);
+                }
             }
         }
         return users;

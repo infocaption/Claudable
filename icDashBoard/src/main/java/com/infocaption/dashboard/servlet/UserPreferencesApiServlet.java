@@ -133,15 +133,16 @@ public class UserPreferencesApiServlet extends HttpServlet {
                 "SELECT pref_value FROM user_preferences WHERE user_id = ? AND pref_key = ?")) {
             ps.setInt(1, userId);
             ps.setString(2, key);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                String val = rs.getString("pref_value");
-                // Decrypt sensitive values
-                if (isSensitiveKey(key)) val = CryptoUtil.decrypt(val);
-                resp.getWriter().write("{\"key\":" + JsonUtil.quote(key) + ",\"value\":" + JsonUtil.quote(val) + "}");
-            } else {
-                resp.setStatus(404);
-                resp.getWriter().write("{\"error\":\"Not found\"}");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String val = rs.getString("pref_value");
+                    // Decrypt sensitive values
+                    if (isSensitiveKey(key)) val = CryptoUtil.decrypt(val);
+                    resp.getWriter().write("{\"key\":" + JsonUtil.quote(key) + ",\"value\":" + JsonUtil.quote(val) + "}");
+                } else {
+                    resp.setStatus(404);
+                    resp.getWriter().write("{\"error\":\"Not found\"}");
+                }
             }
         } catch (SQLException e) {
             resp.setStatus(500);
@@ -154,22 +155,23 @@ public class UserPreferencesApiServlet extends HttpServlet {
              PreparedStatement ps = conn.prepareStatement(
                 "SELECT pref_key, pref_value FROM user_preferences WHERE user_id = ? ORDER BY pref_key")) {
             ps.setInt(1, userId);
-            ResultSet rs = ps.executeQuery();
-            StringBuilder sb = new StringBuilder("{");
-            boolean first = true;
-            while (rs.next()) {
-                if (!first) sb.append(",");
-                first = false;
-                String prefKey = rs.getString("pref_key");
-                String prefValue = rs.getString("pref_value");
-                // Decrypt sensitive values
-                if (isSensitiveKey(prefKey)) prefValue = CryptoUtil.decrypt(prefValue);
-                sb.append(JsonUtil.quote(prefKey));
-                sb.append(":");
-                sb.append(JsonUtil.quote(prefValue));
+            try (ResultSet rs = ps.executeQuery()) {
+                StringBuilder sb = new StringBuilder("{");
+                boolean first = true;
+                while (rs.next()) {
+                    if (!first) sb.append(",");
+                    first = false;
+                    String prefKey = rs.getString("pref_key");
+                    String prefValue = rs.getString("pref_value");
+                    // Decrypt sensitive values
+                    if (isSensitiveKey(prefKey)) prefValue = CryptoUtil.decrypt(prefValue);
+                    sb.append(JsonUtil.quote(prefKey));
+                    sb.append(":");
+                    sb.append(JsonUtil.quote(prefValue));
+                }
+                sb.append("}");
+                resp.getWriter().write(sb.toString());
             }
-            sb.append("}");
-            resp.getWriter().write(sb.toString());
         } catch (SQLException e) {
             resp.setStatus(500);
             resp.getWriter().write("{\"error\":\"Database error\"}");

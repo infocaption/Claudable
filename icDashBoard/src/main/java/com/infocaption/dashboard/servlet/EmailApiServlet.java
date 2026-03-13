@@ -190,27 +190,28 @@ public class EmailApiServlet extends HttpServlet {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, user.getId());
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            StringBuilder json = new StringBuilder("[");
-            boolean first = true;
+                StringBuilder json = new StringBuilder("[");
+                boolean first = true;
 
-            while (rs.next()) {
-                if (!first) json.append(",");
-                first = false;
+                while (rs.next()) {
+                    if (!first) json.append(",");
+                    first = false;
 
-                json.append("{");
-                json.append("\"id\":").append(rs.getInt("id")).append(",");
-                json.append("\"name\":").append(JsonUtil.quote(rs.getString("name"))).append(",");
-                json.append("\"subject\":").append(JsonUtil.quote(rs.getString("subject"))).append(",");
-                json.append("\"bodyHtml\":").append(JsonUtil.quote(rs.getString("body_html"))).append(",");
-                json.append("\"createdAt\":").append(JsonUtil.quote(rs.getTimestamp("created_at").toString())).append(",");
-                json.append("\"updatedAt\":").append(JsonUtil.quote(rs.getTimestamp("updated_at").toString()));
-                json.append("}");
+                    json.append("{");
+                    json.append("\"id\":").append(rs.getInt("id")).append(",");
+                    json.append("\"name\":").append(JsonUtil.quote(rs.getString("name"))).append(",");
+                    json.append("\"subject\":").append(JsonUtil.quote(rs.getString("subject"))).append(",");
+                    json.append("\"bodyHtml\":").append(JsonUtil.quote(rs.getString("body_html"))).append(",");
+                    json.append("\"createdAt\":").append(JsonUtil.quote(rs.getTimestamp("created_at").toString())).append(",");
+                    json.append("\"updatedAt\":").append(JsonUtil.quote(rs.getTimestamp("updated_at").toString()));
+                    json.append("}");
+                }
+
+                json.append("]");
+                resp.getWriter().write(json.toString());
             }
-
-            json.append("]");
-            resp.getWriter().write(json.toString());
 
         } catch (SQLException e) {
             log.error("Failed to list email templates", e);
@@ -243,10 +244,11 @@ public class EmailApiServlet extends HttpServlet {
             ps.setString(4, bodyHtml);
             ps.executeUpdate();
 
-            ResultSet keys = ps.getGeneratedKeys();
             int templateId = 0;
-            if (keys.next()) {
-                templateId = keys.getInt(1);
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    templateId = keys.getInt(1);
+                }
             }
 
             resp.setStatus(HttpServletResponse.SC_CREATED);
@@ -404,9 +406,10 @@ public class EmailApiServlet extends HttpServlet {
                     ps.setInt(5, validEmails.size());
                     ps.executeUpdate();
 
-                    ResultSet keys = ps.getGeneratedKeys();
-                    keys.next();
-                    sendId = keys.getInt(1);
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        keys.next();
+                        sendId = keys.getInt(1);
+                    }
                 }
 
                 // 2. Insert all recipients
@@ -545,36 +548,37 @@ public class EmailApiServlet extends HttpServlet {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, user.getId());
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            StringBuilder json = new StringBuilder("[");
-            boolean first = true;
+                StringBuilder json = new StringBuilder("[");
+                boolean first = true;
 
-            while (rs.next()) {
-                if (!first) json.append(",");
-                first = false;
+                while (rs.next()) {
+                    if (!first) json.append(",");
+                    first = false;
 
-                json.append("{");
-                json.append("\"id\":").append(rs.getInt("id")).append(",");
-                json.append("\"subject\":").append(JsonUtil.quote(rs.getString("subject"))).append(",");
-                json.append("\"recipientCount\":").append(rs.getInt("recipient_count")).append(",");
-                json.append("\"sentCount\":").append(rs.getInt("sent_count")).append(",");
-                json.append("\"failedCount\":").append(rs.getInt("failed_count")).append(",");
-                json.append("\"status\":").append(JsonUtil.quote(rs.getString("status"))).append(",");
-                json.append("\"createdAt\":").append(JsonUtil.quote(rs.getTimestamp("created_at").toString()));
+                    json.append("{");
+                    json.append("\"id\":").append(rs.getInt("id")).append(",");
+                    json.append("\"subject\":").append(JsonUtil.quote(rs.getString("subject"))).append(",");
+                    json.append("\"recipientCount\":").append(rs.getInt("recipient_count")).append(",");
+                    json.append("\"sentCount\":").append(rs.getInt("sent_count")).append(",");
+                    json.append("\"failedCount\":").append(rs.getInt("failed_count")).append(",");
+                    json.append("\"status\":").append(JsonUtil.quote(rs.getString("status"))).append(",");
+                    json.append("\"createdAt\":").append(JsonUtil.quote(rs.getTimestamp("created_at").toString()));
 
-                Timestamp completedAt = rs.getTimestamp("completed_at");
-                if (completedAt != null) {
-                    json.append(",\"completedAt\":").append(JsonUtil.quote(completedAt.toString()));
-                } else {
-                    json.append(",\"completedAt\":null");
+                    Timestamp completedAt = rs.getTimestamp("completed_at");
+                    if (completedAt != null) {
+                        json.append(",\"completedAt\":").append(JsonUtil.quote(completedAt.toString()));
+                    } else {
+                        json.append(",\"completedAt\":null");
+                    }
+
+                    json.append("}");
                 }
 
-                json.append("}");
+                json.append("]");
+                resp.getWriter().write(json.toString());
             }
-
-            json.append("]");
-            resp.getWriter().write(json.toString());
 
         } catch (SQLException e) {
             log.error("Failed to load email send history", e);
@@ -602,7 +606,7 @@ public class EmailApiServlet extends HttpServlet {
             try (PreparedStatement ps = conn.prepareStatement(sqlSend)) {
                 ps.setInt(1, sendId);
                 ps.setInt(2, user.getId());
-                ResultSet rs = ps.executeQuery();
+                try (ResultSet rs = ps.executeQuery()) {
 
                 if (!rs.next()) {
                     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -632,33 +636,35 @@ public class EmailApiServlet extends HttpServlet {
                 String sqlRecip = "SELECT email, status, error_message, sent_at FROM email_recipients WHERE send_id = ? ORDER BY id";
                 try (PreparedStatement psR = conn.prepareStatement(sqlRecip)) {
                     psR.setInt(1, sendId);
-                    ResultSet rsR = psR.executeQuery();
-                    boolean firstR = true;
+                    try (ResultSet rsR = psR.executeQuery()) {
+                        boolean firstR = true;
 
-                    while (rsR.next()) {
-                        if (!firstR) json.append(",");
-                        firstR = false;
+                        while (rsR.next()) {
+                            if (!firstR) json.append(",");
+                            firstR = false;
 
-                        json.append("{");
-                        json.append("\"email\":").append(JsonUtil.quote(rsR.getString("email"))).append(",");
-                        json.append("\"status\":").append(JsonUtil.quote(rsR.getString("status")));
+                            json.append("{");
+                            json.append("\"email\":").append(JsonUtil.quote(rsR.getString("email"))).append(",");
+                            json.append("\"status\":").append(JsonUtil.quote(rsR.getString("status")));
 
-                        String errorMsg = rsR.getString("error_message");
-                        if (errorMsg != null) {
-                            json.append(",\"error\":").append(JsonUtil.quote(errorMsg));
+                            String errorMsg = rsR.getString("error_message");
+                            if (errorMsg != null) {
+                                json.append(",\"error\":").append(JsonUtil.quote(errorMsg));
+                            }
+
+                            Timestamp sentAt = rsR.getTimestamp("sent_at");
+                            if (sentAt != null) {
+                                json.append(",\"sentAt\":").append(JsonUtil.quote(sentAt.toString()));
+                            }
+
+                            json.append("}");
                         }
-
-                        Timestamp sentAt = rsR.getTimestamp("sent_at");
-                        if (sentAt != null) {
-                            json.append(",\"sentAt\":").append(JsonUtil.quote(sentAt.toString()));
-                        }
-
-                        json.append("}");
                     }
                 }
 
                 json.append("]}");
                 resp.getWriter().write(json.toString());
+                }
             }
 
         } catch (SQLException e) {

@@ -400,8 +400,10 @@ public class AdminApiServlet extends HttpServlet {
                     ps.setInt(6, admin.getId());
                     ps.executeUpdate();
 
-                    ResultSet keys = ps.getGeneratedKeys();
-                    int newId = keys.next() ? keys.getInt(1) : 0;
+                    int newId = 0;
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        newId = keys.next() ? keys.getInt(1) : 0;
+                    }
 
                     AuditUtil.logEvent(AuditUtil.GROUP_CHANGE, admin.getId(), req, "group", String.valueOf(newId),
                             "Created group: " + name.trim());
@@ -871,8 +873,10 @@ public class AdminApiServlet extends HttpServlet {
                     ps.setInt(9, admin.getId());
                     ps.executeUpdate();
 
-                    ResultSet keys = ps.getGeneratedKeys();
-                    int newId = keys.next() ? keys.getInt(1) : 0;
+                    int newId = 0;
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        newId = keys.next() ? keys.getInt(1) : 0;
+                    }
 
                     AuditUtil.logEvent(AuditUtil.MODULE_CHANGE, admin.getId(), req, "widget", String.valueOf(newId),
                             "Created widget: " + name.trim());

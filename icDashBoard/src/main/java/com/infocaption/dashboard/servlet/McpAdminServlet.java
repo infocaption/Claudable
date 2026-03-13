@@ -284,8 +284,10 @@ public class McpAdminServlet extends HttpServlet {
                     ps.setInt(10, admin.getId());
                     ps.executeUpdate();
 
-                    ResultSet keys = ps.getGeneratedKeys();
-                    int newId = keys.next() ? keys.getInt(1) : 0;
+                    int newId = 0;
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        newId = keys.next() ? keys.getInt(1) : 0;
+                    }
 
                     McpClientManager.getInstance().reloadServerConfig(newId);
                     resp.getWriter().write("{\"success\":true,\"id\":" + newId + "}");

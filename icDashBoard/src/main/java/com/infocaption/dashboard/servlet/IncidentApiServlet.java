@@ -241,8 +241,9 @@ public class IncidentApiServlet extends HttpServlet {
                 for (int i = 0; i < params.size(); i++) {
                     setParam(ps, i + 1, params.get(i));
                 }
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) total = rs.getInt(1);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) total = rs.getInt(1);
+                }
             }
 
             StringBuilder json = new StringBuilder("{\"incidents\":[");
@@ -252,13 +253,14 @@ public class IncidentApiServlet extends HttpServlet {
                 }
                 ps.setInt(params.size() + 1, limit);
                 ps.setInt(params.size() + 2, offset);
-                ResultSet rs = ps.executeQuery();
+                try (ResultSet rs = ps.executeQuery()) {
 
-                boolean first = true;
-                while (rs.next()) {
-                    if (!first) json.append(",");
-                    first = false;
-                    appendIncidentJson(json, rs);
+                    boolean first = true;
+                    while (rs.next()) {
+                        if (!first) json.append(",");
+                        first = false;
+                        appendIncidentJson(json, rs);
+                    }
                 }
             }
 
@@ -383,12 +385,13 @@ public class IncidentApiServlet extends HttpServlet {
             json.append("\"servers\":[");
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT DISTINCT server FROM incidents WHERE server IS NOT NULL ORDER BY server")) {
-                ResultSet rs = ps.executeQuery();
-                boolean first = true;
-                while (rs.next()) {
-                    if (!first) json.append(",");
-                    first = false;
-                    json.append(JsonUtil.quote(rs.getString("server")));
+                try (ResultSet rs = ps.executeQuery()) {
+                    boolean first = true;
+                    while (rs.next()) {
+                        if (!first) json.append(",");
+                        first = false;
+                        json.append(JsonUtil.quote(rs.getString("server")));
+                    }
                 }
             }
             json.append("],");
@@ -400,15 +403,16 @@ public class IncidentApiServlet extends HttpServlet {
                     "FROM incidents i LEFT JOIN users u ON i.reporter_user_id = u.id " +
                     "WHERE i.reporter_name IS NOT NULL OR i.reporter_user_id IS NOT NULL " +
                     "ORDER BY name")) {
-                ResultSet rs = ps.executeQuery();
-                boolean first = true;
-                while (rs.next()) {
-                    if (!first) json.append(",");
-                    first = false;
-                    json.append("{\"name\":").append(JsonUtil.quote(rs.getString("name")));
-                    int uid = rs.getInt("reporter_user_id");
-                    json.append(",\"userId\":").append(rs.wasNull() ? "null" : String.valueOf(uid));
-                    json.append("}");
+                try (ResultSet rs = ps.executeQuery()) {
+                    boolean first = true;
+                    while (rs.next()) {
+                        if (!first) json.append(",");
+                        first = false;
+                        json.append("{\"name\":").append(JsonUtil.quote(rs.getString("name")));
+                        int uid = rs.getInt("reporter_user_id");
+                        json.append(",\"userId\":").append(rs.wasNull() ? "null" : String.valueOf(uid));
+                        json.append("}");
+                    }
                 }
             }
             json.append("],");
@@ -469,9 +473,10 @@ public class IncidentApiServlet extends HttpServlet {
             ps.setInt(9, user.getId());
             ps.executeUpdate();
 
-            ResultSet rs = ps.getGeneratedKeys();
             int id = 0;
-            if (rs.next()) id = rs.getInt(1);
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) id = rs.getInt(1);
+            }
 
             resp.getWriter().write("{\"id\":" + id + "}");
         } catch (SQLException e) {

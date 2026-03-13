@@ -56,6 +56,7 @@ public class CustomerStatsApiServlet extends HttpServlet {
                 "  coach_email     VARCHAR(255) NULL COMMENT 'Kundcoach epost'," +
                 "  track           VARCHAR(100) NULL COMMENT 'Engagement track: map,train,assist,guide'," +
                 "  is_active       TINYINT(1)   NOT NULL DEFAULT 1," +
+                "  is_excluded     TINYINT(1)   NOT NULL DEFAULT 0," +
                 "  first_seen      DATE         NOT NULL," +
                 "  last_seen       DATE         NOT NULL," +
                 "  created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP," +

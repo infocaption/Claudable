@@ -68,7 +68,7 @@ public class ModuleSpecServlet extends HttpServlet {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, moduleId);
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
             if (!rs.next()) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -117,6 +117,7 @@ public class ModuleSpecServlet extends HttpServlet {
             PrintWriter out = resp.getWriter();
             out.write(md.toString());
             out.flush();
+            }
 
         } catch (SQLException e) {
             log.error("Failed to load module spec for moduleId={}", moduleId, e);

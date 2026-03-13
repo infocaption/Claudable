@@ -37,9 +37,10 @@ public class GroupUtil {
         String sql = "SELECT group_id FROM user_groups WHERE user_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                groupIds.add(rs.getInt("group_id"));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    groupIds.add(rs.getInt("group_id"));
+                }
             }
         }
 
@@ -68,9 +69,10 @@ public class GroupUtil {
     public static int getAllaGroupId(Connection conn) throws SQLException {
         String sql = "SELECT id FROM `groups` WHERE name = 'Alla' LIMIT 1";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
             }
         }
         return -1;

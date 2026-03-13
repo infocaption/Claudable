@@ -93,50 +93,51 @@ public class CertificateApiServlet extends HttpServlet {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ResultSet rs = ps.executeQuery();
-            StringBuilder json = new StringBuilder("[");
-            boolean first = true;
+            try (ResultSet rs = ps.executeQuery()) {
+                StringBuilder json = new StringBuilder("[");
+                boolean first = true;
 
-            while (rs.next()) {
-                if (!first) json.append(",");
-                first = false;
+                while (rs.next()) {
+                    if (!first) json.append(",");
+                    first = false;
 
-                int daysUntilExpiry = rs.getInt("days_until_expiry");
-                String status;
-                if (daysUntilExpiry <= 0) {
-                    status = "expired";
-                } else if (daysUntilExpiry <= 30) {
-                    status = "critical";
-                } else if (daysUntilExpiry <= 60) {
-                    status = "warning";
-                } else {
-                    status = "ok";
+                    int daysUntilExpiry = rs.getInt("days_until_expiry");
+                    String status;
+                    if (daysUntilExpiry <= 0) {
+                        status = "expired";
+                    } else if (daysUntilExpiry <= 30) {
+                        status = "critical";
+                    } else if (daysUntilExpiry <= 60) {
+                        status = "warning";
+                    } else {
+                        status = "ok";
+                    }
+
+                    Date validFrom = rs.getDate("valid_from");
+                    Date validTo = rs.getDate("valid_to");
+                    Timestamp lastChecked = rs.getTimestamp("last_checked");
+
+                    json.append("{");
+                    json.append("\"id\":").append(rs.getInt("id")).append(",");
+                    json.append("\"serverIp\":").append(JsonUtil.quote(rs.getString("server_ip"))).append(",");
+                    json.append("\"keystorePath\":").append(JsonUtil.quote(rs.getString("keystore_path"))).append(",");
+                    json.append("\"hostnamePattern\":").append(JsonUtil.quote(rs.getString("hostname_pattern"))).append(",");
+                    json.append("\"subject\":").append(JsonUtil.quote(rs.getString("subject"))).append(",");
+                    json.append("\"issuer\":").append(JsonUtil.quote(rs.getString("issuer"))).append(",");
+                    json.append("\"serialNumber\":").append(JsonUtil.quote(rs.getString("serial_number"))).append(",");
+                    json.append("\"validFrom\":").append(JsonUtil.quote(validFrom != null ? validFrom.toString() : null)).append(",");
+                    json.append("\"validTo\":").append(JsonUtil.quote(validTo != null ? validTo.toString() : null)).append(",");
+                    json.append("\"daysUntilExpiry\":").append(daysUntilExpiry).append(",");
+                    json.append("\"status\":").append(JsonUtil.quote(status)).append(",");
+                    json.append("\"lastChecked\":").append(JsonUtil.quote(lastChecked != null ? lastChecked.toString() : null));
+                    json.append("}");
                 }
 
-                Date validFrom = rs.getDate("valid_from");
-                Date validTo = rs.getDate("valid_to");
-                Timestamp lastChecked = rs.getTimestamp("last_checked");
-
-                json.append("{");
-                json.append("\"id\":").append(rs.getInt("id")).append(",");
-                json.append("\"serverIp\":").append(JsonUtil.quote(rs.getString("server_ip"))).append(",");
-                json.append("\"keystorePath\":").append(JsonUtil.quote(rs.getString("keystore_path"))).append(",");
-                json.append("\"hostnamePattern\":").append(JsonUtil.quote(rs.getString("hostname_pattern"))).append(",");
-                json.append("\"subject\":").append(JsonUtil.quote(rs.getString("subject"))).append(",");
-                json.append("\"issuer\":").append(JsonUtil.quote(rs.getString("issuer"))).append(",");
-                json.append("\"serialNumber\":").append(JsonUtil.quote(rs.getString("serial_number"))).append(",");
-                json.append("\"validFrom\":").append(JsonUtil.quote(validFrom != null ? validFrom.toString() : null)).append(",");
-                json.append("\"validTo\":").append(JsonUtil.quote(validTo != null ? validTo.toString() : null)).append(",");
-                json.append("\"daysUntilExpiry\":").append(daysUntilExpiry).append(",");
-                json.append("\"status\":").append(JsonUtil.quote(status)).append(",");
-                json.append("\"lastChecked\":").append(JsonUtil.quote(lastChecked != null ? lastChecked.toString() : null));
-                json.append("}");
+                json.append("]");
+                PrintWriter out = resp.getWriter();
+                out.write(json.toString());
+                out.flush();
             }
-
-            json.append("]");
-            PrintWriter out = resp.getWriter();
-            out.write(json.toString());
-            out.flush();
 
         } catch (SQLException e) {
             log.error("Failed to list certificates", e);

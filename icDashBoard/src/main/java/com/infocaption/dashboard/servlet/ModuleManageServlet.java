@@ -74,14 +74,15 @@ public class ModuleManageServlet extends HttpServlet {
             Map<Integer, List<Integer>> moduleGroupIds = loadModuleGroupIds(conn);
             Map<Integer, List<String>> moduleGroupNames = loadModuleGroupNames(conn);
 
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Module m = mapModule(rs);
-                // Attach group info as request-scoped data
-                if ("system".equals(m.getModuleType())) {
-                    systemModules.add(m);
-                } else if (m.getOwnerUserId() != null && m.getOwnerUserId() == userId) {
-                    userModules.add(m);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Module m = mapModule(rs);
+                    // Attach group info as request-scoped data
+                    if ("system".equals(m.getModuleType())) {
+                        systemModules.add(m);
+                    } else if (m.getOwnerUserId() != null && m.getOwnerUserId() == userId) {
+                        userModules.add(m);
+                    }
                 }
             }
 
@@ -192,15 +193,16 @@ public class ModuleManageServlet extends HttpServlet {
             String checkSql = "SELECT COUNT(*) FROM module_groups WHERE module_id = ?";
             try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
                 checkPs.setInt(1, module.getId());
-                ResultSet rs = checkPs.executeQuery();
-                if (rs.next() && rs.getInt(1) == 0) {
-                    int allaId = GroupUtil.getAllaGroupId(conn);
-                    if (allaId > 0) {
-                        try (PreparedStatement insertPs = conn.prepareStatement(
-                                "INSERT INTO module_groups (module_id, group_id) VALUES (?, ?)")) {
-                            insertPs.setInt(1, module.getId());
-                            insertPs.setInt(2, allaId);
-                            insertPs.executeUpdate();
+                try (ResultSet rs = checkPs.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        int allaId = GroupUtil.getAllaGroupId(conn);
+                        if (allaId > 0) {
+                            try (PreparedStatement insertPs = conn.prepareStatement(
+                                    "INSERT INTO module_groups (module_id, group_id) VALUES (?, ?)")) {
+                                insertPs.setInt(1, module.getId());
+                                insertPs.setInt(2, allaId);
+                                insertPs.executeUpdate();
+                            }
                         }
                     }
                 }
@@ -457,11 +459,12 @@ public class ModuleManageServlet extends HttpServlet {
                 "category, entry_file, directory_name, badge, version, ai_spec_text, is_active, " +
                 "created_at, updated_at FROM modules WHERE id = ?")) {
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return mapModule(rs);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapModule(rs);
+                }
+                return null;
             }
-            return null;
         }
     }
 
@@ -474,16 +477,17 @@ public class ModuleManageServlet extends HttpServlet {
                      "(SELECT COUNT(*) FROM user_groups ug WHERE ug.group_id = g.id) as member_count " +
                      "FROM `groups` g ORDER BY g.name";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Group g = new Group();
-                g.setId(rs.getInt("id"));
-                g.setName(rs.getString("name"));
-                g.setIcon(rs.getString("icon"));
-                g.setDescription(rs.getString("description"));
-                g.setHidden(rs.getBoolean("is_hidden"));
-                g.setMemberCount(rs.getInt("member_count"));
-                groups.add(g);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Group g = new Group();
+                    g.setId(rs.getInt("id"));
+                    g.setName(rs.getString("name"));
+                    g.setIcon(rs.getString("icon"));
+                    g.setDescription(rs.getString("description"));
+                    g.setHidden(rs.getBoolean("is_hidden"));
+                    g.setMemberCount(rs.getInt("member_count"));
+                    groups.add(g);
+                }
             }
         }
         return groups;
@@ -496,11 +500,12 @@ public class ModuleManageServlet extends HttpServlet {
         Map<Integer, List<Integer>> map = new HashMap<>();
         String sql = "SELECT module_id, group_id FROM module_groups";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int moduleId = rs.getInt("module_id");
-                int groupId = rs.getInt("group_id");
-                map.computeIfAbsent(moduleId, k -> new ArrayList<>()).add(groupId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int moduleId = rs.getInt("module_id");
+                    int groupId = rs.getInt("group_id");
+                    map.computeIfAbsent(moduleId, k -> new ArrayList<>()).add(groupId);
+                }
             }
         }
         return map;
@@ -514,11 +519,12 @@ public class ModuleManageServlet extends HttpServlet {
         String sql = "SELECT mg.module_id, g.name FROM module_groups mg " +
                      "JOIN `groups` g ON mg.group_id = g.id ORDER BY g.name";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int moduleId = rs.getInt("module_id");
-                String name = rs.getString("name");
-                map.computeIfAbsent(moduleId, k -> new ArrayList<>()).add(name);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int moduleId = rs.getInt("module_id");
+                    String name = rs.getString("name");
+                    map.computeIfAbsent(moduleId, k -> new ArrayList<>()).add(name);
+                }
             }
         }
         return map;

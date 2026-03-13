@@ -351,8 +351,10 @@ public class KbAdminServlet extends HttpServlet {
             ps.setInt(6, admin.getId());
             ps.executeUpdate();
 
-            ResultSet keys = ps.getGeneratedKeys();
-            int newId = keys.next() ? keys.getInt(1) : 0;
+            int newId = 0;
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                newId = keys.next() ? keys.getInt(1) : 0;
+            }
 
             resp.getWriter().write("{\"success\":true,\"id\":" + newId + "}");
 
@@ -627,8 +629,10 @@ public class KbAdminServlet extends HttpServlet {
             ps.setInt(4, admin.getId());
             ps.executeUpdate();
 
-            ResultSet keys = ps.getGeneratedKeys();
-            int newId = keys.next() ? keys.getInt(1) : 0;
+            int newId = 0;
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                newId = keys.next() ? keys.getInt(1) : 0;
+            }
 
             resp.getWriter().write("{\"success\":true,\"id\":" + newId + "}");
 

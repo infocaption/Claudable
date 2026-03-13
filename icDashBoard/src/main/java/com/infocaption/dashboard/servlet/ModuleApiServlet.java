@@ -95,7 +95,7 @@ public class ModuleApiServlet extends HttpServlet {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, userId);
                 ps.setInt(2, userId);
-                ResultSet rs = ps.executeQuery();
+                try (ResultSet rs = ps.executeQuery()) {
 
                 StringBuilder json = new StringBuilder("[");
                 boolean first = true;
@@ -153,6 +153,7 @@ public class ModuleApiServlet extends HttpServlet {
                 PrintWriter out = resp.getWriter();
                 out.write(json.toString());
                 out.flush();
+                }
             }
 
         } catch (SQLException e) {
@@ -170,11 +171,12 @@ public class ModuleApiServlet extends HttpServlet {
         String sql = "SELECT mg.module_id, g.name FROM module_groups mg " +
                      "JOIN `groups` g ON mg.group_id = g.id ORDER BY g.name";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int moduleId = rs.getInt("module_id");
-                String groupName = rs.getString("name");
-                map.computeIfAbsent(moduleId, k -> new ArrayList<>()).add(groupName);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int moduleId = rs.getInt("module_id");
+                    String groupName = rs.getString("name");
+                    map.computeIfAbsent(moduleId, k -> new ArrayList<>()).add(groupName);
+                }
             }
         }
         return map;

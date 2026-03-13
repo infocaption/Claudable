@@ -102,32 +102,33 @@ public class WidgetApiServlet extends HttpServlet {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            StringBuilder json = new StringBuilder("[");
-            boolean first = true;
+                StringBuilder json = new StringBuilder("[");
+                boolean first = true;
 
-            while (rs.next()) {
-                if (!first) json.append(",");
-                first = false;
+                while (rs.next()) {
+                    if (!first) json.append(",");
+                    first = false;
 
-                json.append("{");
-                json.append("\"id\":").append(rs.getInt("id")).append(",");
-                json.append("\"name\":").append(JsonUtil.quote(rs.getString("name"))).append(",");
-                json.append("\"icon\":").append(JsonUtil.quote(rs.getString("icon"))).append(",");
-                json.append("\"description\":").append(JsonUtil.quote(rs.getString("description"))).append(",");
-                json.append("\"renderKey\":").append(JsonUtil.quote(rs.getString("render_key"))).append(",");
-                json.append("\"customHtml\":").append(JsonUtil.quote(rs.getString("custom_html"))).append(",");
-                json.append("\"customJs\":").append(JsonUtil.quote(rs.getString("custom_js"))).append(",");
-                json.append("\"refreshSeconds\":").append(rs.getInt("refresh_seconds"));
-                json.append("}");
+                    json.append("{");
+                    json.append("\"id\":").append(rs.getInt("id")).append(",");
+                    json.append("\"name\":").append(JsonUtil.quote(rs.getString("name"))).append(",");
+                    json.append("\"icon\":").append(JsonUtil.quote(rs.getString("icon"))).append(",");
+                    json.append("\"description\":").append(JsonUtil.quote(rs.getString("description"))).append(",");
+                    json.append("\"renderKey\":").append(JsonUtil.quote(rs.getString("render_key"))).append(",");
+                    json.append("\"customHtml\":").append(JsonUtil.quote(rs.getString("custom_html"))).append(",");
+                    json.append("\"customJs\":").append(JsonUtil.quote(rs.getString("custom_js"))).append(",");
+                    json.append("\"refreshSeconds\":").append(rs.getInt("refresh_seconds"));
+                    json.append("}");
+                }
+
+                json.append("]");
+
+                PrintWriter out = resp.getWriter();
+                out.write(json.toString());
+                out.flush();
             }
-
-            json.append("]");
-
-            PrintWriter out = resp.getWriter();
-            out.write(json.toString());
-            out.flush();
 
         } catch (SQLException e) {
             log.error("Failed to load widgets for user", e);

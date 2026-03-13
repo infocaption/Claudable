@@ -227,13 +227,14 @@ public class SyncConfigServlet extends HttpServlet {
             ps.setInt(12, admin.getId());
             ps.executeUpdate();
 
-            ResultSet keys = ps.getGeneratedKeys();
-            int newId = keys.next() ? keys.getInt(1) : 0;
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                int newId = keys.next() ? keys.getInt(1) : 0;
 
-            AuditUtil.logEvent(AuditUtil.SYNC_CONFIG_CHANGE, admin.getId(), req, "sync_config", String.valueOf(newId),
-                    "Created sync config: " + name);
+                AuditUtil.logEvent(AuditUtil.SYNC_CONFIG_CHANGE, admin.getId(), req, "sync_config", String.valueOf(newId),
+                        "Created sync config: " + name);
 
-            resp.getWriter().write("{\"success\":true,\"id\":" + newId + "}");
+                resp.getWriter().write("{\"success\":true,\"id\":" + newId + "}");
+            }
 
         } catch (SQLException e) {
             log("Error creating sync config: " + e.getMessage());
@@ -482,34 +483,35 @@ public class SyncConfigServlet extends HttpServlet {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, Integer.parseInt(configIdParam));
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            StringBuilder json = new StringBuilder("[");
-            boolean first = true;
-            while (rs.next()) {
-                if (!first) json.append(",");
-                first = false;
+                StringBuilder json = new StringBuilder("[");
+                boolean first = true;
+                while (rs.next()) {
+                    if (!first) json.append(",");
+                    first = false;
 
-                json.append("{");
-                json.append("\"id\":").append(rs.getLong("id")).append(",");
-                json.append("\"configId\":").append(rs.getInt("config_id")).append(",");
+                    json.append("{");
+                    json.append("\"id\":").append(rs.getLong("id")).append(",");
+                    json.append("\"configId\":").append(rs.getInt("config_id")).append(",");
 
-                Timestamp startedAt = rs.getTimestamp("started_at");
-                json.append("\"startedAt\":").append(JsonUtil.quote(startedAt != null ? startedAt.toString() : null)).append(",");
+                    Timestamp startedAt = rs.getTimestamp("started_at");
+                    json.append("\"startedAt\":").append(JsonUtil.quote(startedAt != null ? startedAt.toString() : null)).append(",");
 
-                Timestamp completedAt = rs.getTimestamp("completed_at");
-                json.append("\"completedAt\":").append(JsonUtil.quote(completedAt != null ? completedAt.toString() : null)).append(",");
+                    Timestamp completedAt = rs.getTimestamp("completed_at");
+                    json.append("\"completedAt\":").append(JsonUtil.quote(completedAt != null ? completedAt.toString() : null)).append(",");
 
-                json.append("\"status\":").append(JsonUtil.quote(rs.getString("status"))).append(",");
-                json.append("\"recordsFetched\":").append(rs.getInt("records_fetched")).append(",");
-                json.append("\"recordsUpserted\":").append(rs.getInt("records_upserted")).append(",");
-                json.append("\"recordsFailed\":").append(rs.getInt("records_failed")).append(",");
-                json.append("\"errorMessage\":").append(JsonUtil.quote(rs.getString("error_message"))).append(",");
-                json.append("\"triggeredByName\":").append(JsonUtil.quote(rs.getString("triggered_by_name")));
-                json.append("}");
+                    json.append("\"status\":").append(JsonUtil.quote(rs.getString("status"))).append(",");
+                    json.append("\"recordsFetched\":").append(rs.getInt("records_fetched")).append(",");
+                    json.append("\"recordsUpserted\":").append(rs.getInt("records_upserted")).append(",");
+                    json.append("\"recordsFailed\":").append(rs.getInt("records_failed")).append(",");
+                    json.append("\"errorMessage\":").append(JsonUtil.quote(rs.getString("error_message"))).append(",");
+                    json.append("\"triggeredByName\":").append(JsonUtil.quote(rs.getString("triggered_by_name")));
+                    json.append("}");
+                }
+                json.append("]");
+                resp.getWriter().write(json.toString());
             }
-            json.append("]");
-            resp.getWriter().write(json.toString());
 
         } catch (SQLException e) {
             log("Error getting sync history: " + e.getMessage());

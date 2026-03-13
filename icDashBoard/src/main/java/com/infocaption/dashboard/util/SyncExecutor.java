@@ -334,14 +334,15 @@ public class SyncExecutor {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, tableName);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                ColumnInfo col = new ColumnInfo();
-                col.name = rs.getString("COLUMN_NAME");
-                col.type = rs.getString("DATA_TYPE");
-                col.nullable = "YES".equals(rs.getString("IS_NULLABLE"));
-                col.isKey = rs.getString("COLUMN_KEY") != null && !rs.getString("COLUMN_KEY").isEmpty();
-                columns.add(col);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ColumnInfo col = new ColumnInfo();
+                    col.name = rs.getString("COLUMN_NAME");
+                    col.type = rs.getString("DATA_TYPE");
+                    col.nullable = "YES".equals(rs.getString("IS_NULLABLE"));
+                    col.isKey = rs.getString("COLUMN_KEY") != null && !rs.getString("COLUMN_KEY").isEmpty();
+                    columns.add(col);
+                }
             }
         }
         return columns;
@@ -808,9 +809,10 @@ public class SyncExecutor {
                      "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, table);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                validColumns.add(rs.getString("COLUMN_NAME").toLowerCase());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    validColumns.add(rs.getString("COLUMN_NAME").toLowerCase());
+                }
             }
         }
 
@@ -827,24 +829,25 @@ public class SyncExecutor {
         String sql = "SELECT * FROM sync_configs WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, configId);
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) return null;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
 
-            SyncConfig config = new SyncConfig();
-            config.id = rs.getInt("id");
-            config.name = rs.getString("name");
-            config.sourceUrl = rs.getString("source_url");
-            config.authType = rs.getString("auth_type");
-            config.authConfig = CryptoUtil.decrypt(rs.getString("auth_config"));
-            config.jsonRootPath = rs.getString("json_root_path");
-            config.targetTable = rs.getString("target_table");
-            config.idFieldSource = rs.getString("id_field_source");
-            config.idFieldTarget = rs.getString("id_field_target");
-            config.fieldMappings = rs.getString("field_mappings");
-            config.scheduleMinutes = rs.getInt("schedule_minutes");
-            config.isActive = rs.getBoolean("is_active");
-            try { config.updateOnly = rs.getBoolean("update_only"); } catch (SQLException ignored) {}
-            return config;
+                SyncConfig config = new SyncConfig();
+                config.id = rs.getInt("id");
+                config.name = rs.getString("name");
+                config.sourceUrl = rs.getString("source_url");
+                config.authType = rs.getString("auth_type");
+                config.authConfig = CryptoUtil.decrypt(rs.getString("auth_config"));
+                config.jsonRootPath = rs.getString("json_root_path");
+                config.targetTable = rs.getString("target_table");
+                config.idFieldSource = rs.getString("id_field_source");
+                config.idFieldTarget = rs.getString("id_field_target");
+                config.fieldMappings = rs.getString("field_mappings");
+                config.scheduleMinutes = rs.getInt("schedule_minutes");
+                config.isActive = rs.getBoolean("is_active");
+                try { config.updateOnly = rs.getBoolean("update_only"); } catch (SQLException ignored) {}
+                return config;
+            }
         }
     }
 
@@ -859,8 +862,9 @@ public class SyncExecutor {
                 ps.setNull(2, Types.INTEGER);
             }
             ps.executeUpdate();
-            ResultSet keys = ps.getGeneratedKeys();
-            return keys.next() ? keys.getLong(1) : 0;
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                return keys.next() ? keys.getLong(1) : 0;
+            }
         }
     }
 

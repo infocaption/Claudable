@@ -184,10 +184,11 @@ public class ModuleCreateServlet extends HttpServlet {
                 ps.executeUpdate();
 
                 // Get the generated module ID
-                ResultSet keys = ps.getGeneratedKeys();
                 int newModuleId = -1;
-                if (keys.next()) {
-                    newModuleId = keys.getInt(1);
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (keys.next()) {
+                        newModuleId = keys.getInt(1);
+                    }
                 }
 
                 // Assign groups if module is shared
@@ -229,15 +230,16 @@ public class ModuleCreateServlet extends HttpServlet {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                  "SELECT id, name, icon, description, is_hidden FROM `groups` ORDER BY name")) {
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Group g = new Group();
-                g.setId(rs.getInt("id"));
-                g.setName(rs.getString("name"));
-                g.setIcon(rs.getString("icon"));
-                g.setDescription(rs.getString("description"));
-                g.setHidden(rs.getBoolean("is_hidden"));
-                groups.add(g);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Group g = new Group();
+                    g.setId(rs.getInt("id"));
+                    g.setName(rs.getString("name"));
+                    g.setIcon(rs.getString("icon"));
+                    g.setDescription(rs.getString("description"));
+                    g.setHidden(rs.getBoolean("is_hidden"));
+                    groups.add(g);
+                }
             }
         } catch (SQLException e) {
             log.error("Failed to load groups for module creation form", e);

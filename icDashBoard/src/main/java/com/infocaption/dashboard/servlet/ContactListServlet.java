@@ -269,87 +269,88 @@ public class ContactListServlet extends HttpServlet {
                 ps.setObject(i + 1, params.get(i));
             }
 
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            // Collect all data per email, aggregating multiple servers
-            // LinkedHashMap preserves insertion order
-            Map<String, String[]> contactData = new LinkedHashMap<>(); // email -> [companyName, language, compCat, persCat]
-            Map<String, Set<String>> contactServers = new LinkedHashMap<>(); // email -> set of serverUrls
-            Map<String, Set<String>> contactMachines = new LinkedHashMap<>(); // email -> set of machineNames
-            int totalRows = 0;
+                // Collect all data per email, aggregating multiple servers
+                // LinkedHashMap preserves insertion order
+                Map<String, String[]> contactData = new LinkedHashMap<>(); // email -> [companyName, language, compCat, persCat]
+                Map<String, Set<String>> contactServers = new LinkedHashMap<>(); // email -> set of serverUrls
+                Map<String, Set<String>> contactMachines = new LinkedHashMap<>(); // email -> set of machineNames
+                int totalRows = 0;
 
-            while (rs.next()) {
-                totalRows++;
-                String email = rs.getString("PersonEmail");
-                if (email == null || email.trim().isEmpty()) continue;
-                email = email.trim().toLowerCase();
+                while (rs.next()) {
+                    totalRows++;
+                    String email = rs.getString("PersonEmail");
+                    if (email == null || email.trim().isEmpty()) continue;
+                    email = email.trim().toLowerCase();
 
-                // Store contact data (first occurrence wins for non-server fields)
-                if (!contactData.containsKey(email)) {
-                    contactData.put(email, new String[]{
-                        rs.getString("CompanyName"),
-                        rs.getString("Language"),
-                        nullSafeInt(rs, "CompanyCategory"),
-                        nullSafeInt(rs, "PersonCategory")
-                    });
-                    contactServers.put(email, new LinkedHashSet<>());
-                    contactMachines.put(email, new LinkedHashSet<>());
+                    // Store contact data (first occurrence wins for non-server fields)
+                    if (!contactData.containsKey(email)) {
+                        contactData.put(email, new String[]{
+                            rs.getString("CompanyName"),
+                            rs.getString("Language"),
+                            nullSafeInt(rs, "CompanyCategory"),
+                            nullSafeInt(rs, "PersonCategory")
+                        });
+                        contactServers.put(email, new LinkedHashSet<>());
+                        contactMachines.put(email, new LinkedHashSet<>());
+                    }
+
+                    // Aggregate ALL servers for this contact
+                    String serverUrl = rs.getString("ServerUrl");
+                    if (serverUrl != null && !serverUrl.trim().isEmpty()) {
+                        contactServers.get(email).add(serverUrl.trim());
+                    }
+                    String machineName = rs.getString("MachineName");
+                    if (machineName != null && !machineName.trim().isEmpty()) {
+                        contactMachines.get(email).add(machineName.trim());
+                    }
                 }
 
-                // Aggregate ALL servers for this contact
-                String serverUrl = rs.getString("ServerUrl");
-                if (serverUrl != null && !serverUrl.trim().isEmpty()) {
-                    contactServers.get(email).add(serverUrl.trim());
+                // Build JSON response
+                StringBuilder json = new StringBuilder("{");
+                json.append("\"contacts\":[");
+
+                boolean first = true;
+                for (Map.Entry<String, String[]> entry : contactData.entrySet()) {
+                    if (!first) json.append(",");
+                    first = false;
+
+                    String email = entry.getKey();
+                    String[] data = entry.getValue();
+                    Set<String> servers = contactServers.get(email);
+                    Set<String> machines = contactMachines.get(email);
+
+                    json.append("{");
+                    json.append("\"email\":").append(JsonUtil.quote(email)).append(",");
+                    json.append("\"companyName\":").append(JsonUtil.quote(data[0])).append(",");
+                    json.append("\"language\":").append(JsonUtil.quote(data[1])).append(",");
+                    json.append("\"companyCategory\":").append(data[2]).append(",");
+                    json.append("\"personCategory\":").append(data[3]).append(",");
+                    // serverUrl: comma-separated if multiple, for backward compat
+                    json.append("\"serverUrl\":").append(JsonUtil.quote(String.join(", ", servers))).append(",");
+                    json.append("\"machineName\":").append(JsonUtil.quote(String.join(", ", machines))).append(",");
+                    // serverUrls: array for template variable support (per-server sending)
+                    json.append("\"serverUrls\":[");
+                    boolean sf = true;
+                    for (String s : servers) {
+                        if (!sf) json.append(",");
+                        sf = false;
+                        json.append(JsonUtil.quote(s));
+                    }
+                    json.append("]");
+                    json.append("}");
                 }
-                String machineName = rs.getString("MachineName");
-                if (machineName != null && !machineName.trim().isEmpty()) {
-                    contactMachines.get(email).add(machineName.trim());
-                }
-            }
 
-            // Build JSON response
-            StringBuilder json = new StringBuilder("{");
-            json.append("\"contacts\":[");
-
-            boolean first = true;
-            for (Map.Entry<String, String[]> entry : contactData.entrySet()) {
-                if (!first) json.append(",");
-                first = false;
-
-                String email = entry.getKey();
-                String[] data = entry.getValue();
-                Set<String> servers = contactServers.get(email);
-                Set<String> machines = contactMachines.get(email);
-
-                json.append("{");
-                json.append("\"email\":").append(JsonUtil.quote(email)).append(",");
-                json.append("\"companyName\":").append(JsonUtil.quote(data[0])).append(",");
-                json.append("\"language\":").append(JsonUtil.quote(data[1])).append(",");
-                json.append("\"companyCategory\":").append(data[2]).append(",");
-                json.append("\"personCategory\":").append(data[3]).append(",");
-                // serverUrl: comma-separated if multiple, for backward compat
-                json.append("\"serverUrl\":").append(JsonUtil.quote(String.join(", ", servers))).append(",");
-                json.append("\"machineName\":").append(JsonUtil.quote(String.join(", ", machines))).append(",");
-                // serverUrls: array for template variable support (per-server sending)
-                json.append("\"serverUrls\":[");
-                boolean sf = true;
-                for (String s : servers) {
-                    if (!sf) json.append(",");
-                    sf = false;
-                    json.append(JsonUtil.quote(s));
-                }
-                json.append("]");
+                json.append("],");
+                json.append("\"emailCount\":").append(contactData.size()).append(",");
+                json.append("\"totalRows\":").append(totalRows).append(",");
+                json.append("\"maxResults\":").append(maxResults()).append(",");
+                json.append("\"limited\":").append(totalRows >= maxResults());
                 json.append("}");
+
+                resp.getWriter().write(json.toString());
             }
-
-            json.append("],");
-            json.append("\"emailCount\":").append(contactData.size()).append(",");
-            json.append("\"totalRows\":").append(totalRows).append(",");
-            json.append("\"maxResults\":").append(maxResults()).append(",");
-            json.append("\"limited\":").append(totalRows >= maxResults());
-            json.append("}");
-
-            resp.getWriter().write(json.toString());
 
         } catch (SQLException e) {
             log.error("Failed to query contacts from external database", e);

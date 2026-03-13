@@ -67,53 +67,54 @@ public class GroupApiServlet extends HttpServlet {
                          "FROM `groups` g ORDER BY g.name";
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ResultSet rs = ps.executeQuery();
+                try (ResultSet rs = ps.executeQuery()) {
 
-                StringBuilder json = new StringBuilder("[");
-                boolean first = true;
+                    StringBuilder json = new StringBuilder("[");
+                    boolean first = true;
 
-                while (rs.next()) {
-                    int groupId = rs.getInt("id");
-                    String name = rs.getString("name");
-                    String icon = rs.getString("icon");
-                    String description = rs.getString("description");
-                    boolean isHidden = rs.getBoolean("is_hidden");
-                    int memberCount = rs.getInt("member_count");
-                    boolean isMember = userGroupIds.contains(groupId);
-                    boolean isDefault = (groupId == allaGroupId);
+                    while (rs.next()) {
+                        int groupId = rs.getInt("id");
+                        String name = rs.getString("name");
+                        String icon = rs.getString("icon");
+                        String description = rs.getString("description");
+                        boolean isHidden = rs.getBoolean("is_hidden");
+                        int memberCount = rs.getInt("member_count");
+                        boolean isMember = userGroupIds.contains(groupId);
+                        boolean isDefault = (groupId == allaGroupId);
 
-                    // "Alla" always has all users as members (implicit)
-                    if (isDefault) {
-                        // Count all active users for "Alla"
-                        memberCount = countActiveUsers(conn);
-                        isMember = true;
+                        // "Alla" always has all users as members (implicit)
+                        if (isDefault) {
+                            // Count all active users for "Alla"
+                            memberCount = countActiveUsers(conn);
+                            isMember = true;
+                        }
+
+                        // Hidden groups: only show if user is a member
+                        if (isHidden && !isMember) {
+                            continue;
+                        }
+
+                        if (!first) json.append(",");
+                        first = false;
+
+                        json.append("{");
+                        json.append("\"id\":").append(groupId).append(",");
+                        json.append("\"name\":").append(JsonUtil.quote(name)).append(",");
+                        json.append("\"icon\":").append(JsonUtil.quote(icon)).append(",");
+                        json.append("\"description\":").append(JsonUtil.quote(description)).append(",");
+                        json.append("\"isHidden\":").append(isHidden).append(",");
+                        json.append("\"isMember\":").append(isMember).append(",");
+                        json.append("\"memberCount\":").append(memberCount).append(",");
+                        json.append("\"isDefault\":").append(isDefault);
+                        json.append("}");
                     }
 
-                    // Hidden groups: only show if user is a member
-                    if (isHidden && !isMember) {
-                        continue;
-                    }
+                    json.append("]");
 
-                    if (!first) json.append(",");
-                    first = false;
-
-                    json.append("{");
-                    json.append("\"id\":").append(groupId).append(",");
-                    json.append("\"name\":").append(JsonUtil.quote(name)).append(",");
-                    json.append("\"icon\":").append(JsonUtil.quote(icon)).append(",");
-                    json.append("\"description\":").append(JsonUtil.quote(description)).append(",");
-                    json.append("\"isHidden\":").append(isHidden).append(",");
-                    json.append("\"isMember\":").append(isMember).append(",");
-                    json.append("\"memberCount\":").append(memberCount).append(",");
-                    json.append("\"isDefault\":").append(isDefault);
-                    json.append("}");
+                    PrintWriter out = resp.getWriter();
+                    out.write(json.toString());
+                    out.flush();
                 }
-
-                json.append("]");
-
-                PrintWriter out = resp.getWriter();
-                out.write(json.toString());
-                out.flush();
             }
 
         } catch (SQLException e) {
@@ -176,10 +177,11 @@ public class GroupApiServlet extends HttpServlet {
             String checkSql = "SELECT is_hidden FROM `groups` WHERE id = ?";
             try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
                 ps.setInt(1, groupId);
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    groupExists = true;
-                    isHidden = rs.getBoolean("is_hidden");
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        groupExists = true;
+                        isHidden = rs.getBoolean("is_hidden");
+                    }
                 }
             }
 
@@ -234,8 +236,9 @@ public class GroupApiServlet extends HttpServlet {
     private int countActiveUsers(Connection conn) throws SQLException {
         String sql = "SELECT COUNT(*) FROM users WHERE is_active = 1";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
         }
         return 0;
     }

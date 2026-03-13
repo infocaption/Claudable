@@ -38,6 +38,34 @@ public class JsonUtil {
         return sb.toString();
     }
 
+    /**
+     * Unescape a JSON string value (handles \", \\, \n, \r, \t, \b, \f).
+     */
+    static String unescapeJson(String s) {
+        if (s == null || s.indexOf('\\') == -1) return s;
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\\' && i + 1 < s.length()) {
+                char next = s.charAt(++i);
+                switch (next) {
+                    case '"':  sb.append('"');  break;
+                    case '\\': sb.append('\\'); break;
+                    case 'n':  sb.append('\n'); break;
+                    case 'r':  sb.append('\r'); break;
+                    case 't':  sb.append('\t'); break;
+                    case 'b':  sb.append('\b'); break;
+                    case 'f':  sb.append('\f'); break;
+                    case '/':  sb.append('/');  break;
+                    default:   sb.append('\\').append(next);
+                }
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
     // ── JSON parsing helpers (regex-based, no external library) ──
 
     /**
@@ -46,8 +74,8 @@ public class JsonUtil {
      */
     public static String extractJsonString(String json, String key) {
         if (json == null || key == null) return null;
-        Matcher m = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
-        return m.find() ? m.group(1) : null;
+        Matcher m = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"").matcher(json);
+        return m.find() ? unescapeJson(m.group(1)) : null;
     }
 
     /**
@@ -133,7 +161,7 @@ public class JsonUtil {
         List<String> result = new ArrayList<>();
         Matcher valueMatcher = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"").matcher(arrayContent);
         while (valueMatcher.find()) {
-            result.add(valueMatcher.group(1).replace("\\\"", "\""));
+            result.add(unescapeJson(valueMatcher.group(1)));
         }
         if (result.isEmpty()) {
             Matcher intMatcher = Pattern.compile("(\\d+)").matcher(arrayContent);

@@ -533,7 +533,7 @@ public class SyncExecutor {
      * Extract a string value from a flat JSON object by key.
      * Handles both quoted strings and unquoted values (numbers, booleans, null).
      */
-    static String extractJsonFieldValue(String json, String key) {
+    public static String extractJsonFieldValue(String json, String key) {
         // Try string value first
         Pattern p = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*\"([^\"]*)\"");
         Matcher m = p.matcher(json);
@@ -582,7 +582,7 @@ public class SyncExecutor {
      * E.g., "serverUrl|url_normalize" → ["serverUrl", "url_normalize"]
      * Returns String[2]: [fieldName, transformName or null]
      */
-    private static String[] parseFieldTransform(String field) {
+    public static String[] parseFieldTransform(String field) {
         if (field == null || !field.contains("|")) return new String[]{field, null};
         int pipe = field.indexOf('|');
         return new String[]{field.substring(0, pipe), field.substring(pipe + 1)};
@@ -592,7 +592,7 @@ public class SyncExecutor {
      * Apply a named value transform.
      * Supported: "url_normalize" — strips http(s):// prefix and /path suffix, lowercases.
      */
-    private static String applyTransform(String value, String transform) {
+    public static String applyTransform(String value, String transform) {
         if (value == null || transform == null) return value;
         if ("url_normalize".equals(transform)) {
             String result = value.replaceFirst("^https?://", "");
@@ -692,7 +692,7 @@ public class SyncExecutor {
      * Lookup format: "table.column" — resolves the JSON value via
      *   (SELECT id FROM table WHERE column = ?) before inserting into target column.
      */
-    static List<String[]> parseMappings(String mappingsJson) {
+    public static List<String[]> parseMappings(String mappingsJson) {
         List<String[]> result = new ArrayList<>();
         if (mappingsJson == null || mappingsJson.trim().isEmpty()) return result;
 
@@ -714,7 +714,7 @@ public class SyncExecutor {
      * becomes (SELECT id FROM table WHERE column = ?) instead of plain ?.
      * Column names are validated before this method is called.
      */
-    static String buildUpsertSql(String table, String idColumn, List<String[]> mappings) {
+    public static String buildUpsertSql(String table, String idColumn, List<String[]> mappings) {
         // Validate identifier names (only alphanumeric + underscore)
         validateIdentifier(table);
         validateIdentifier(idColumn);
@@ -762,7 +762,7 @@ public class SyncExecutor {
      * Supports FK lookup in SET clause.
      * Parameter order: SET values first, then WHERE id value last.
      */
-    static String buildUpdateSql(String table, String idColumn, List<String[]> mappings) {
+    public static String buildUpdateSql(String table, String idColumn, List<String[]> mappings) {
         validateIdentifier(table);
         validateIdentifier(idColumn);
 
@@ -793,7 +793,7 @@ public class SyncExecutor {
     /**
      * Validate an SQL identifier contains only safe characters.
      */
-    private static void validateIdentifier(String name) {
+    public static void validateIdentifier(String name) {
         if (name == null || !name.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
             throw new IllegalArgumentException("Invalid SQL identifier: " + name);
         }
@@ -802,7 +802,7 @@ public class SyncExecutor {
     /**
      * Validate that all target columns exist in the table.
      */
-    private static void validateColumns(Connection conn, String table, List<String> columns)
+    public static void validateColumns(Connection conn, String table, List<String> columns)
             throws SQLException {
         Set<String> validColumns = new HashSet<>();
         String sql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS " +

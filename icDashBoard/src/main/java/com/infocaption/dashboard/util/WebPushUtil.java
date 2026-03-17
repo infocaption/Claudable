@@ -70,8 +70,8 @@ public class WebPushUtil {
             }
             String privateKeyB64 = base64UrlEncode(privBytes);
 
-            AppConfig.set("vapid.publicKey", publicKeyB64, 0);
-            AppConfig.set("vapid.privateKey", privateKeyB64, 0);
+            AppConfig.set("vapid.publicKey", publicKeyB64);
+            AppConfig.set("vapid.privateKey", privateKeyB64);
             log.info("VAPID keypair generated and stored in app_config");
 
         } catch (Exception e) {

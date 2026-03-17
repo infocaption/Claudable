@@ -131,6 +131,8 @@ public class ModuleFileApiServlet extends HttpServlet {
                 handleUpdateFile(req, resp);
             } else if (pathInfo.equals("/metadata")) {
                 handleUpdateMetadata(req, resp);
+            } else if (pathInfo.equals("/toggle-active")) {
+                handleToggleActive(req, resp);
             } else {
                 resp.setStatus(404);
                 writeJson(resp, "{\"error\":\"Not found\"}");
@@ -644,6 +646,39 @@ public class ModuleFileApiServlet extends HttpServlet {
             }
         }
 
+        writeJson(resp, "{\"success\":true}");
+    }
+
+    // ═════════════════════════════════════════════════════════════════════
+    //  HANDLER: Toggle module active/inactive
+    // ═════════════════════════════════════════════════════════════════════
+
+    private void handleToggleActive(HttpServletRequest req, HttpServletResponse resp)
+            throws SQLException, IOException {
+        String body = readBody(req);
+        int moduleId = JsonUtil.extractJsonInt(body, "id");
+        if (moduleId <= 0) { sendError(resp, 400, "Missing id"); return; }
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                "UPDATE modules SET is_active = NOT is_active WHERE id = ?")) {
+            ps.setInt(1, moduleId);
+            int rows = ps.executeUpdate();
+            if (rows == 0) { sendError(resp, 404, "Module not found"); return; }
+        }
+
+        // Return new state
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                "SELECT is_active FROM modules WHERE id = ?")) {
+            ps.setInt(1, moduleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    writeJson(resp, "{\"success\":true,\"isActive\":" + rs.getBoolean("is_active") + "}");
+                    return;
+                }
+            }
+        }
         writeJson(resp, "{\"success\":true}");
     }
 

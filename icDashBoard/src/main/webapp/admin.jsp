@@ -237,6 +237,22 @@
         .mf-type-badge.system { background: #dbeafe; color: #1e40af; }
         .mf-type-badge.shared { background: #d1fae5; color: #065f46; }
         .mf-type-badge.private { background: #fef3c7; color: #92400e; }
+
+        /* Module toggle switch */
+        .toggle-switch { position: relative; width: 40px; height: 22px; display: inline-block; }
+        .toggle-switch input { display: none; }
+        .toggle-slider {
+            position: absolute; inset: 0; background: #d1d5db; border-radius: 22px;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px;
+            background: #fff; border-radius: 50%; transition: transform 0.2s;
+        }
+        .toggle-switch input:checked + .toggle-slider { background: #10b981; }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+        .module-row-inactive { opacity: 0.5; }
+        .module-row-inactive td { background: #f9fafb; }
     </style>
 </head>
 <body>
@@ -360,9 +376,45 @@
             <span id="syncCount" style="color:var(--ic-text-muted);font-size:0.85em"></span>
         </div>
         <div id="syncAlert"></div>
-        <div class="sync-grid" id="syncGrid">
-            <div class="empty-state">Laddar synk-konfigurationer...</div>
+        <table class="mf-table" id="syncTable" style="margin-top:12px">
+            <thead>
+                <tr>
+                    <th>Namn</th>
+                    <th>Käll-URL</th>
+                    <th style="width:100px">Måltabell</th>
+                    <th style="width:100px">Schema</th>
+                    <th style="width:140px">Senaste kör</th>
+                    <th style="width:200px;text-align:right">Åtgärder</th>
+                </tr>
+            </thead>
+            <tbody id="syncTableBody">
+                <tr><td colspan="6" class="empty-state">Laddar synk-konfigurationer...</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Webhooks section -->
+        <h3 style="margin-top:32px;margin-bottom:8px">Webhooks (inkommande)</h3>
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="openWebhookModal()">+ Ny webhook</button>
+            <span id="webhookCount" style="color:var(--ic-text-muted);font-size:0.85em"></span>
         </div>
+        <div id="webhookAlert"></div>
+        <table class="mf-table" id="webhookTable" style="margin-top:12px">
+            <thead>
+                <tr>
+                    <th>Namn</th>
+                    <th>Webhook-URL</th>
+                    <th style="width:100px">Måltabell</th>
+                    <th style="width:60px">Auth</th>
+                    <th style="width:60px;text-align:center">Aktiv</th>
+                    <th style="width:140px">Senaste</th>
+                    <th style="width:180px;text-align:right">Åtgärder</th>
+                </tr>
+            </thead>
+            <tbody id="webhookTableBody">
+                <tr><td colspan="7" class="empty-state">Laddar webhooks...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <!-- ============ WIDGETS TAB ============ -->
@@ -405,9 +457,21 @@
                 </select>
             </div>
             <div id="moduleAlert"></div>
-            <div class="sync-grid" id="moduleGrid">
-                <div class="empty-state">Laddar moduler...</div>
-            </div>
+            <table class="mf-table" id="moduleTable" style="margin-top:12px">
+                <thead>
+                    <tr>
+                        <th style="width:40px"></th>
+                        <th>Modul</th>
+                        <th style="width:90px">Typ</th>
+                        <th style="width:100px">Ägare</th>
+                        <th style="width:80px;text-align:center">Aktiv</th>
+                        <th style="width:160px;text-align:right">Åtgärder</th>
+                    </tr>
+                </thead>
+                <tbody id="moduleTableBody">
+                    <tr><td colspan="6" class="empty-state">Laddar moduler...</td></tr>
+                </tbody>
+            </table>
         </div>
 
         <!-- File browser view -->
@@ -921,6 +985,106 @@ fetch('/api/servers')
         </div>
     </div>
 
+    <!-- ============ WEBHOOK MODAL ============ -->
+    <div class="modal-overlay" id="webhookModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="webhookModalTitle">Ny webhook</h2>
+                <button class="modal-close" onclick="closeWebhookModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="whEditId">
+                <input type="hidden" id="whUrlToken">
+
+                <div id="whUrlDisplay" style="display:none;margin-bottom:16px">
+                    <label>Webhook-URL</label>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <input type="text" id="whUrlField" readonly style="flex:1;background:#f3f4f6;font-family:monospace;font-size:0.85em">
+                        <button class="btn btn-sm" onclick="copyWebhookUrl()">Kopiera</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Namn</label>
+                    <input type="text" id="whName" placeholder="T.ex. CRM Webhook">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Autentisering</label>
+                        <select id="whAuthType" onchange="toggleWhAuthFields()">
+                            <option value="none">Ingen</option>
+                            <option value="api_key">API-nyckel</option>
+                            <option value="bearer">Bearer Token</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="whAuthField1Group" style="display:none">
+                        <label id="whAuthField1Label">API-nyckel</label>
+                        <input type="text" id="whAuthField1">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Måltabell</label>
+                        <select id="whTargetTable" onchange="loadWhTableColumns()">
+                            <option value="">Välj tabell...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ID-fält källa (JSON-fältnamn)</label>
+                        <input type="text" id="whIdSource" placeholder="T.ex. companyId">
+                    </div>
+                    <div class="form-group">
+                        <label>ID-fält mål (DB-kolumn)</label>
+                        <select id="whIdTarget"><option value="">Välj...</option></select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display:flex;align-items:center;gap:8px">
+                    <label class="toggle" style="margin:0">
+                        <input type="checkbox" id="whUpdateOnly">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <div>
+                        <label style="margin:0;cursor:pointer" onclick="document.getElementById('whUpdateOnly').click()">Bara uppdatera (skapa inga nya rader)</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Fältmappning</label>
+                    <div class="mapping-grid" id="whMappingGrid">
+                        <div class="mapping-header">
+                            <div>JSON-fält</div><div></div><div>DB-kolumn</div><div>FK Lookup</div><div></div>
+                        </div>
+                        <div id="whMappingRows"></div>
+                        <div class="mapping-add">
+                            <button class="btn btn-sm" onclick="addWhMappingRow()">+ Lägg till mappning</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeWebhookModal()">Avbryt</button>
+                <button class="btn btn-primary" onclick="saveWebhook()">Spara</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ WEBHOOK HISTORY MODAL ============ -->
+    <div class="modal-overlay" id="whHistoryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Webhook-historik</h2>
+                <button class="modal-close" onclick="closeWhHistoryModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="whHistoryContent">Laddar...</div>
+        </div>
+    </div>
+
 <script nonce="<%= request.getAttribute("cspNonce") %>">
 const CTX = '<%= ctxPath %>';
 let allUsers = [];
@@ -938,6 +1102,8 @@ let modulesLoaded = false;
 let currentModuleId = null;
 let currentModuleData = null;
 let currentModuleFiles = [];
+let allWebhooks = [];
+let whDbColumns = [];
 let allMcpServers = [];
 let mcpLoaded = false;
 let allStatServers = [];
@@ -1326,7 +1492,7 @@ async function loadSyncConfigs() {
         allSyncConfigs = await resp.json();
         renderSyncConfigs();
     } catch (e) {
-        document.getElementById('syncGrid').innerHTML = '<div class="empty-state" style="color:#ef4444">Kunde inte ladda: ' + e.message + '</div>';
+        document.getElementById('syncTableBody').innerHTML = '<tr><td colspan="6" class="empty-state" style="color:#ef4444">Kunde inte ladda: ' + e.message + '</td></tr>';
     }
 }
 
@@ -1334,37 +1500,31 @@ function renderSyncConfigs() {
     document.getElementById('syncCount').textContent = allSyncConfigs.length + ' konfigurationer';
 
     if (allSyncConfigs.length === 0) {
-        document.getElementById('syncGrid').innerHTML = '<div class="empty-state">Inga synk-konfigurationer. Klicka "+ Ny synk" för att skapa en.</div>';
+        document.getElementById('syncTableBody').innerHTML = '<tr><td colspan="6" class="empty-state">Inga synk-konfigurationer. Klicka "+ Ny synk" för att skapa en.</td></tr>';
         return;
     }
 
-    document.getElementById('syncGrid').innerHTML = allSyncConfigs.map(c => {
+    document.getElementById('syncTableBody').innerHTML = allSyncConfigs.map(c => {
         const statusBadge = c.lastRunStatus === 'success' ? '<span class="badge badge-success">OK</span>' :
                             c.lastRunStatus === 'failed' ? '<span class="badge badge-failed">Fel</span>' : '';
         const scheduleBadge = c.scheduleMinutes > 0
             ? '<span class="badge badge-scheduled">Var ' + c.scheduleMinutes + ' min</span>'
             : '<span class="badge badge-manual">Manuell</span>';
-        const updateOnlyBadge = c.updateOnly ? ' <span class="badge" style="background:#fef3c7;color:#92400e">Bara uppdatera</span>' : '';
         const lastRun = c.lastRunAt ? new Date(c.lastRunAt).toLocaleString('sv-SE') : 'Aldrig';
 
-        return '<div class="sync-card">' +
-            '<div class="sync-card-header">' +
-                '<div class="sync-card-title">' + esc(c.name) + '</div>' +
-                '<div>' + statusBadge + ' ' + scheduleBadge + updateOnlyBadge + '</div>' +
-            '</div>' +
-            '<div class="sync-card-meta">' +
-                '<div>🔗 ' + esc(truncUrl(c.sourceUrl)) + '</div>' +
-                '<div>📋 ' + esc(c.targetTable) + ' (matchning: ' + esc(c.idFieldSource) + ' → ' + esc(c.idFieldTarget) + ')</div>' +
-                '<div>🕐 Senaste körning: ' + lastRun + (c.lastRunCount > 0 ? ' (' + c.lastRunCount + ' poster)' : '') + '</div>' +
-                '<div>👤 Skapad av: ' + esc(c.creatorName || '-') + '</div>' +
-            '</div>' +
-            '<div class="sync-card-actions">' +
-                '<button class="btn btn-sm" onclick="runSync(' + c.id + ')">▶ Kör nu</button>' +
-                '<button class="btn btn-sm" onclick="openSyncModal(' + c.id + ')">✏️ Redigera</button>' +
-                '<button class="btn btn-sm" onclick="openHistoryModal(' + c.id + ')">📜 Historik</button>' +
-                '<button class="btn btn-sm btn-danger" onclick="deleteSync(' + c.id + ', \'' + esc(c.name) + '\')">🗑️</button>' +
-            '</div>' +
-        '</div>';
+        return '<tr>' +
+            '<td><strong>' + esc(c.name) + '</strong>' + (c.updateOnly ? ' <span class="badge" style="background:#fef3c7;color:#92400e;font-size:0.75em">Update-only</span>' : '') + ' ' + statusBadge + '</td>' +
+            '<td style="font-size:0.85em;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(c.sourceUrl) + '">' + esc(truncUrl(c.sourceUrl)) + '</td>' +
+            '<td>' + esc(c.targetTable) + '</td>' +
+            '<td>' + scheduleBadge + '</td>' +
+            '<td style="font-size:0.85em">' + lastRun + (c.lastRunCount > 0 ? ' (' + c.lastRunCount + ')' : '') + '</td>' +
+            '<td style="text-align:right"><div class="mf-actions">' +
+                '<button class="btn btn-sm" onclick="runSync(' + c.id + ')">Kör</button>' +
+                '<button class="btn btn-sm" onclick="openSyncModal(' + c.id + ')">Redigera</button>' +
+                '<button class="btn btn-sm" onclick="openHistoryModal(' + c.id + ')">Historik</button>' +
+                '<button class="btn btn-sm btn-danger" onclick="deleteSync(' + c.id + ', \'' + esc(c.name) + '\')">Ta bort</button>' +
+            '</div></td>' +
+        '</tr>';
     }).join('');
 }
 
@@ -1700,6 +1860,299 @@ function closeHistoryModal() {
     document.getElementById('historyModal').classList.remove('open');
 }
 
+// ========== WEBHOOKS ==========
+async function loadWebhooks() {
+    try {
+        const resp = await fetch(CTX + '/api/webhook/configs');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        allWebhooks = await resp.json();
+        renderWebhooks();
+    } catch (e) {
+        document.getElementById('webhookTableBody').innerHTML = '<tr><td colspan="7" class="empty-state" style="color:#ef4444">Kunde inte ladda: ' + e.message + '</td></tr>';
+    }
+}
+
+function renderWebhooks() {
+    document.getElementById('webhookCount').textContent = allWebhooks.length + ' webhooks';
+
+    if (allWebhooks.length === 0) {
+        document.getElementById('webhookTableBody').innerHTML = '<tr><td colspan="7" class="empty-state">Inga webhooks. Klicka "+ Ny webhook" för att skapa en.</td></tr>';
+        return;
+    }
+
+    const base = window.location.origin + CTX;
+    document.getElementById('webhookTableBody').innerHTML = allWebhooks.map(w => {
+        const url = base + '/api/webhook/inbound/' + w.urlToken;
+        const lastRecv = w.lastReceivedAt ? new Date(w.lastReceivedAt).toLocaleString('sv-SE') : 'Aldrig';
+        const authLabel = w.authType === 'api_key' ? 'API-nyckel' : w.authType === 'bearer' ? 'Bearer' : 'Ingen';
+
+        return '<tr>' +
+            '<td><strong>' + esc(w.name) + '</strong>' + (w.updateOnly ? ' <span class="badge" style="background:#fef3c7;color:#92400e;font-size:0.75em">Update-only</span>' : '') + '</td>' +
+            '<td style="font-size:0.8em;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace" title="' + esc(url) + '">' + esc(url) + '</td>' +
+            '<td>' + esc(w.targetTable) + '</td>' +
+            '<td>' + authLabel + '</td>' +
+            '<td style="text-align:center"><label class="toggle" style="margin:0"><input type="checkbox" ' + (w.isActive ? 'checked' : '') + ' onchange="toggleWebhookActive(' + w.id + ', this.checked)"><span class="toggle-slider"></span></label></td>' +
+            '<td style="font-size:0.85em">' + lastRecv + (w.lastReceivedCount > 0 ? ' (' + w.lastReceivedCount + ')' : '') + '</td>' +
+            '<td style="text-align:right"><div class="mf-actions">' +
+                '<button class="btn btn-sm" onclick="openWebhookModal(' + w.id + ')">Redigera</button>' +
+                '<button class="btn btn-sm" onclick="openWhHistoryModal(' + w.id + ')">Historik</button>' +
+                '<button class="btn btn-sm btn-danger" onclick="deleteWebhook(' + w.id + ', \'' + esc(w.name) + '\')">Ta bort</button>' +
+            '</div></td>' +
+        '</tr>';
+    }).join('');
+}
+
+async function toggleWebhookActive(id, active) {
+    try {
+        await fetch(CTX + '/api/webhook/toggle-active', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, isActive: active })
+        });
+    } catch (e) {
+        showAlert('webhookAlert', 'error', 'Fel: ' + e.message);
+        loadWebhooks();
+    }
+}
+
+async function deleteWebhook(id, name) {
+    if (!confirm('Radera webhook "' + name + '"?')) return;
+    try {
+        const resp = await fetch(CTX + '/api/webhook/configs?id=' + id, { method: 'DELETE' });
+        if (!resp.ok) throw new Error('Failed');
+        showAlert('webhookAlert', 'success', 'Borttagen: ' + name);
+        loadWebhooks();
+    } catch (e) {
+        showAlert('webhookAlert', 'error', 'Fel: ' + e.message);
+    }
+}
+
+async function openWebhookModal(editId) {
+    whDbColumns = [];
+    document.getElementById('whEditId').value = editId || '';
+    document.getElementById('whUrlToken').value = '';
+    document.getElementById('whName').value = '';
+    document.getElementById('whAuthType').value = 'none';
+    document.getElementById('whAuthField1').value = '';
+    document.getElementById('whTargetTable').value = '';
+    document.getElementById('whIdSource').value = '';
+    document.getElementById('whIdTarget').innerHTML = '<option value="">Välj...</option>';
+    document.getElementById('whMappingRows').innerHTML = '';
+    document.getElementById('whUpdateOnly').checked = false;
+    document.getElementById('whUrlDisplay').style.display = 'none';
+    toggleWhAuthFields();
+
+    document.getElementById('webhookModalTitle').textContent = editId ? 'Redigera webhook' : 'Ny webhook';
+
+    // Load tables
+    try {
+        const resp = await fetch(CTX + '/api/webhook/tables');
+        const tables = await resp.json();
+        const sel = document.getElementById('whTargetTable');
+        sel.innerHTML = '<option value="">Välj tabell...</option>';
+        tables.forEach(t => { sel.innerHTML += '<option value="' + t + '">' + t + '</option>'; });
+    } catch (e) { /* ignore */ }
+
+    if (editId) {
+        const wh = allWebhooks.find(w => w.id === editId);
+        if (wh) {
+            document.getElementById('whName').value = wh.name;
+            document.getElementById('whAuthType').value = wh.authType || 'none';
+            document.getElementById('whTargetTable').value = wh.targetTable;
+            document.getElementById('whIdSource').value = wh.idFieldSource || '';
+            document.getElementById('whUpdateOnly').checked = wh.updateOnly || false;
+            document.getElementById('whUrlToken').value = wh.urlToken;
+
+            // Show URL
+            const base = window.location.origin + CTX;
+            document.getElementById('whUrlField').value = base + '/api/webhook/inbound/' + wh.urlToken;
+            document.getElementById('whUrlDisplay').style.display = 'block';
+
+            // Parse auth config
+            if (wh.authConfig && typeof wh.authConfig === 'object') {
+                if (wh.authType === 'api_key') {
+                    document.getElementById('whAuthField1').value = wh.authConfig.keyValue || '';
+                } else if (wh.authType === 'bearer') {
+                    document.getElementById('whAuthField1').value = wh.authConfig.token || '';
+                }
+            }
+            toggleWhAuthFields();
+
+            await loadWhTableColumns();
+            document.getElementById('whIdTarget').value = wh.idFieldTarget || '';
+
+            if (wh.fieldMappings) {
+                try {
+                    const mappings = typeof wh.fieldMappings === 'string' ? JSON.parse(wh.fieldMappings) : wh.fieldMappings;
+                    mappings.forEach(m => addWhMappingRow(m.source, m.target, m.lookup));
+                } catch (e) { /* ignore */ }
+            }
+        }
+    }
+
+    document.getElementById('webhookModal').classList.add('open');
+}
+
+function closeWebhookModal() {
+    document.getElementById('webhookModal').classList.remove('open');
+}
+
+function toggleWhAuthFields() {
+    const type = document.getElementById('whAuthType').value;
+    const g = document.getElementById('whAuthField1Group');
+    const l = document.getElementById('whAuthField1Label');
+    g.style.display = type === 'none' ? 'none' : 'block';
+    if (type === 'api_key') l.textContent = 'API-nyckel (X-API-Key header)';
+    else if (type === 'bearer') l.textContent = 'Bearer Token';
+}
+
+async function loadWhTableColumns() {
+    const table = document.getElementById('whTargetTable').value;
+    if (!table) return;
+    try {
+        const resp = await fetch(CTX + '/api/webhook/table-info?table=' + table);
+        const data = await resp.json();
+        whDbColumns = data.columns || [];
+        const options = '<option value="">Välj...</option>' + whDbColumns.map(c =>
+            '<option value="' + esc(c.name) + '">' + esc(c.name) + ' (' + c.type + (c.isKey ? ', PK' : '') + ')</option>').join('');
+        document.getElementById('whIdTarget').innerHTML = options;
+
+        document.querySelectorAll('#whMappingRows .mapping-target').forEach(sel => {
+            const current = sel.value;
+            sel.innerHTML = '<option value="">Välj...</option>' + whDbColumns.map(c =>
+                '<option value="' + esc(c.name) + '"' + (c.name === current ? ' selected' : '') + '>' + esc(c.name) + ' (' + c.type + ')</option>').join('');
+        });
+    } catch (e) { /* ignore */ }
+}
+
+function addWhMappingRow(sourceVal, targetVal, lookupVal) {
+    const container = document.getElementById('whMappingRows');
+    const row = document.createElement('div');
+    row.className = 'mapping-row';
+
+    const selStyle = 'width:100%;padding:6px;font-size:0.85em;border:1px solid #d1d5db;border-radius:4px';
+    const targetOpts = '<option value="">Välj...</option>' + whDbColumns.map(c =>
+        '<option value="' + esc(c.name) + '"' + (c.name === targetVal ? ' selected' : '') + '>' + esc(c.name) + ' (' + c.type + ')</option>').join('');
+
+    row.innerHTML =
+        '<input class="mapping-source" type="text" placeholder="JSON-fält" value="' + esc(sourceVal || '') + '" style="' + selStyle + '">' +
+        '<div class="mapping-arrow">→</div>' +
+        '<select class="mapping-target" style="' + selStyle + '">' + targetOpts + '</select>' +
+        '<input class="mapping-lookup" type="text" placeholder="t.ex. customers.company_id" value="' + esc(lookupVal || '') + '" style="' + selStyle + '" title="FK Lookup: tabell.kolumn">' +
+        '<button class="mapping-remove" onclick="this.parentElement.remove()">✕</button>';
+
+    container.appendChild(row);
+}
+
+function buildWhAuthConfig() {
+    const type = document.getElementById('whAuthType').value;
+    const f1 = document.getElementById('whAuthField1').value;
+    if (type === 'api_key') return { keyValue: f1 };
+    if (type === 'bearer') return { token: f1 };
+    return {};
+}
+
+function collectWhMappings() {
+    const rows = document.querySelectorAll('#whMappingRows .mapping-row');
+    const mappings = [];
+    rows.forEach(row => {
+        const source = row.querySelector('.mapping-source').value;
+        const target = row.querySelector('.mapping-target').value;
+        const lookup = row.querySelector('.mapping-lookup').value.trim();
+        if (source && target) {
+            const m = { source, target };
+            if (lookup) m.lookup = lookup;
+            mappings.push(m);
+        }
+    });
+    return mappings;
+}
+
+async function saveWebhook() {
+    const editId = document.getElementById('whEditId').value;
+    const body = {
+        name: document.getElementById('whName').value,
+        authType: document.getElementById('whAuthType').value,
+        authConfig: buildWhAuthConfig(),
+        targetTable: document.getElementById('whTargetTable').value,
+        idFieldSource: document.getElementById('whIdSource').value,
+        idFieldTarget: document.getElementById('whIdTarget').value,
+        fieldMappings: collectWhMappings(),
+        updateOnly: document.getElementById('whUpdateOnly').checked
+    };
+
+    if (!body.name || !body.targetTable || !body.idFieldSource || !body.idFieldTarget) {
+        alert('Fyll i alla obligatoriska fält');
+        return;
+    }
+
+    if (editId) body.id = parseInt(editId);
+
+    try {
+        const resp = await fetch(CTX + '/api/webhook/configs', {
+            method: editId ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Failed');
+
+        closeWebhookModal();
+        showAlert('webhookAlert', 'success', editId ? 'Webhook uppdaterad' : 'Ny webhook skapad');
+        loadWebhooks();
+    } catch (e) {
+        alert('Fel: ' + e.message);
+    }
+}
+
+function copyWebhookUrl() {
+    const url = document.getElementById('whUrlField').value;
+    navigator.clipboard.writeText(url).then(() => {
+        showAlert('webhookAlert', 'success', 'URL kopierad!');
+    });
+}
+
+async function openWhHistoryModal(webhookId) {
+    document.getElementById('whHistoryModal').classList.add('open');
+    document.getElementById('whHistoryContent').innerHTML = 'Laddar...';
+
+    try {
+        const resp = await fetch(CTX + '/api/webhook/history?webhookId=' + webhookId);
+        const history = await resp.json();
+
+        if (history.length === 0) {
+            document.getElementById('whHistoryContent').innerHTML = '<div class="empty-state">Ingen historik</div>';
+            return;
+        }
+
+        let html = '<table class="history-table"><thead><tr>' +
+            '<th>Mottaget</th><th>Status</th><th>Mottagna</th><th>Sparade</th><th>Fel</th><th>Käll-IP</th><th>Felmeddelande</th>' +
+            '</tr></thead><tbody>';
+
+        history.forEach(h => {
+            const statusClass = h.status === 'success' ? 'badge-success' : 'badge-failed';
+            html += '<tr>' +
+                '<td>' + (h.receivedAt ? new Date(h.receivedAt).toLocaleString('sv-SE') : '-') + '</td>' +
+                '<td><span class="badge ' + statusClass + '">' + h.status + '</span></td>' +
+                '<td>' + h.recordsReceived + '</td>' +
+                '<td>' + h.recordsUpserted + '</td>' +
+                '<td>' + h.recordsFailed + '</td>' +
+                '<td>' + esc(h.sourceIp || '-') + '</td>' +
+                '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="' + esc(h.errorMessage || '') + '">' + esc(h.errorMessage || '-') + '</td>' +
+            '</tr>';
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('whHistoryContent').innerHTML = html;
+    } catch (e) {
+        document.getElementById('whHistoryContent').innerHTML = '<div class="empty-state" style="color:#ef4444">' + e.message + '</div>';
+    }
+}
+
+function closeWhHistoryModal() {
+    document.getElementById('whHistoryModal').classList.remove('open');
+}
+
 // ========== HELPERS ==========
 function showAlert(containerId, type, message) {
     const cls = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-error' : 'alert-info';
@@ -2011,33 +2464,28 @@ function renderAdminModules() {
 
     document.getElementById('moduleCount').textContent = filtered.length + ' av ' + allModulesAdmin.length + ' moduler';
 
+    const tbody = document.getElementById('moduleTableBody');
     if (filtered.length === 0) {
-        document.getElementById('moduleGrid').innerHTML = '<div class="empty-state">Inga moduler hittades</div>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Inga moduler hittades</td></tr>';
         return;
     }
 
-    document.getElementById('moduleGrid').innerHTML = filtered.map(m => {
+    tbody.innerHTML = filtered.map(m => {
         const typeBadge = '<span class="mf-type-badge ' + esc(m.moduleType) + '">' + esc(m.moduleType) + '</span>';
-        const specBadge = m.hasAiSpec ? ' <span class="badge badge-success" style="font-size:0.7em">📄 Spec</span>' : '';
-        const groups = (m.groups || []).map(g => '<span class="badge badge-default" style="font-size:0.7em">' + esc(g) + '</span>').join(' ');
+        const rowClass = m.isActive === false ? ' class="module-row-inactive"' : '';
+        const desc = m.description ? '<div style="font-size:0.78em;color:var(--ic-text-muted);margin-top:2px">' + esc(m.description).substring(0, 80) + '</div>' : '';
 
-        return '<div class="sync-card">' +
-            '<div class="sync-card-header">' +
-                '<div class="sync-card-title">' + esc(m.icon || '📦') + ' ' + esc(m.name) + '</div>' +
-                '<div>' + typeBadge + specBadge + '</div>' +
-            '</div>' +
-            '<div class="sync-card-meta">' +
-                '<div>📁 <code style="font-size:0.85em">' + esc(m.directoryName) + '/' + esc(m.entryFile) + '</code></div>' +
-                (m.description ? '<div style="color:var(--ic-text-muted)">' + esc(m.description).substring(0, 120) + '</div>' : '') +
-                (m.ownerName ? '<div>👤 ' + esc(m.ownerName) + '</div>' : '') +
-                (groups ? '<div>' + groups + '</div>' : '') +
-            '</div>' +
-            '<div class="sync-card-actions">' +
-                '<button class="btn btn-sm" onclick="openModuleFiles(' + m.id + ')">📁 Filer</button>' +
-                '<button class="btn btn-sm" onclick="openModuleMetadataModalFor(' + m.id + ')">✏️ Metadata</button>' +
-                (m.hasAiSpec ? '<button class="btn btn-sm" onclick="downloadModuleSpecFor(' + m.id + ')">📄 Spec</button>' : '') +
-            '</div>' +
-        '</div>';
+        return '<tr' + rowClass + '>' +
+            '<td style="font-size:1.3em;text-align:center">' + esc(m.icon || '📦') + '</td>' +
+            '<td><div style="font-weight:600">' + esc(m.name) + '</div>' + desc + '</td>' +
+            '<td>' + typeBadge + '</td>' +
+            '<td style="font-size:0.85em;color:var(--ic-text-muted)">' + esc(m.ownerName || '—') + '</td>' +
+            '<td style="text-align:center"><label class="toggle-switch"><input type="checkbox"' + (m.isActive !== false ? ' checked' : '') + ' onchange="toggleModuleActive(' + m.id + ', this)"><span class="toggle-slider"></span></label></td>' +
+            '<td style="text-align:right">' +
+                '<button class="btn btn-sm" onclick="openModuleFiles(' + m.id + ')">📁 Filer</button> ' +
+                '<button class="btn btn-sm" onclick="openModuleMetadataModalFor(' + m.id + ')">✏️</button>' +
+            '</td>' +
+        '</tr>';
     }).join('');
 }
 
@@ -2047,6 +2495,28 @@ document.getElementById('moduleSearch').addEventListener('input', function() {
     searchTimeout = setTimeout(renderAdminModules, 200);
 });
 document.getElementById('moduleTypeFilter').addEventListener('change', renderAdminModules);
+
+// Toggle module active/inactive
+async function toggleModuleActive(moduleId, checkbox) {
+    try {
+        const resp = await fetch(CTX + '/api/admin/modules/toggle-active', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: moduleId })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        // Update local data
+        const mod = allModulesAdmin.find(m => m.id === moduleId);
+        if (mod) mod.isActive = data.isActive;
+        // Update row styling
+        const row = checkbox.closest('tr');
+        if (row) row.className = data.isActive ? '' : 'module-row-inactive';
+    } catch (e) {
+        checkbox.checked = !checkbox.checked;
+        showAlert('moduleAlert', 'Kunde inte ändra status: ' + e.message, 'error');
+    }
+}
 
 // ─── File browser ───
 
@@ -2992,6 +3462,7 @@ function showKbAlert(msg, type) {
 // ========== INIT ==========
 loadUsers();
 loadSyncConfigs();
+loadWebhooks();
 
 // Handle OAuth callback redirect
 if (new URLSearchParams(window.location.search).get('mcpAuth') === 'success') {

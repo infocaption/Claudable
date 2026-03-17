@@ -30,6 +30,12 @@ public class AuthFilter implements Filter {
         String uri = req.getRequestURI();
         String contextPath = req.getContextPath();
 
+        // Allow webhook inbound endpoint (uses own auth)
+        if (uri.startsWith(contextPath + "/api/webhook/inbound/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         // Allow API key authentication for machine-to-machine endpoints
         if (uri.startsWith(contextPath + "/api/customer-stats/import") ||
             uri.startsWith(contextPath + "/api/drift/") ||

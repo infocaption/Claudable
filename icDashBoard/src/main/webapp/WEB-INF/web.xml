@@ -554,6 +554,17 @@
         <url-pattern>/api/tomcat-instances/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Webhook API Servlet (inbound data endpoints) -->
+    <servlet>
+        <servlet-name>WebhookServlet</servlet-name>
+        <servlet-class>com.infocaption.dashboard.servlet.WebhookServlet</servlet-class>
+        <load-on-startup>4</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>WebhookServlet</servlet-name>
+        <url-pattern>/api/webhook/*</url-pattern>
+    </servlet-mapping>
+
     <!-- Background Health Check Scheduler -->
     <servlet>
         <servlet-name>HealthCheckScheduler</servlet-name>

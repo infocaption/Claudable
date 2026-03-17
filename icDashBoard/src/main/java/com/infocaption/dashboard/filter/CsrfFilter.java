@@ -120,7 +120,8 @@ public class CsrfFilter implements Filter {
                // API key-authenticated endpoints (scripts, PowerShell)
                path.equals("/api/customer-stats/import") ||
                path.startsWith("/api/drift/") ||
-               path.startsWith("/api/cloudguard/");
+               path.startsWith("/api/cloudguard/") ||
+               path.startsWith("/api/webhook/inbound/");
     }
 
     private void ensureToken(HttpServletRequest req) {

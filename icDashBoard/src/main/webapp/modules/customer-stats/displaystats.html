@@ -45,7 +45,7 @@
         }
 
         .container {
-            max-width: 1600px;
+            max-width: 100%;
             margin: 0 auto;
             background: var(--ic-bg-white);
             min-height: 100vh;
@@ -1270,6 +1270,35 @@
             opacity: 1;
         }
 
+        /* Column visibility */
+        th.col-hidden, td.col-hidden { display: none; }
+
+        /* Column resize handles */
+        .col-resize-handle {
+            position: absolute; right: 0; top: 0; bottom: 0;
+            width: 5px; cursor: col-resize; user-select: none; z-index: 2;
+        }
+        .col-resize-handle:hover, .col-resize-handle.active {
+            background: var(--ic-primary); opacity: 0.3;
+        }
+
+        /* Column picker popout */
+        .col-picker-popout {
+            min-width: 180px; padding: 8px 0;
+        }
+        .col-picker-popout label {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 14px; cursor: pointer; font-size: 0.88em;
+        }
+        .col-picker-popout label:hover { background: #f0f1f3; }
+        .col-picker-actions {
+            border-top: 1px solid #dee2e6; padding: 6px 14px; text-align: right;
+        }
+        .col-picker-reset {
+            background: none; border: none; color: var(--ic-primary);
+            cursor: pointer; font-size: 0.82em; font-weight: 500;
+        }
+
         .version-dropdown {
             position: absolute;
             top: 100%;
@@ -1318,43 +1347,71 @@
             background-color: #f8f9fa;
         }
 
-        .site-url {
-            max-width: 250px;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .customer-cell {
+            max-width: 300px;
         }
 
-        .site-url a {
+        .customer-cell-inner {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .customer-cell .cust-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            min-width: 0;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .customer-cell .cust-label:hover {
             color: var(--ic-primary);
-            font-weight: 500;
+        }
+
+        .customer-cell .cust-btns {
+            display: flex;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+
+        .customer-cell .btn-detail,
+        .customer-cell .btn-so,
+        .customer-cell .btn-site {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            cursor: pointer;
+            color: #718096;
+            font-size: 14px;
+            padding: 0;
+            transition: background 0.15s, color 0.15s;
             text-decoration: none;
-            transition: color 0.2s;
         }
 
-        .site-url a:hover {
-            color: #5a6fd6;
-            text-decoration: underline;
+        .customer-cell .btn-detail:hover {
+            background: #f0f0f0;
+            color: var(--ic-primary);
         }
 
-        .company-name {
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .company-name a {
+        .customer-cell .btn-so:hover {
+            background: #e6fffa;
             color: #38a169;
-            font-weight: 500;
-            text-decoration: none;
-            transition: color 0.2s;
         }
 
-        .company-name a:hover {
-            color: #2f855a;
-            text-decoration: underline;
+        .customer-cell .btn-site:hover {
+            background: #ebf4ff;
+            color: var(--ic-primary);
         }
 
-        .company-name .no-match {
+        .customer-cell .no-company {
             color: #a0aec0;
             font-style: italic;
         }
@@ -1500,22 +1557,6 @@
         }
 
         /* (date-range-picker removed — replaced by toolbar popout) */
-
-        /* Chart button in table */
-        .chart-btn {
-            background: none;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            cursor: pointer;
-            padding: 4px 8px;
-            font-size: 1em;
-            transition: background 0.2s, border-color 0.2s;
-        }
-
-        .chart-btn:hover {
-            background: #f0f0ff;
-            border-color: var(--ic-primary);
-        }
 
 
         .weight-badge {
@@ -2391,6 +2432,17 @@
             <label id="newOnlyFilter" style="display:none;margin-left:auto;font-size:0.82em;cursor:pointer;align-self:center;white-space:nowrap;padding-right:12px">
                 <input type="checkbox" id="filterNewOnly" onchange="applyNewOnlyFilter()"> Visa bara nya
             </label>
+            <div class="toolbar-popout-wrapper" id="colPickerWrapper" style="display:none;align-self:center;margin-left:auto">
+                <button class="toolbar-icon-btn" id="colPickerBtn" onclick="toggleColPicker()" title="Visa/d&ouml;lj kolumner">
+                    <i class="icon-eye1"></i>
+                </button>
+                <div class="toolbar-popout col-picker-popout right-aligned" id="colPickerPopout">
+                    <div id="colPickerList"></div>
+                    <div class="col-picker-actions">
+                        <button class="col-picker-reset" onclick="resetColumns()">Återställ</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tab panels -->
@@ -2463,12 +2515,22 @@
                 <table id="allaTable">
                     <thead>
                         <tr>
-                            <th></th>
-                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Site URL</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Site URL" data-filter="name" data-table="alla"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
-                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Företag</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Företag" data-filter="company" data-table="alla"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
-                            <th style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('alla', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-alla"></div></th>
-                            <th>Spår</th>
-                            <th>Kategori</th>
+                            <th data-col="name" class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Kund</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Sök kund..." data-filter="name" data-table="alla"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th data-col="version" style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('alla', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-alla"></div></th>
+                            <th data-col="track">Spår</th>
+                            <th data-col="category">Kategori</th>
+                            <th data-col="pubs" data-timed="1">Publiceringar</th>
+                            <th data-col="guides" data-timed="1">Skapade guider</th>
+                            <th data-col="views" data-timed="1">Visningar</th>
+                            <th data-col="procviews" data-timed="1">Processvisningar</th>
+                            <th data-col="procs" data-timed="1">Processer skapade</th>
+                            <th data-col="logins" data-timed="1">Inloggningar</th>
+                            <th data-col="uniqlogins" data-timed="1">Unika inloggade</th>
+                            <th data-col="uniqpubs" data-timed="1">Unika publicerande</th>
+                            <th data-col="producers">Producenter</th>
+                            <th data-col="activeprod">Aktiva prod. (6m)</th>
+                            <th data-col="admins">Administratörer</th>
+                            <th data-col="users">Användare</th>
                         </tr>
                     </thead>
                     <tbody id="allaTableBody"></tbody>
@@ -2481,12 +2543,22 @@
                 <table id="successTable">
                     <thead>
                         <tr>
-                            <th></th>
-                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Site URL</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Site URL" data-filter="name" data-table="success"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
-                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Företag</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Företag" data-filter="company" data-table="success"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
-                            <th style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('success', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-success"></div></th>
-                            <th>Spår</th>
-                            <th>Flaggor</th>
+                            <th data-col="name" class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Kund</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Sök kund..." data-filter="name" data-table="success"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th data-col="version" style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('success', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-success"></div></th>
+                            <th data-col="track">Spår</th>
+                            <th data-col="flags">Flaggor</th>
+                            <th data-col="pubs" data-timed="1">Publiceringar</th>
+                            <th data-col="guides" data-timed="1">Skapade guider</th>
+                            <th data-col="views" data-timed="1">Visningar</th>
+                            <th data-col="procviews" data-timed="1">Processvisningar</th>
+                            <th data-col="procs" data-timed="1">Processer skapade</th>
+                            <th data-col="logins" data-timed="1">Inloggningar</th>
+                            <th data-col="uniqlogins" data-timed="1">Unika inloggade</th>
+                            <th data-col="uniqpubs" data-timed="1">Unika publicerande</th>
+                            <th data-col="producers">Producenter</th>
+                            <th data-col="activeprod">Aktiva prod. (6m)</th>
+                            <th data-col="admins">Administratörer</th>
+                            <th data-col="users">Användare</th>
                         </tr>
                     </thead>
                     <tbody id="successTableBody"></tbody>
@@ -2499,12 +2571,22 @@
                 <table id="riskTable">
                     <thead>
                         <tr>
-                            <th></th>
-                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Site URL</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Site URL" data-filter="name" data-table="risk"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
-                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Företag</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Företag" data-filter="company" data-table="risk"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
-                            <th style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('risk', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-risk"></div></th>
-                            <th>Spår</th>
-                            <th>Flaggor</th>
+                            <th data-col="name" class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Kund</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Sök kund..." data-filter="name" data-table="risk"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th data-col="version" style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('risk', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-risk"></div></th>
+                            <th data-col="track">Spår</th>
+                            <th data-col="flags">Flaggor</th>
+                            <th data-col="pubs" data-timed="1">Publiceringar</th>
+                            <th data-col="guides" data-timed="1">Skapade guider</th>
+                            <th data-col="views" data-timed="1">Visningar</th>
+                            <th data-col="procviews" data-timed="1">Processvisningar</th>
+                            <th data-col="procs" data-timed="1">Processer skapade</th>
+                            <th data-col="logins" data-timed="1">Inloggningar</th>
+                            <th data-col="uniqlogins" data-timed="1">Unika inloggade</th>
+                            <th data-col="uniqpubs" data-timed="1">Unika publicerande</th>
+                            <th data-col="producers">Producenter</th>
+                            <th data-col="activeprod">Aktiva prod. (6m)</th>
+                            <th data-col="admins">Administratörer</th>
+                            <th data-col="users">Användare</th>
                         </tr>
                     </thead>
                     <tbody id="riskTableBody"></tbody>
@@ -2517,11 +2599,21 @@
                 <table id="otherTable">
                     <thead>
                         <tr>
-                            <th></th>
-                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Site URL</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Site URL" data-filter="name" data-table="other"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
-                            <th class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Företag</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Företag" data-filter="company" data-table="other"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
-                            <th style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('other', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-other"></div></th>
-                            <th>Spår</th>
+                            <th data-col="name" class="header-searchable" onclick="openColSearch(this)"><span class="col-search-label">Kund</span><span class="col-search-icon"><i class="icon-search"></i></span><input type="text" class="col-search-input" placeholder="Sök kund..." data-filter="name" data-table="other"><button class="col-search-clear" onclick="clearColSearch(this, event)">&times;</button></th>
+                            <th data-col="version" style="position:relative;">Version <button class="version-filter-btn-inline" onclick="toggleVersionDropdown('other', event)" title="Filtrera version">&#9660;</button><div class="version-dropdown" id="versionDropdown-other"></div></th>
+                            <th data-col="track">Spår</th>
+                            <th data-col="pubs" data-timed="1">Publiceringar</th>
+                            <th data-col="guides" data-timed="1">Skapade guider</th>
+                            <th data-col="views" data-timed="1">Visningar</th>
+                            <th data-col="procviews" data-timed="1">Processvisningar</th>
+                            <th data-col="procs" data-timed="1">Processer skapade</th>
+                            <th data-col="logins" data-timed="1">Inloggningar</th>
+                            <th data-col="uniqlogins" data-timed="1">Unika inloggade</th>
+                            <th data-col="uniqpubs" data-timed="1">Unika publicerande</th>
+                            <th data-col="producers">Producenter</th>
+                            <th data-col="activeprod">Aktiva prod. (6m)</th>
+                            <th data-col="admins">Administratörer</th>
+                            <th data-col="users">Användare</th>
                         </tr>
                     </thead>
                     <tbody id="otherTableBody"></tbody>
@@ -2747,10 +2839,10 @@
         let customerLookup = {}; // URL → customer object for detail panel (used by onclick)
         let companyData = {}; // SuperOffice company lookup
         let filters = {
-            success: { name: '', company: '', versions: [] },
-            risk: { name: '', company: '', versions: [] },
-            other: { name: '', company: '', versions: [] },
-            alla: { name: '', company: '', versions: [] }
+            success: { name: '', versions: [] },
+            risk: { name: '', versions: [] },
+            other: { name: '', versions: [] },
+            alla: { name: '', versions: [] }
         };
         let sortState = {
             success: { field: null, dir: null },
@@ -2805,7 +2897,13 @@
             } else {
                 currentDayCount = 30;
             }
-            // Metric columns removed from table — currentDayCount still used by export functions
+            // Update timed column headers with current period label
+            const dl = currentDayCount + 'd';
+            document.querySelectorAll('th[data-timed="1"]').forEach(th => {
+                const colId = th.dataset.col;
+                const sc = STAT_COLUMNS.find(s => s.id === colId);
+                if (sc) th.textContent = sc.label + ' (' + dl + ')';
+            });
         }
 
         // Sync date range to URL params so the link is shareable
@@ -2914,6 +3012,240 @@
         };
 
         let criteria = { ...defaultCriteria };
+
+        // ===== COLUMN VISIBILITY & RESIZE =====
+        // Extra stat columns — hidden by default, togglable via column picker
+        const STAT_COLUMNS = [
+            {id:'pubs',        label:'Publiceringar',      siteKey:'Publiseringar_7d',                    timed:true},
+            {id:'guides',      label:'Skapade guider',     siteKey:'Skapade_Guider_7d',                   timed:true},
+            {id:'views',       label:'Visningar',          siteKey:'Visningar_7d',                        timed:true},
+            {id:'procviews',   label:'Processvisningar',   siteKey:'Processvisningar_7d',                 timed:true},
+            {id:'procs',       label:'Processer skapade',  siteKey:'Processer_Skapade_7d',                timed:true},
+            {id:'logins',      label:'Inloggningar',       siteKey:'Antal_Inloggningar_Prod_Admin',       timed:true},
+            {id:'uniqlogins',  label:'Unika inloggade',    siteKey:'Antal_Unika_Inloggade_Prod_Admin',    timed:true},
+            {id:'uniqpubs',    label:'Unika publicerande', siteKey:'Antal_Unika_Publicerande_Prod',       timed:true},
+            {id:'producers',   label:'Producenter',        siteKey:'Antal_Producenter',                   timed:false},
+            {id:'activeprod',  label:'Aktiva prod. (6m)',  siteKey:'Antal_Aktiva_Producenter_Sista_6_Manader', timed:false},
+            {id:'admins',      label:'Administratörer',    siteKey:'Antal_Administratorer',               timed:false},
+            {id:'users',       label:'Användare',          siteKey:'Totalt_Antal_Anvandare',              timed:false}
+        ];
+        const DEFAULT_HIDDEN = STAT_COLUMNS.map(c => c.id);
+        const baseCols = {
+            alla:    [{id:'name',label:'Kund'},{id:'version',label:'Version'},{id:'track',label:'Spår'},{id:'category',label:'Kategori'}],
+            success: [{id:'name',label:'Kund'},{id:'version',label:'Version'},{id:'track',label:'Spår'},{id:'flags',label:'Flaggor'}],
+            risk:    [{id:'name',label:'Kund'},{id:'version',label:'Version'},{id:'track',label:'Spår'},{id:'flags',label:'Flaggor'}],
+            other:   [{id:'name',label:'Kund'},{id:'version',label:'Version'},{id:'track',label:'Spår'}]
+        };
+        // Build TAB_COLUMNS by appending stat columns to each tab
+        const TAB_COLUMNS = {};
+        ['alla','success','risk','other'].forEach(tab => {
+            TAB_COLUMNS[tab] = [...baseCols[tab], ...STAT_COLUMNS.map(s => ({id: s.id, label: s.label}))];
+        });
+        let columnPrefs = {};
+        let _csrfToken = null;
+
+        // Fetch CSRF token from parent dashboard for POST requests
+        function getCsrfToken() {
+            if (_csrfToken) return Promise.resolve(_csrfToken);
+            return new Promise(resolve => {
+                function onMsg(e) {
+                    if (e.origin !== window.location.origin) return;
+                    if (e.data && e.data.type === 'CSRF_TOKEN') {
+                        _csrfToken = e.data.token;
+                        window.removeEventListener('message', onMsg);
+                        resolve(_csrfToken);
+                    }
+                }
+                window.addEventListener('message', onMsg);
+                window.parent.postMessage({ type: 'GET_CSRF_TOKEN' }, window.location.origin);
+                setTimeout(() => resolve(_csrfToken || ''), 2000);
+            });
+        }
+
+        function loadColumnPrefs() {
+            // Load from localStorage as immediate default
+            ['alla','success','risk','other'].forEach(tab => {
+                try {
+                    const raw = localStorage.getItem('cstats.columns.' + tab);
+                    if (raw) columnPrefs[tab] = JSON.parse(raw);
+                } catch(e) { /* ignore */ }
+                if (!columnPrefs[tab]) columnPrefs[tab] = { hidden: [...DEFAULT_HIDDEN], widths: {} };
+            });
+            // Then load from server (overrides localStorage)
+            fetch('../../api/preferences?key=cstats.columns')
+                .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+                .then(data => {
+                    if (data.value) {
+                        try {
+                            const serverPrefs = JSON.parse(data.value);
+                            ['alla','success','risk','other'].forEach(tab => {
+                                if (serverPrefs[tab]) columnPrefs[tab] = serverPrefs[tab];
+                            });
+                            // Sync to localStorage as cache
+                            ['alla','success','risk','other'].forEach(tab => {
+                                localStorage.setItem('cstats.columns.' + tab, JSON.stringify(columnPrefs[tab]));
+                            });
+                            // Re-apply if tables already rendered
+                            ['alla','success','risk','other'].forEach(tab => {
+                                if (document.getElementById(tab + 'TableBody')?.children.length > 0) {
+                                    applyColumnVisibility(tab);
+                                    applyColumnWidths(tab);
+                                }
+                            });
+                        } catch(e) { /* corrupt server data */ }
+                    }
+                })
+                .catch(() => { /* server unavailable, localStorage is fine */ });
+        }
+
+        function saveColumnPrefs(tab) {
+            // Save to localStorage immediately
+            try {
+                localStorage.setItem('cstats.columns.' + tab, JSON.stringify(columnPrefs[tab]));
+            } catch(e) { /* quota exceeded */ }
+            // Save all tabs to server (debounced)
+            clearTimeout(saveColumnPrefs._timer);
+            saveColumnPrefs._timer = setTimeout(() => {
+                const allPrefs = {};
+                ['alla','success','risk','other'].forEach(t => { allPrefs[t] = columnPrefs[t]; });
+                getCsrfToken().then(token => {
+                    fetch('../../api/preferences', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+                        body: JSON.stringify({ key: 'cstats.columns', value: JSON.stringify(allPrefs) })
+                    }).catch(() => { /* silent fail */ });
+                });
+            }, 500);
+        }
+
+        function applyColumnVisibility(tab) {
+            const prefs = columnPrefs[tab] || { hidden: [] };
+            const tableId = tab + 'Table';
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const cols = TAB_COLUMNS[tab] || [];
+            const allCols = cols.map(c => c.id);
+            allCols.forEach(colId => {
+                const isHidden = prefs.hidden.includes(colId);
+                table.querySelectorAll(`[data-col="${colId}"]`).forEach(el => {
+                    el.classList.toggle('col-hidden', isHidden);
+                });
+            });
+        }
+
+        function applyColumnWidths(tab) {
+            const prefs = columnPrefs[tab] || { widths: {} };
+            const table = document.getElementById(tab + 'Table');
+            if (!table) return;
+            const hasWidths = Object.keys(prefs.widths).length > 0;
+            if (hasWidths) {
+                table.style.tableLayout = 'fixed';
+                table.style.width = '100%';
+            }
+            Object.entries(prefs.widths).forEach(([colId, w]) => {
+                const th = table.querySelector(`th[data-col="${colId}"]`);
+                if (th) th.style.width = w + 'px';
+            });
+        }
+
+        function setupColumnResize() {
+            // Remove old handles
+            document.querySelectorAll('.col-resize-handle').forEach(h => h.remove());
+            const tabs = ['alla','success','risk','other'];
+            tabs.forEach(tab => {
+                const table = document.getElementById(tab + 'Table');
+                if (!table) return;
+                table.querySelectorAll('th[data-col]').forEach(th => {
+                    const handle = document.createElement('div');
+                    handle.className = 'col-resize-handle';
+                    th.appendChild(handle);
+                    handle.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startWidth = th.offsetWidth;
+                        handle.classList.add('active');
+                        table.style.tableLayout = 'fixed';
+                        table.style.width = '100%';
+                        function onMove(ev) {
+                            const newW = Math.max(40, startWidth + (ev.clientX - startX));
+                            th.style.width = newW + 'px';
+                        }
+                        function onUp(ev) {
+                            handle.classList.remove('active');
+                            document.removeEventListener('mousemove', onMove);
+                            document.removeEventListener('mouseup', onUp);
+                            const finalW = th.offsetWidth;
+                            if (!columnPrefs[tab]) columnPrefs[tab] = { hidden: [], widths: {} };
+                            columnPrefs[tab].widths[th.dataset.col] = finalW;
+                            saveColumnPrefs(tab);
+                        }
+                        document.addEventListener('mousemove', onMove);
+                        document.addEventListener('mouseup', onUp);
+                    });
+                });
+            });
+        }
+
+        function toggleColPicker() {
+            const popout = document.getElementById('colPickerPopout');
+            const isOpen = popout.classList.contains('show');
+            closeAllPopouts();
+            if (!isOpen) {
+                renderColPicker();
+                popout.classList.add('show');
+            }
+        }
+
+        function renderColPicker() {
+            const tab = activeTab;
+            const cols = TAB_COLUMNS[tab];
+            if (!cols) return;
+            const prefs = columnPrefs[tab] || { hidden: [] };
+            const dl = currentDayCount + 'd';
+            const list = document.getElementById('colPickerList');
+            list.innerHTML = cols.filter(c => c.id !== 'name').map(c => {
+                const checked = !prefs.hidden.includes(c.id) ? 'checked' : '';
+                const sc = STAT_COLUMNS.find(s => s.id === c.id);
+                const label = (sc && sc.timed) ? c.label + ' (' + dl + ')' : c.label;
+                return `<label><input type="checkbox" ${checked} onchange="toggleColumn('${tab}','${c.id}', this.checked)"> ${label}</label>`;
+            }).join('');
+        }
+
+        function toggleColumn(tab, colId, visible) {
+            if (!columnPrefs[tab]) columnPrefs[tab] = { hidden: [], widths: {} };
+            const hidden = columnPrefs[tab].hidden;
+            if (visible) {
+                const idx = hidden.indexOf(colId);
+                if (idx !== -1) hidden.splice(idx, 1);
+            } else {
+                if (!hidden.includes(colId)) hidden.push(colId);
+            }
+            applyColumnVisibility(tab);
+            saveColumnPrefs(tab);
+        }
+
+        function resetColumns() {
+            const tab = activeTab;
+            columnPrefs[tab] = { hidden: [...DEFAULT_HIDDEN], widths: {} };
+            saveColumnPrefs(tab);
+            // Reset inline widths
+            const table = document.getElementById(tab + 'Table');
+            if (table) {
+                table.style.tableLayout = '';
+                table.style.width = '';
+                table.querySelectorAll('th[data-col]').forEach(th => th.style.width = '');
+            }
+            applyColumnVisibility(tab);
+            renderColPicker();
+        }
+
+        function updateColPickerVisibility() {
+            const wrapper = document.getElementById('colPickerWrapper');
+            if (!wrapper) return;
+            const isTableTab = ['alla','success','risk','other'].includes(activeTab);
+            wrapper.style.display = isTableTab ? '' : 'none';
+        }
 
         // Load company data from companies.json (fallback for when API doesn't provide it)
         function loadCompanyData() {
@@ -3041,26 +3373,36 @@
                 });
             }
 
+            // Helper to build top-5 customer label with SO/site buttons
+            function buildTop5Label(c) {
+                const ci = getCompanyInfo(c.site.url, c.site);
+                const compName = ci ? escHtml(ci.companyName) : '';
+                const siteUrl = escHtml(normalizeUrl(c.site.url) || c.name || '-');
+                const displayName = compName || '<span style="color:#a0aec0;font-style:italic">' + siteUrl + '</span>';
+                let btns = '';
+                if (ci) {
+                    const crmUrl = 'https://online2.superoffice.com/Cust16404/default.aspx?contact.main.detaljkortet.minimonth?contact_id=' + encodeURIComponent(ci.companyId);
+                    btns += ' <a href="' + escHtml(crmUrl) + '" target="_blank" style="color:#718096;font-size:12px" title="SuperOffice"><i class="icon-office-building"></i></a>';
+                }
+                if (c.site.url) {
+                    const cfgUrl = escHtml(c.site.url) + 'LoginCoreManual?returnURL=/config';
+                    btns += ' <a href="' + cfgUrl + '" target="_blank" style="color:#718096;font-size:12px" title="Site config"><i class="icon-external-link1"></i></a>';
+                }
+                return displayName + btns;
+            }
+
             // Top 5 most active (by views)
             const sorted = [...alla].sort((a, b) => (b.site.Visningar_7d || 0) - (a.site.Visningar_7d || 0));
             const top5 = sorted.slice(0, 5);
             document.querySelector('#topActiveList tbody').innerHTML = top5.map((c, i) => {
-                const ci = getCompanyInfo(c.site.url, c.site);
-                const compName = ci ? escHtml(ci.companyName) : '';
-                const siteUrl = escHtml(normalizeUrl(c.site.url) || c.name || '-');
-                const label = compName ? compName + ' <span style="color:#a0aec0;font-size:0.85em">' + siteUrl + '</span>' : siteUrl;
-                return '<tr><td>' + (i + 1) + '</td><td>' + label + '</td><td>' + fmt(c.site.Visningar_7d || 0) + '</td></tr>';
+                return '<tr><td>' + (i + 1) + '</td><td>' + buildTop5Label(c) + '</td><td>' + fmt(c.site.Visningar_7d || 0) + '</td></tr>';
             }).join('') || '<tr><td colspan="3" style="color:#a0aec0">Ingen data</td></tr>';
 
             // Top 5 most active producers (by publications)
             const sortedProd = [...alla].sort((a, b) => (b.site.Publiseringar_7d || 0) - (a.site.Publiseringar_7d || 0));
             const top5Prod = sortedProd.slice(0, 5);
             document.querySelector('#topProducersList tbody').innerHTML = top5Prod.map((c, i) => {
-                const ci = getCompanyInfo(c.site.url, c.site);
-                const compName = ci ? escHtml(ci.companyName) : '';
-                const siteUrl = escHtml(normalizeUrl(c.site.url) || c.name || '-');
-                const label = compName ? compName + ' <span style="color:#a0aec0;font-size:0.85em">' + siteUrl + '</span>' : siteUrl;
-                return '<tr><td>' + (i + 1) + '</td><td>' + label + '</td><td>' + fmt(c.site.Publiseringar_7d || 0) + '</td></tr>';
+                return '<tr><td>' + (i + 1) + '</td><td>' + buildTop5Label(c) + '</td><td>' + fmt(c.site.Publiseringar_7d || 0) + '</td></tr>';
             }).join('') || '<tr><td colspan="3" style="color:#a0aec0">Ingen data</td></tr>';
 
             // Top 5 biggest decline
@@ -3073,12 +3415,8 @@
             }).sort((a, b) => a.pct - b.pct).slice(0, 5);
 
             document.querySelector('#topDeclineList tbody').innerHTML = declined.map((d, i) => {
-                const ci = getCompanyInfo(d.customer.site.url, d.customer.site);
-                const compName = ci ? escHtml(ci.companyName) : '';
-                const siteUrl = escHtml(normalizeUrl(d.customer.site.url) || d.customer.name || '-');
-                const label = compName ? compName + ' <span style="color:#a0aec0;font-size:0.85em">' + siteUrl + '</span>' : siteUrl;
                 const sign = d.pct > 0 ? '+' : '';
-                return '<tr><td>' + (i + 1) + '</td><td>' + label + '</td><td>' + sign + d.pct.toFixed(1) + '%</td></tr>';
+                return '<tr><td>' + (i + 1) + '</td><td>' + buildTop5Label(d.customer) + '</td><td>' + sign + d.pct.toFixed(1) + '%</td></tr>';
             }).join('') || '<tr><td colspan="3" style="color:#a0aec0">Ingen data</td></tr>';
 
             // Totals
@@ -3100,13 +3438,13 @@
         function buildTrackCell(site) {
             const tracks = (site.track || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
             if (tracks.length === 0) {
-                return '<td class="track-cell"><span class="track-none">–</span></td>';
+                return '<td data-col="track" class="track-cell"><span class="track-none">–</span></td>';
             }
             const icons = [];
             if (tracks.includes('assist')) icons.push('<span class="track-icon track-assist" title="Assist"><i class="icon-play-filled1"></i></span>');
             if (tracks.includes('train'))  icons.push('<span class="track-icon track-train" title="Train"><i class="icon-graduation-cap2"></i></span>');
             if (tracks.includes('map'))    icons.push('<span class="track-icon track-map" title="Map"><i class="icon-workflow"></i></span>');
-            return `<td class="track-cell">${icons.join('')}</td>`;
+            return `<td data-col="track" class="track-cell">${icons.join('')}</td>`;
         }
 
         // Normalize string for diacritics-insensitive search (åäö ↔ aao etc.)
@@ -3424,7 +3762,7 @@
         }
 
         function closeAllPopouts(except) {
-            ['datePopout', 'coachPopout', 'trackPopout', 'riskPopout', 'onboardingPopout', 'downloadPopout'].forEach(id => {
+            ['datePopout', 'coachPopout', 'trackPopout', 'riskPopout', 'onboardingPopout', 'downloadPopout', 'colPickerPopout'].forEach(id => {
                 if (id !== except) document.getElementById(id)?.classList.remove('show');
             });
         }
@@ -3506,6 +3844,7 @@
 
         // Initialize: set default dates (or from URL params) and load data
         (function init() {
+            loadColumnPrefs();
             const today = new Date();
             const threeMonthsAgo = new Date(today);
             threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
@@ -3779,6 +4118,9 @@
             if (panel) panel.classList.add('active');
             // Lazy render: render tab content on first switch
             renderTabContent(tab);
+            // Update column picker visibility & close if open
+            updateColPickerVisibility();
+            document.getElementById('colPickerPopout')?.classList.remove('show');
             // Sync URL
             syncUrlParams();
         }
@@ -4202,12 +4544,7 @@
                 input.addEventListener('click', (e) => e.stopPropagation());
                 input.addEventListener('input', (e) => {
                     const table = e.target.dataset.table;
-                    const filterType = e.target.dataset.filter;
-                    if (filterType === 'company') {
-                        filters[table].company = e.target.value;
-                    } else {
-                        filters[table].name = e.target.value;
-                    }
+                    filters[table].name = e.target.value;
                     debouncedRender(table);
                 });
             });
@@ -4311,19 +4648,14 @@
         function getFilteredData(type) {
             let data = [...globalData[type]];
 
-            // Apply name filter (diacritics-insensitive)
+            // Apply name/company filter (searches both fields)
             if (filters[type].name) {
                 const nf = norm(filters[type].name);
-                data = data.filter(c => norm(c.name).includes(nf));
-            }
-
-            // Apply company filter (diacritics-insensitive)
-            if (filters[type].company) {
-                const cf = norm(filters[type].company);
                 data = data.filter(c => {
+                    if (norm(c.name).includes(nf)) return true;
                     const companyInfo = getCompanyInfo(c.site.url, c.site);
-                    if (!companyInfo) return false;
-                    return norm(companyInfo.companyName).includes(cf);
+                    if (companyInfo && norm(companyInfo.companyName).includes(nf)) return true;
+                    return false;
                 });
             }
 
@@ -4395,7 +4727,8 @@
             const tbody = document.getElementById(`${type}TableBody`);
 
             if (data.length === 0) {
-                const colspan = (type === 'other') ? 5 : 6;
+                const baseCount = (type === 'other') ? 3 : 4;
+                const colspan = baseCount + STAT_COLUMNS.length;
                 tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">Inga kunder matchar filtret</td></tr>`;
                 return;
             }
@@ -4404,13 +4737,18 @@
             const CHUNK_SIZE = 50;
             if (data.length <= CHUNK_SIZE) {
                 tbody.innerHTML = data.map(c => createTableRow(c, type)).join('');
+                applyColumnVisibility(type); applyColumnWidths(type); setupColumnResize();
             } else {
                 // Render first chunk immediately for perceived speed
                 tbody.innerHTML = data.slice(0, CHUNK_SIZE).map(c => createTableRow(c, type)).join('');
+                applyColumnVisibility(type); applyColumnWidths(type); setupColumnResize();
                 // Append remaining chunks via rAF to avoid blocking UI
                 let offset = CHUNK_SIZE;
                 function appendChunk() {
-                    if (offset >= data.length) return;
+                    if (offset >= data.length) {
+                        applyColumnVisibility(type);
+                        return;
+                    }
                     const chunk = data.slice(offset, offset + CHUNK_SIZE);
                     const temp = document.createElement('tbody');
                     temp.innerHTML = chunk.map(c => createTableRow(c, type)).join('');
@@ -4419,6 +4757,7 @@
                     tbody.appendChild(frag);
                     offset += CHUNK_SIZE;
                     if (offset < data.length) requestAnimationFrame(appendChunk);
+                    else applyColumnVisibility(type);
                 }
                 requestAnimationFrame(appendChunk);
             }
@@ -4705,9 +5044,9 @@
 
             let flagsCell;
             if (type === 'alla') {
-                flagsCell = `<td class="flags-cell"><span class="flag-badge ${catClass}">${catLabel}</span></td>`;
+                flagsCell = `<td data-col="category" class="flags-cell"><span class="flag-badge ${catClass}">${catLabel}</span></td>`;
             } else if (type !== 'other') {
-                flagsCell = `<td class="flags-cell">${flagsHtml}</td>`;
+                flagsCell = `<td data-col="flags" class="flags-cell">${flagsHtml}</td>`;
             } else {
                 flagsCell = '';
             }
@@ -4728,12 +5067,18 @@
 
             // Get company info (from API response or SuperOffice lookup)
             const companyInfo = getCompanyInfo(site.url, site);
-            let companyCell = '';
+            const compName = companyInfo ? escHtml(companyInfo.companyName) : '';
+            const siteUrlDisplay = escHtml(normalizeUrl(site.url) || customer.name || '-');
+            const custLabel = compName || `<span class="no-company">${siteUrlDisplay}</span>`;
+            const tooltipText = compName ? `Företag: ${compName}\nSite: ${siteUrlDisplay}` : siteUrlDisplay;
+
+            let custBtns = '';
             if (companyInfo) {
                 const crmUrl = `https://online2.superoffice.com/Cust16404/default.aspx?contact.main.detaljkortet.minimonth?contact_id=${encodeURIComponent(companyInfo.companyId)}`;
-                companyCell = `<td class="company-name" title="${escHtml(companyInfo.companyName)}">${newBadgeHtml}<a href="${escHtml(crmUrl)}" target="_blank">${escHtml(companyInfo.companyName)}</a></td>`;
-            } else {
-                companyCell = `<td class="company-name">${newBadgeHtml}<span class="no-match">-</span></td>`;
+                custBtns += `<a href="${escHtml(crmUrl)}" target="_blank" class="btn-so" title="Öppna i SuperOffice"><i class="icon-office-building"></i></a>`;
+            }
+            if (site.url) {
+                custBtns += `<a href="${configUrl}" target="_blank" class="btn-site" title="Öppna site config"><i class="icon-external-link1"></i></a>`;
             }
 
             const escapedUrl = escHtml((site.url || '').replace(/'/g, "\\'"));
@@ -4743,14 +5088,20 @@
             const urlKey = (site.url || '').replace(/'/g, "\\'");
             customerLookup[urlKey] = customer;
 
+            const detailBtn = `<button class="btn-detail" onclick="openDetailPanel('${escapedUrl}', '${escapedName}', customerLookup['${urlKey}'])" title="Visa detaljer"><i class="icon-chart-bar1"></i></button>`;
+
+            // Build stat cells from STAT_COLUMNS
+            const statCells = STAT_COLUMNS.map(sc =>
+                `<td data-col="${sc.id}" style="text-align:right">${formatNumber(site[sc.siteKey] || 0)}</td>`
+            ).join('');
+
             return `
                 <tr class="${rowClass}">
-                    <td><button class="chart-btn" onclick="openDetailPanel('${escapedUrl}', '${escapedName}', customerLookup['${urlKey}'])" title="Visa detaljer"><i class="icon-chart-bar1"></i></button></td>
-                    <td class="site-url" title="${escHtml(site.url || '')}"><a href="${configUrl}" target="_blank">${escHtml(customer.name)}</a></td>
-                    ${companyCell}
-                    <td><span class="version-badge">${escHtml(site.Version || '-')}</span></td>
+                    <td data-col="name" class="customer-cell" title="${escHtml(tooltipText)}"><div class="customer-cell-inner">${newBadgeHtml}<span class="cust-label" onclick="openDetailPanel('${escapedUrl}', '${escapedName}', customerLookup['${urlKey}'])">${custLabel}</span><span class="cust-btns">${detailBtn}${custBtns}</span></div></td>
+                    <td data-col="version"><span class="version-badge">${escHtml(site.Version || '-')}</span></td>
                     ${buildTrackCell(site)}
                     ${flagsCell}
+                    ${statCells}
                 </tr>
             `;
         }

@@ -100,70 +100,6 @@
             gap: 8px;
         }
 
-        .step-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: #5458F2;
-            color: #fff;
-            font-size: 0.78em;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .workflow-banner {
-            background: linear-gradient(135deg, #ede9fe 0%, #f0f0ff 100%);
-            border: 1px solid #d4d5fc;
-            border-radius: 12px;
-            padding: 20px 24px;
-            margin-bottom: 20px;
-        }
-
-        .workflow-banner h3 {
-            font-size: 0.95em;
-            font-weight: 700;
-            color: #5458F2;
-            margin-bottom: 10px;
-        }
-
-        .workflow-steps {
-            display: flex;
-            align-items: center;
-            gap: 0;
-            flex-wrap: wrap;
-        }
-
-        .workflow-step {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.82em;
-            color: #323232;
-            font-weight: 500;
-        }
-
-        .workflow-step .ws-num {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #5458F2;
-            color: #fff;
-            font-size: 0.72em;
-            font-weight: 700;
-        }
-
-        .workflow-arrow {
-            margin: 0 8px;
-            color: #bec0f9;
-            font-size: 1.1em;
-        }
-
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -215,7 +151,7 @@
         }
 
         .form-group .spec-textarea {
-            min-height: 250px;
+            min-height: 200px;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 0.85em;
             line-height: 1.6;
@@ -242,6 +178,205 @@
 
         .icon-input {
             flex: 1;
+        }
+
+        /* Wizard Progress */
+        .wizard-progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px 20px 24px;
+            gap: 0;
+        }
+
+        .wizard-progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+
+        .wizard-progress-step.disabled {
+            cursor: not-allowed;
+        }
+
+        .wizard-progress-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            font-weight: 700;
+            border: 2.5px solid #e5e7eb;
+            background: #fff;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .wizard-progress-step.active .wizard-progress-circle {
+            border-color: #5458F2;
+            background: #5458F2;
+            color: #fff;
+        }
+
+        .wizard-progress-step.completed .wizard-progress-circle {
+            border-color: #10b981;
+            background: #10b981;
+            color: #fff;
+        }
+
+        .wizard-progress-label {
+            margin-top: 8px;
+            font-size: 0.78em;
+            font-weight: 600;
+            color: #6c757d;
+            transition: color 0.3s;
+        }
+
+        .wizard-progress-step.active .wizard-progress-label {
+            color: #5458F2;
+        }
+
+        .wizard-progress-step.completed .wizard-progress-label {
+            color: #10b981;
+        }
+
+        .wizard-progress-line {
+            flex: 1;
+            height: 3px;
+            background: #e5e7eb;
+            margin: 0 -4px;
+            margin-bottom: 22px;
+            min-width: 60px;
+            transition: background 0.3s;
+        }
+
+        .wizard-progress-line.completed {
+            background: #10b981;
+        }
+
+        /* Wizard steps */
+        .wizard-step {
+            display: none;
+        }
+
+        .wizard-step.active {
+            display: block;
+        }
+
+        /* Wizard nav */
+        .wizard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafafe;
+        }
+
+        .wizard-nav-btn {
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .wizard-nav-btn.primary {
+            background: #5458F2;
+            color: #fff;
+        }
+
+        .wizard-nav-btn.primary:hover {
+            background: #4347d9;
+        }
+
+        .wizard-nav-btn.secondary {
+            background: none;
+            border: 1px solid #e5e7eb;
+            color: #6c757d;
+        }
+
+        .wizard-nav-btn.secondary:hover {
+            border-color: #5458F2;
+            color: #5458F2;
+        }
+
+        .wizard-nav-btn.cancel:hover {
+            background: #fee2e2;
+            color: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .wizard-nav-btn.submit {
+            background: #5458F2;
+            color: #fff;
+            padding: 12px 32px;
+        }
+
+        .wizard-nav-btn.submit:hover {
+            background: #4347d9;
+        }
+
+        /* Endpoint cards grid */
+        .endpoint-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .endpoint-card {
+            border: 1.5px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .endpoint-card:hover {
+            border-color: #5458F2;
+            background: #fafaff;
+        }
+
+        .endpoint-card.selected {
+            border-color: #5458F2;
+            background: #f0f0ff;
+            box-shadow: 0 0 0 3px rgba(84, 88, 242, 0.1);
+        }
+
+        .endpoint-card-icon {
+            font-size: 1.5em;
+            margin-bottom: 8px;
+        }
+
+        .endpoint-card-name {
+            font-size: 0.88em;
+            font-weight: 600;
+            color: #323232;
+            margin-bottom: 4px;
+        }
+
+        .endpoint-card-desc {
+            font-size: 0.78em;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+
+        .endpoint-section-label {
+            font-size: 0.88em;
+            font-weight: 600;
+            color: #323232;
+            margin-bottom: 6px;
+            margin-top: 20px;
         }
 
         /* File upload area */
@@ -340,63 +475,6 @@
             margin-top: 3px;
         }
 
-        /* (tabs removed — simplified UI) */
-
-        /* Submit area */
-        .submit-area {
-            padding: 24px 32px;
-            background: #fafafe;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .submit-btn {
-            background: #5458F2;
-            color: #fff;
-            border: none;
-            padding: 12px 32px;
-            border-radius: 10px;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background 0.2s;
-        }
-
-        .submit-btn:hover {
-            background: #4347d9;
-        }
-
-        .cancel-btn {
-            background: none;
-            border: 1px solid #e5e7eb;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 0.9em;
-            color: #6c757d;
-            cursor: pointer;
-            font-family: inherit;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .cancel-btn:hover {
-            background: #fee2e2;
-            color: #ef4444;
-            border-color: #ef4444;
-        }
-
-        .error-alert {
-            background: #fee2e2;
-            color: #ef4444;
-            padding: 14px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-            font-weight: 500;
-        }
-
         /* Group selection */
         .group-section-note {
             font-size: 0.82em;
@@ -449,6 +527,92 @@
             opacity: 0.7;
         }
 
+        .error-alert {
+            background: #fee2e2;
+            color: #ef4444;
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .validation-error {
+            color: #ef4444;
+            font-size: 0.82em;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-group.has-error input,
+        .form-group.has-error textarea {
+            border-color: #ef4444;
+        }
+
+        .form-group.has-error .validation-error {
+            display: block;
+        }
+
+        /* Prompt area */
+        .prompt-area {
+            padding: 20px;
+            background: linear-gradient(135deg, #ede9fe 0%, #f0f0ff 100%);
+            border-radius: 12px;
+            border: 1px solid #d4d5fc;
+            margin-top: 20px;
+        }
+
+        .prompt-area-inner {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .prompt-area-text {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .prompt-area-title {
+            font-weight: 700;
+            color: #5458F2;
+            font-size: 0.95em;
+            margin-bottom: 6px;
+        }
+
+        .prompt-area-desc {
+            font-size: 0.82em;
+            color: #4a4a6a;
+            line-height: 1.5;
+        }
+
+        .prompt-copy-btn {
+            background: #5458F2;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(84,88,242,0.3);
+            transition: background 0.2s;
+        }
+
+        .prompt-copy-btn:hover {
+            background: #4347d9;
+        }
+
+        @media (max-width: 700px) {
+            .endpoint-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 600px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -462,14 +626,25 @@
                 padding: 20px 18px;
             }
 
-            .submit-area {
-                flex-direction: column-reverse;
-                gap: 12px;
+            .wizard-nav {
+                padding: 16px 18px;
             }
 
-            .submit-btn, .cancel-btn {
-                width: 100%;
-                text-align: center;
+            .wizard-nav-btn {
+                padding: 10px 18px;
+                font-size: 0.85em;
+            }
+
+            .endpoint-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .wizard-progress {
+                padding: 20px 10px 16px;
+            }
+
+            .wizard-progress-line {
+                min-width: 30px;
             }
         }
     </style>
@@ -485,170 +660,331 @@
             <div class="error-alert"><%= Esc.h((String) request.getAttribute("error")) %></div>
         <% } %>
 
-        <div class="workflow-banner">
-            <h3>&#129302; S&aring; skapar du en modul</h3>
-            <div class="workflow-steps">
-                <span class="workflow-step"><span class="ws-num">1</span> Fyll i namn &amp; beskrivning</span>
-                <span class="workflow-arrow">&#8594;</span>
-                <span class="workflow-step"><span class="ws-num">2</span> Skriv vad modulen ska g&ouml;ra</span>
-                <span class="workflow-arrow">&#8594;</span>
-                <span class="workflow-step"><span class="ws-num">3</span> Generera AI-prompt</span>
-                <span class="workflow-arrow">&#8594;</span>
-                <span class="workflow-step"><span class="ws-num">4</span> Klistra i Claude/ChatGPT</span>
-                <span class="workflow-arrow">&#8594;</span>
-                <span class="workflow-step"><span class="ws-num">5</span> Ladda upp HTML-filen</span>
+        <!-- Wizard Progress Bar -->
+        <div class="wizard-progress">
+            <div class="wizard-progress-step active" data-step="1" onclick="progressClick(1)">
+                <div class="wizard-progress-circle" id="progressCircle1">1</div>
+                <div class="wizard-progress-label">Info</div>
+            </div>
+            <div class="wizard-progress-line" id="progressLine1"></div>
+            <div class="wizard-progress-step disabled" data-step="2" onclick="progressClick(2)">
+                <div class="wizard-progress-circle" id="progressCircle2">2</div>
+                <div class="wizard-progress-label">Beskriv</div>
+            </div>
+            <div class="wizard-progress-line" id="progressLine2"></div>
+            <div class="wizard-progress-step disabled" data-step="3" onclick="progressClick(3)">
+                <div class="wizard-progress-circle" id="progressCircle3">3</div>
+                <div class="wizard-progress-label">Publicera</div>
             </div>
         </div>
 
         <form action="<%= ctxPath %>/module/create?_csrf=<%= session.getAttribute("csrfToken") %>" method="post" enctype="multipart/form-data" id="createForm">
             <div class="form-card">
 
-                <!-- Module Info -->
-                <div class="form-section">
-                    <div class="form-section-title"><span class="step-number">1</span> Modulinformation</div>
+                <!-- Step 1: Module Info -->
+                <div class="wizard-step active" data-step="1">
+                    <div class="form-section">
+                        <div class="form-section-title">Vad ska modulen heta?</div>
 
-                    <div class="form-group">
-                        <label>Modulnamn <span class="hint">(obligatoriskt)</span></label>
-                        <input type="text" name="name" placeholder="T.ex. Min Analysmodul" required value="<%= Esc.h((String) request.getAttribute("name")) %>">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Ikon <span class="hint">(emoji)</span></label>
-                            <div class="icon-picker">
-                                <div class="icon-preview" id="iconPreview">&#128230;</div>
-                                <input type="text" name="icon" class="icon-input" placeholder="&#128230;" maxlength="10" id="iconInput" value="&#128230;">
-                            </div>
+                        <div class="form-group" id="nameGroup">
+                            <label>Modulnamn <span class="hint">(obligatoriskt)</span></label>
+                            <input type="text" name="name" placeholder="T.ex. Min Analysmodul" value="<%= Esc.h(savedName) %>" id="nameInput">
+                            <div class="validation-error" id="nameError">Modulnamn kr&#228;vs</div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Kategori</label>
-                            <select name="category">
-                                <option value="tools">&#128295; Verktyg</option>
-                                <option value="analytics">&#128200; Analys &amp; Rapporter</option>
-                                <option value="admin">&#9881; Administration</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Beskrivning <span class="hint">(valfritt)</span></label>
-                        <textarea name="description" placeholder="Beskriv vad modulen g&#246;r..." rows="3"><%= Esc.h((String) request.getAttribute("description")) %></textarea>
-                    </div>
-                </div>
-
-                <!-- AI Spec (Step 2) -->
-                <div class="form-section">
-                    <div class="form-section-title"><span class="step-number">2</span> Beskriv vad modulen ska g&#246;ra</div>
-
-                    <div class="form-group" style="margin-bottom: 12px;">
-                        <label>Din beskrivning <span class="hint">(skriv fritt &mdash; som en best&auml;llning)</span></label>
-                        <textarea name="aiSpecText" class="spec-textarea" id="specTextarea"
-                                  placeholder="Beskriv vad modulen ska visa och g&#246;ra. T.ex:&#10;&#10;Jag vill ha en modul som visar en lista &#246;ver alla servrar med versionsnummer.&#10;Tabellen ska g&#229; att sortera och filtrera. Visa en f&#228;rgkodad badge baserat&#10;p&#229; version. Det ska finnas en knapp f&#246;r att exportera listan som CSV.&#10;&#10;Ju mer detaljer, desto b&#228;ttre resultat."><%= Esc.h((String) request.getAttribute("aiSpecText")) %></textarea>
-                    </div>
-
-                    <div style="margin-bottom: 16px;">
-                        <button type="button" style="background: none; border: none; color: #5458F2; font-size: 0.82em; cursor: pointer; font-family: inherit; padding: 0; font-weight: 500;" onclick="toggleSpecTips()">&#128161; Tips f&#246;r bra beskrivningar <span id="specTipsArrow">&#9660;</span></button>
-                        <div id="specTips" style="display: none; margin-top: 10px; padding: 14px; background: #f8f9fc; border-radius: 10px; font-size: 0.84em; line-height: 1.7; color: #323232;">
-                            <ul style="margin: 0; padding-left: 20px;">
-                                <li><strong>Vad ska visas?</strong> &mdash; Tabell, kort, graf, lista?</li>
-                                <li><strong>Vilken data?</strong> &mdash; Servrar, kunder, certifikat, statistik? (API:er ing&#229;r automatiskt i prompten)</li>
-                                <li><strong>Interaktioner?</strong> &mdash; Sortering, filtrering, s&#246;kning, export?</li>
-                                <li><strong>Layout?</strong> &mdash; Sidebar, tabs, toolbar, modaler?</li>
-                                <li><strong>S&#228;rskilda krav?</strong> &mdash; F&#228;rgkodning, badges, realtidsuppdatering?</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Prompt Generator (Step 3) -->
-                    <div style="padding: 20px; background: linear-gradient(135deg, #ede9fe 0%, #f0f0ff 100%); border-radius: 12px; border: 1px solid #d4d5fc;">
-                        <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                            <div style="flex: 1; min-width: 200px;">
-                                <div style="font-weight: 700; color: #5458F2; font-size: 0.95em; margin-bottom: 6px;"><span class="step-number" style="width: 22px; height: 22px; font-size: 0.7em;">3</span> Generera AI-prompt</div>
-                                <div style="font-size: 0.82em; color: #4a4a6a; line-height: 1.5;">
-                                    Knappen skapar en f&#228;rdig prompt med din beskrivning + all teknisk info.<br>
-                                    <strong>Klistra in prompten i Claude eller ChatGPT</strong> &mdash; du f&#229;r tillbaka en HTML-fil att ladda upp nedan.
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Ikon <span class="hint">(emoji)</span></label>
+                                <div class="icon-picker">
+                                    <div class="icon-preview" id="iconPreview">&#128230;</div>
+                                    <input type="text" name="icon" class="icon-input" placeholder="&#128230;" maxlength="10" id="iconInput" value="&#128230;">
                                 </div>
                             </div>
-                            <button type="button" onclick="generateAIPrompt()" style="background: #5458F2; color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-size: 0.9em; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; box-shadow: 0 2px 8px rgba(84,88,242,0.3);">&#128203; Kopiera AI-prompt</button>
+
+                            <div class="form-group">
+                                <label>Kategori</label>
+                                <select name="category">
+                                    <option value="tools">&#128295; Verktyg</option>
+                                    <option value="analytics">&#128200; Analys &amp; Rapporter</option>
+                                    <option value="admin">&#9881; Administration</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Beskrivning <span class="hint">(valfritt)</span></label>
+                            <textarea name="description" placeholder="Beskriv vad modulen g&#246;r..." rows="3"><%= Esc.h(savedDesc) %></textarea>
                         </div>
                     </div>
-                </div>
 
-                <!-- File Upload (Step 4) -->
-                <div class="form-section">
-                    <div class="form-section-title"><span class="step-number">4</span> Ladda upp HTML-filen</div>
-                    <div style="font-size: 0.82em; color: #6c757d; margin-bottom: 14px;">
-                        Spara koden fr&#229;n AI:n som en <code>.html</code>-fil och ladda upp den h&#228;r.
-                    </div>
-
-                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                        <div class="upload-icon" id="uploadIcon">&#128228;</div>
-                        <div class="upload-text" id="uploadText">Klicka eller dra filer hit</div>
-                        <div class="upload-hint">Accepterar .html eller .zip (max 50 MB)</div>
-                        <div class="upload-filename" id="uploadFilename" style="display: none;"></div>
-                    </div>
-                    <input type="file" name="moduleFile" class="file-input" id="fileInput" accept=".html,.htm,.zip">
-                </div>
-
-                <!-- Visibility (Step 5) -->
-                <div class="form-section">
-                    <div class="form-section-title"><span class="step-number">5</span> Synlighet</div>
-
-                    <div class="visibility-options">
-                        <label class="visibility-option selected" id="opt-private" onclick="selectVisibility('private')">
-                            <input type="radio" name="visibility" value="private" checked>
-                            <div class="visibility-icon">&#128274;</div>
-                            <div class="visibility-label">Privat</div>
-                            <div class="visibility-desc">Bara du kan se modulen</div>
-                        </label>
-
-                        <label class="visibility-option" id="opt-shared" onclick="selectVisibility('shared')">
-                            <input type="radio" name="visibility" value="shared">
-                            <div class="visibility-icon">&#128101;</div>
-                            <div class="visibility-label">Delad</div>
-                            <div class="visibility-desc">Alla inloggade kan se modulen</div>
-                        </label>
+                    <div class="wizard-nav">
+                        <button type="button" class="wizard-nav-btn secondary cancel" onclick="cancelWizard()">Avbryt</button>
+                        <button type="button" class="wizard-nav-btn primary" onclick="goToStep(2)">N&#228;sta &#8594;</button>
                     </div>
                 </div>
 
-                <!-- Group Visibility -->
-                <div class="form-section" id="groupSection" style="display: none;">
-                    <div class="form-section-title">&#128101; Gruppsynlighet</div>
-                    <div class="group-section-note">
-                        V&auml;lj vilka grupper som ska se modulen. Om ingen v&auml;ljs blir den synlig f&ouml;r alla.
+                <!-- Step 2: Describe & Generate -->
+                <div class="wizard-step" data-step="2">
+                    <div class="form-section">
+                        <div class="form-section-title">Beskriv vad modulen ska g&#246;ra</div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label>Din beskrivning <span class="hint">(skriv fritt &mdash; som en best&#228;llning)</span></label>
+                            <textarea name="aiSpecText" class="spec-textarea" id="specTextarea"
+                                      placeholder="Beskriv vad modulen ska visa och g&#246;ra. T.ex:&#10;&#10;Jag vill ha en modul som visar en lista &#246;ver alla servrar med versionsnummer.&#10;Tabellen ska g&#229; att sortera och filtrera. Visa en f&#228;rgkodad badge baserat&#10;p&#229; version. Det ska finnas en knapp f&#246;r att exportera listan som CSV.&#10;&#10;Ju mer detaljer, desto b&#228;ttre resultat."><%= Esc.h(savedSpec) %></textarea>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <button type="button" style="background: none; border: none; color: #5458F2; font-size: 0.82em; cursor: pointer; font-family: inherit; padding: 0; font-weight: 500;" onclick="toggleSpecTips()">&#128161; Tips f&#246;r bra beskrivningar <span id="specTipsArrow">&#9660;</span></button>
+                            <div id="specTips" style="display: none; margin-top: 10px; padding: 14px; background: #f8f9fc; border-radius: 10px; font-size: 0.84em; line-height: 1.7; color: #323232;">
+                                <ul style="margin: 0; padding-left: 20px;">
+                                    <li><strong>Vad ska visas?</strong> &mdash; Tabell, kort, graf, lista?</li>
+                                    <li><strong>Vilken data?</strong> &mdash; Servrar, kunder, certifikat, statistik?</li>
+                                    <li><strong>Interaktioner?</strong> &mdash; Sortering, filtrering, s&#246;kning, export?</li>
+                                    <li><strong>Layout?</strong> &mdash; Sidebar, tabs, toolbar, modaler?</li>
+                                    <li><strong>S&#228;rskilda krav?</strong> &mdash; F&#228;rgkodning, badges, realtidsuppdatering?</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Endpoint Cards -->
+                        <div class="endpoint-section-label">Vilka datak&#228;llor beh&#246;ver modulen? <span class="hint">(klicka f&#246;r att v&#228;lja)</span></div>
+                        <div class="endpoint-grid" id="endpointGrid"></div>
+
+                        <!-- Prompt Generator -->
+                        <div class="prompt-area">
+                            <div class="prompt-area-inner">
+                                <div class="prompt-area-text">
+                                    <div class="prompt-area-title">&#10024; Generera AI-prompt</div>
+                                    <div class="prompt-area-desc">
+                                        Knappen skapar en f&#228;rdig prompt med din beskrivning + valda datk&#228;llor.<br>
+                                        <strong>Klistra in prompten i Claude eller ChatGPT</strong> &mdash; du f&#229;r tillbaka en HTML-fil att ladda upp i n&#228;sta steg.
+                                    </div>
+                                </div>
+                                <button type="button" class="prompt-copy-btn" onclick="generateAIPrompt()">&#128203; Kopiera AI-prompt</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="group-checkbox-list">
-                        <% for (Group g : allGroups) { %>
-                        <label class="group-checkbox-item<%= "Alla".equals(g.getName()) ? " checked" : "" %>">
-                            <input type="checkbox" class="group-cb" value="<%= g.getId() %>"
-                                   onchange="updateGroupCheckbox(this)"
-                                   <%= "Alla".equals(g.getName()) ? "checked" : "" %>>
-                            <span class="group-checkbox-label">
-                                <%= g.getIcon() != null ? g.getIcon() : "" %> <%= g.getName() %>
-                                <% if (g.isHidden()) { %><span class="group-hidden-badge">&#128274;</span><% } %>
-                            </span>
-                        </label>
-                        <% } %>
+
+                    <div class="wizard-nav">
+                        <button type="button" class="wizard-nav-btn secondary" onclick="goToStep(1)">&#8592; Tillbaka</button>
+                        <button type="button" class="wizard-nav-btn primary" onclick="goToStep(3)">N&#228;sta &#8594;</button>
                     </div>
-                    <input type="hidden" name="groupIds" id="groupIdsInput" value="">
                 </div>
 
-                <!-- Submit -->
-                <div class="submit-area">
-                    <a href="<%= ctxPath %>/dashboard.jsp" class="cancel-btn">Avbryt</a>
-                    <button type="submit" class="submit-btn">&#128640; Skapa modul</button>
+                <!-- Step 3: Upload & Publish -->
+                <div class="wizard-step" data-step="3">
+                    <div class="form-section">
+                        <div class="form-section-title">Ladda upp &amp; publicera</div>
+                        <div style="font-size: 0.82em; color: #6c757d; margin-bottom: 14px;">
+                            Spara koden fr&#229;n AI:n som en <code>.html</code>-fil och ladda upp den h&#228;r.
+                        </div>
+
+                        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                            <div class="upload-icon" id="uploadIcon">&#128228;</div>
+                            <div class="upload-text" id="uploadText">Klicka eller dra filer hit</div>
+                            <div class="upload-hint">Accepterar .html eller .zip (max 50 MB)</div>
+                            <div class="upload-filename" id="uploadFilename" style="display: none;"></div>
+                        </div>
+                        <input type="file" name="moduleFile" class="file-input" id="fileInput" accept=".html,.htm,.zip">
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-title">Synlighet</div>
+
+                        <div class="visibility-options">
+                            <label class="visibility-option selected" id="opt-private" onclick="selectVisibility('private')">
+                                <input type="radio" name="visibility" value="private" checked>
+                                <div class="visibility-icon">&#128274;</div>
+                                <div class="visibility-label">Privat</div>
+                                <div class="visibility-desc">Bara du kan se modulen</div>
+                            </label>
+
+                            <label class="visibility-option" id="opt-shared" onclick="selectVisibility('shared')">
+                                <input type="radio" name="visibility" value="shared">
+                                <div class="visibility-icon">&#128101;</div>
+                                <div class="visibility-label">Delad</div>
+                                <div class="visibility-desc">Alla inloggade kan se modulen</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Group Visibility -->
+                    <div class="form-section" id="groupSection" style="display: none;">
+                        <div class="form-section-title">&#128101; Gruppsynlighet</div>
+                        <div class="group-section-note">
+                            V&#228;lj vilka grupper som ska se modulen. Om ingen v&#228;ljs blir den synlig f&#246;r alla.
+                        </div>
+                        <div class="group-checkbox-list">
+                            <% for (Group g : allGroups) { %>
+                            <label class="group-checkbox-item<%= "Alla".equals(g.getName()) ? " checked" : "" %>">
+                                <input type="checkbox" class="group-cb" value="<%= g.getId() %>"
+                                       onchange="updateGroupCheckbox(this)"
+                                       <%= "Alla".equals(g.getName()) ? "checked" : "" %>>
+                                <span class="group-checkbox-label">
+                                    <%= g.getIcon() != null ? g.getIcon() : "" %> <%= g.getName() %>
+                                    <% if (g.isHidden()) { %><span class="group-hidden-badge">&#128274;</span><% } %>
+                                </span>
+                            </label>
+                            <% } %>
+                        </div>
+                        <input type="hidden" name="groupIds" id="groupIdsInput" value="">
+                    </div>
+
+                    <div class="wizard-nav">
+                        <button type="button" class="wizard-nav-btn secondary" onclick="goToStep(2)">&#8592; Tillbaka</button>
+                        <button type="submit" class="wizard-nav-btn submit">Skapa modul &#128640;</button>
+                    </div>
                 </div>
+
             </div>
         </form>
     </div>
 
     <script nonce="<%= request.getAttribute("cspNonce") %>">
         var ctxPath = '<%= ctxPath %>';
+        var currentStep = 1;
+        var highestVisited = 1;
+
+        // Endpoint data
+        var endpoints = [
+            { id: 'customer-stats', icon: '\uD83D\uDCCA', name: 'Kundstatistik', desc: 'Statistik och historik per kundsite', selected: false },
+            { id: 'email', icon: '\uD83D\uDCE7', name: 'E-post', desc: 'Mallar, utskick och historik', selected: false },
+            { id: 'contacts', icon: '\uD83D\uDC65', name: 'Kontakter', desc: 'S\u00f6k kontakter fr\u00e5n SmartAssIC', selected: false },
+            { id: 'servers', icon: '\uD83D\uDDA5\uFE0F', name: 'Servrar', desc: 'Lista, versioner och h\u00e4lsokoll', selected: false },
+            { id: 'certificates', icon: '\uD83D\uDD12', name: 'Certifikat', desc: 'SSL-cert och utg\u00e5ngsdatum', selected: false },
+            { id: 'groups', icon: '\uD83C\uDFF7\uFE0F', name: 'Grupper', desc: 'Grupper och medlemskap', selected: false },
+            { id: 'widgets', icon: '\uD83D\uDCE6', name: 'Widgets', desc: 'Widgetlista', selected: false },
+            { id: 'modules', icon: '\uD83E\uDDE9', name: 'Moduler', desc: 'Modullista och AI-specs', selected: false },
+            { id: 'admin', icon: '\u2699\uFE0F', name: 'Admin', desc: 'Anv\u00e4ndare, config och datasynk', selected: false }
+        ];
+
+        // Prompt sections per endpoint
+        var promptSections = {
+            'customer-stats': '#### Kundstatistik\n| Endpoint | Metod | Beskrivning |\n|----------|-------|-------------|\n| `../../api/customer-stats` | GET | Aggregerad statistik (30d f\u00f6nster). Params: `?from=yyyy-MM-dd&to=yyyy-MM-dd` |\n| `../../api/customer-stats/history` | GET | Dagliga snapshots per server. Params: `?url=X&from=Y&to=Z&limit=N` |\n| `../../api/customer-stats/import` | POST | Bulk-import JSON-array (kr\u00e4ver API-nyckel via `X-API-Key` header) |\n',
+            'email': '#### E-post\n| Endpoint | Metod | Beskrivning |\n|----------|-------|-------------|\n| `../../api/email/templates` | GET | Lista anv\u00e4ndarens mallar |\n| `../../api/email/templates` | POST | Skapa mall. Body: `{name, subject, bodyHtml}` |\n| `../../api/email/templates/{id}` | PUT | Uppdatera mall |\n| `../../api/email/templates/{id}` | DELETE | Ta bort mall |\n| `../../api/email/send` | POST | Skicka utskick. Body: `{subject, bodyHtml, recipients:[], templateId}` |\n| `../../api/email/history` | GET | Utskickshistorik (senaste 100) |\n| `../../api/email/history/{id}` | GET | Detaljer + mottagarstatus |\n',
+            'contacts': '#### Kontakter (extern DB \u2014 smartassic)\n| Endpoint | Metod | Beskrivning |\n|----------|-------|-------------|\n| `../../api/contacts/filters` | GET | Filterv\u00e4rden (ServerUrl, CompanyName, Language etc.) |\n| `../../api/contacts/query` | POST | S\u00f6k kontakter med filter. Body: `{filters:{...}, maxResults}` |\n',
+            'servers': '#### Servrar\n| Endpoint | Metod | Beskrivning |\n|----------|-------|-------------|\n| `../../api/servers` | GET | Serverlista med f\u00f6retag + maskinnamn + version |\n| `../../api/servers/health` | GET | Async h\u00e4lsokontroll p\u00e5 alla servrar (severity: ok/low/medium/severe) |\n',
+            'certificates': '#### Certifikat\n| Endpoint | Metod | Beskrivning |\n|----------|-------|-------------|\n| `../../api/certificates` | GET | Certifikatlista (daysLeft, isExpired, commonName, issuer, validTo) |\n',
+            'groups': '#### Grupper\n| Endpoint | Metod | Beskrivning |\n|----------|-------|-------------|\n| `../../api/groups` | GET | Synliga grupper + medlemsstatus (isMember, memberCount) |\n| `../../api/groups` | POST | G\u00e5 med/l\u00e4mna grupp. Body: `{action:"join|leave", groupId:N}` |\n',
+            'widgets': '#### Widgets\n| Endpoint | Metod | Beskrivning |\n|----------|-------|-------------|\n| `../../api/widgets` | GET | Gruppfiltrerad widgetlista |\n',
+            'modules': '#### Moduler\n| Endpoint | Metod | Beskrivning |\n|----------|-------|-------------|\n| `../../api/modules` | GET | Gruppfiltrerad modullista (id, name, icon, path, moduleType, groups, aiSpecText) |\n| `../../api/module/spec?id=X` | GET | AI-spec f\u00f6r en modul som markdown |\n',
+            'admin': '#### Admin-only (kr\u00e4ver is_admin=1)\n| Endpoint | Metod | Beskrivning |\n|----------|-------|-------------|\n| `../../api/admin/users` | GET/POST | Anv\u00e4ndarlista / toggla admin-status |\n| `../../api/admin/config` | GET/POST | AppConfig-lista / uppdatera inst\u00e4llning |\n| `../../api/sync/configs` | CRUD | Datasynk-konfigurationer |\n| `../../api/sync/run` | POST | K\u00f6r synk manuellt |\n'
+        };
+
+        // Render endpoint cards
+        function renderEndpointCards() {
+            var grid = document.getElementById('endpointGrid');
+            grid.innerHTML = '';
+            endpoints.forEach(function(ep) {
+                var card = document.createElement('div');
+                card.className = 'endpoint-card' + (ep.selected ? ' selected' : '');
+                card.setAttribute('data-id', ep.id);
+                card.innerHTML = '<div class="endpoint-card-icon">' + ep.icon + '</div>' +
+                    '<div class="endpoint-card-name">' + ep.name + '</div>' +
+                    '<div class="endpoint-card-desc">' + ep.desc + '</div>';
+                card.addEventListener('click', function() {
+                    ep.selected = !ep.selected;
+                    card.classList.toggle('selected', ep.selected);
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        // Cancel — navigate home via postMessage if in iframe, else redirect
+        function cancelWizard() {
+            if (window !== window.top) {
+                window.parent.postMessage({ type: 'LOAD_MODULE', moduleId: 'home' }, window.location.origin);
+            } else {
+                window.location.href = ctxPath + '/dashboard.jsp';
+            }
+        }
+
+        // Wizard navigation
+        function goToStep(step) {
+            if (step < 1 || step > 3) return;
+
+            // Validate before going forward
+            if (step > currentStep) {
+                for (var s = currentStep; s < step; s++) {
+                    if (!validateStep(s)) return;
+                }
+            }
+
+            currentStep = step;
+            if (step > highestVisited) highestVisited = step;
+
+            // Show/hide steps
+            document.querySelectorAll('.wizard-step').forEach(function(el) {
+                el.classList.toggle('active', parseInt(el.getAttribute('data-step')) === step);
+            });
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            for (var i = 1; i <= 3; i++) {
+                var stepEl = document.querySelector('.wizard-progress-step[data-step="' + i + '"]');
+                var circle = document.getElementById('progressCircle' + i);
+
+                stepEl.classList.remove('active', 'completed', 'disabled');
+
+                if (i === currentStep) {
+                    stepEl.classList.add('active');
+                    circle.textContent = i;
+                } else if (i < currentStep) {
+                    stepEl.classList.add('completed');
+                    circle.textContent = '\u2713';
+                } else {
+                    if (i <= highestVisited) {
+                        // Can click back to it
+                    } else {
+                        stepEl.classList.add('disabled');
+                    }
+                    circle.textContent = i;
+                }
+            }
+
+            // Lines
+            document.getElementById('progressLine1').classList.toggle('completed', currentStep > 1);
+            document.getElementById('progressLine2').classList.toggle('completed', currentStep > 2);
+        }
+
+        function progressClick(step) {
+            if (step > highestVisited) return;
+            // Going back is always ok; going forward validates
+            if (step <= currentStep) {
+                currentStep = step;
+                document.querySelectorAll('.wizard-step').forEach(function(el) {
+                    el.classList.toggle('active', parseInt(el.getAttribute('data-step')) === step);
+                });
+                updateProgress();
+            } else {
+                goToStep(step);
+            }
+        }
+
+        function validateStep(step) {
+            if (step === 1) {
+                var name = document.getElementById('nameInput').value.trim();
+                var group = document.getElementById('nameGroup');
+                if (!name) {
+                    group.classList.add('has-error');
+                    document.getElementById('nameInput').focus();
+                    return false;
+                }
+                group.classList.remove('has-error');
+            }
+            return true;
+        }
+
+        // Clear validation on input
+        document.getElementById('nameInput').addEventListener('input', function() {
+            document.getElementById('nameGroup').classList.remove('has-error');
+        });
 
         // Icon preview
-        var iconInput = document.getElementById('iconInput');
-        iconInput.addEventListener('input', function() {
+        document.getElementById('iconInput').addEventListener('input', function() {
             document.getElementById('iconPreview').textContent = this.value || '\uD83D\uDCE6';
         });
 
@@ -709,7 +1045,6 @@
             document.getElementById('opt-' + value).classList.add('selected');
             document.querySelector('input[name="visibility"][value="' + value + '"]').checked = true;
 
-            // Show/hide group section based on visibility
             var groupSection = document.getElementById('groupSection');
             if (value === 'shared') {
                 groupSection.style.display = '';
@@ -834,68 +1169,25 @@
             prompt += 'const resp = await fetch(API + \'/email/templates\');\n';
             prompt += '```\n\n';
 
-            prompt += '### Tillg\u00e4ngliga API-endpoints\n';
-            prompt += 'Alla URL:er nedan \u00e4r relativa till applikationens rot. I moduler anv\u00e4nds `../../api/...`.\n\n';
+            // Only include selected endpoint sections
+            var selectedEndpoints = endpoints.filter(function(ep) { return ep.selected; });
 
-            prompt += '#### Kundstatistik\n';
-            prompt += '| Endpoint | Metod | Beskrivning |\n';
-            prompt += '|----------|-------|-------------|\n';
-            prompt += '| `../../api/customer-stats` | GET | Aggregerad statistik (30d f\u00f6nster). Params: `?from=yyyy-MM-dd&to=yyyy-MM-dd` |\n';
-            prompt += '| `../../api/customer-stats/history` | GET | Dagliga snapshots per server. Params: `?url=X&from=Y&to=Z&limit=N` |\n';
-            prompt += '| `../../api/customer-stats/import` | POST | Bulk-import JSON-array (kr\u00e4ver API-nyckel via `X-API-Key` header) |\n\n';
-
-            prompt += '#### E-post\n';
-            prompt += '| Endpoint | Metod | Beskrivning |\n';
-            prompt += '|----------|-------|-------------|\n';
-            prompt += '| `../../api/email/templates` | GET | Lista anv\u00e4ndarens mallar |\n';
-            prompt += '| `../../api/email/templates` | POST | Skapa mall. Body: `{name, subject, bodyHtml}` |\n';
-            prompt += '| `../../api/email/templates/{id}` | PUT | Uppdatera mall |\n';
-            prompt += '| `../../api/email/templates/{id}` | DELETE | Ta bort mall |\n';
-            prompt += '| `../../api/email/send` | POST | Skicka utskick. Body: `{subject, bodyHtml, recipients:[], templateId}` |\n';
-            prompt += '| `../../api/email/history` | GET | Utskickshistorik (senaste 100) |\n';
-            prompt += '| `../../api/email/history/{id}` | GET | Detaljer + mottagarstatus |\n\n';
-
-            prompt += '#### Kontakter (extern DB \u2014 smartassic)\n';
-            prompt += '| Endpoint | Metod | Beskrivning |\n';
-            prompt += '|----------|-------|-------------|\n';
-            prompt += '| `../../api/contacts/filters` | GET | Filterv\u00e4rden (ServerUrl, CompanyName, Language etc.) |\n';
-            prompt += '| `../../api/contacts/query` | POST | S\u00f6k kontakter med filter. Body: `{filters:{...}, maxResults}` |\n\n';
-
-            prompt += '#### Servrar\n';
-            prompt += '| Endpoint | Metod | Beskrivning |\n';
-            prompt += '|----------|-------|-------------|\n';
-            prompt += '| `../../api/servers` | GET | Serverlista med f\u00f6retag + maskinnamn + version |\n';
-            prompt += '| `../../api/servers/health` | GET | Async h\u00e4lsokontroll p\u00e5 alla servrar (severity: ok/low/medium/severe) |\n\n';
-
-            prompt += '#### Certifikat\n';
-            prompt += '| Endpoint | Metod | Beskrivning |\n';
-            prompt += '|----------|-------|-------------|\n';
-            prompt += '| `../../api/certificates` | GET | Certifikatlista (daysLeft, isExpired, commonName, issuer, validTo) |\n\n';
-
-            prompt += '#### Grupper\n';
-            prompt += '| Endpoint | Metod | Beskrivning |\n';
-            prompt += '|----------|-------|-------------|\n';
-            prompt += '| `../../api/groups` | GET | Synliga grupper + medlemsstatus (isMember, memberCount) |\n';
-            prompt += '| `../../api/groups` | POST | G\u00e5 med/l\u00e4mna grupp. Body: `{action:"join|leave", groupId:N}` |\n\n';
-
-            prompt += '#### Widgets\n';
-            prompt += '| Endpoint | Metod | Beskrivning |\n';
-            prompt += '|----------|-------|-------------|\n';
-            prompt += '| `../../api/widgets` | GET | Gruppfiltrerad widgetlista |\n\n';
-
-            prompt += '#### Moduler\n';
-            prompt += '| Endpoint | Metod | Beskrivning |\n';
-            prompt += '|----------|-------|-------------|\n';
-            prompt += '| `../../api/modules` | GET | Gruppfiltrerad modullista (id, name, icon, path, moduleType, groups, aiSpecText) |\n';
-            prompt += '| `../../api/module/spec?id=X` | GET | AI-spec f\u00f6r en modul som markdown |\n\n';
-
-            prompt += '#### Admin-only (kr\u00e4ver is_admin=1)\n';
-            prompt += '| Endpoint | Metod | Beskrivning |\n';
-            prompt += '|----------|-------|-------------|\n';
-            prompt += '| `../../api/admin/users` | GET/POST | Anv\u00e4ndarlista / toggla admin-status |\n';
-            prompt += '| `../../api/admin/config` | GET/POST | AppConfig-lista / uppdatera inst\u00e4llning |\n';
-            prompt += '| `../../api/sync/configs` | CRUD | Datasynk-konfigurationer |\n';
-            prompt += '| `../../api/sync/run` | POST | K\u00f6r synk manuellt |\n\n';
+            if (selectedEndpoints.length > 0) {
+                prompt += '### Tillg\u00e4ngliga API-endpoints\n';
+                prompt += 'Alla URL:er nedan \u00e4r relativa till applikationens rot. I moduler anv\u00e4nds `../../api/...`.\n\n';
+                selectedEndpoints.forEach(function(ep) {
+                    if (promptSections[ep.id]) {
+                        prompt += promptSections[ep.id] + '\n';
+                    }
+                });
+            } else {
+                // If none selected, include all (backwards compatible)
+                prompt += '### Tillg\u00e4ngliga API-endpoints\n';
+                prompt += 'Alla URL:er nedan \u00e4r relativa till applikationens rot. I moduler anv\u00e4nds `../../api/...`.\n\n';
+                Object.keys(promptSections).forEach(function(key) {
+                    prompt += promptSections[key] + '\n';
+                });
+            }
 
             prompt += '### Konventioner\n';
             prompt += '- `const`/`let` ist\u00e4llet f\u00f6r `var`\n';
@@ -906,25 +1198,33 @@
 
             // Copy to clipboard
             navigator.clipboard.writeText(prompt).then(function() {
-                var btn = event.target;
-                var orig = btn.textContent;
+                var btn = document.querySelector('.prompt-copy-btn');
+                var orig = btn.innerHTML;
                 btn.textContent = '\u2705 Kopierad! Klistra in i Claude/ChatGPT';
                 btn.style.background = '#10b981';
                 setTimeout(function() {
-                    btn.textContent = orig;
-                    btn.style.background = '#5458F2';
+                    btn.innerHTML = orig;
+                    btn.style.background = '';
                 }, 3000);
             }).catch(function() {
-                // Fallback: open in new window
                 var win = window.open('', '_blank');
                 win.document.write('<pre style="white-space:pre-wrap;font-family:monospace;padding:20px;">' + prompt.replace(/</g, '&lt;') + '</pre>');
             });
         }
 
-        // (tabs removed — simplified UI)
+        // Handle server error repopulation — if there's saved data, jump to step 3
+        <% if (error != null) { %>
+        (function() {
+            highestVisited = 3;
+            goToStep(3);
+        })();
+        <% } %>
+
+        // Init
+        renderEndpointCards();
     </script>
     <script nonce="<%= request.getAttribute("cspNonce") %>">
-    // If loaded inside dashboard iframe, hide page header (back link is redundant)
+    // If loaded inside dashboard iframe, hide page header
     if (window !== window.top) {
         var hdr = document.querySelector('.page-header');
         if (hdr) hdr.style.display = 'none';
